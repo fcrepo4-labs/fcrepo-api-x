@@ -398,17 +398,17 @@ Tomcat7</y:NodeLabel>
               <y:Geometry height="113.16961178177326" width="658.0" x="707.425622372702" y="529.6324437579765"/>
               <y:Fill color="#FFFFFF" color2="#FFFFFF" transparent="false"/>
               <y:BorderStyle color="#999999" type="dashed" width="1.0"/>
-              <y:NodeLabel alignment="center" autoSizePolicy="node_width" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="22.37646484375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="658.0" x="0.0" y="0.0">External Services</y:NodeLabel>
+              <y:NodeLabel alignment="center" autoSizePolicy="node_width" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="22.37646484375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="658.0" x="0.0" y="0.0">Services (accessed by API-X Core)</y:NodeLabel>
               <y:Shape type="roundrectangle"/>
               <y:State closed="false" closedHeight="50.0" closedWidth="50.0" innerGraphDisplayEnabled="false"/>
               <y:Insets bottom="15" bottomF="15.0" left="15" leftF="15.0" right="15" rightF="15.0" top="15" topF="15.0"/>
-              <y:BorderInsets bottom="0" bottomF="1.1368683772161603E-13" left="0" leftF="0.0" right="25" rightF="24.5" top="1" topF="0.793146938023142"/>
+              <y:BorderInsets bottom="10" bottomF="10.000000000000114" left="0" leftF="0.0" right="25" rightF="24.5" top="11" topF="10.793146938023142"/>
             </y:GroupNode>
             <y:GroupNode>
               <y:Geometry height="50.0" width="50.0" x="1121.675622372702" y="474.23259491501994"/>
               <y:Fill color="#F5F5F5" color2="#BFBFBF" transparent="false"/>
               <y:BorderStyle color="#000000" type="line" width="1.0"/>
-              <y:NodeLabel alignment="center" autoSizePolicy="node_width" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" hasText="false" height="4.0" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="50.0" x="0.0" y="0.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="node_width" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="22.37646484375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="251.62451171875" x="-100.812255859375" y="0.0">Services (accessed by API-X Core)</y:NodeLabel>
               <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="24.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="50.681640625" x="-0.3408203125" y="24.0">RHEL6
 Tomcat7</y:NodeLabel>
               <y:Shape type="roundrectangle"/>
@@ -423,10 +423,11 @@ Tomcat7</y:NodeLabel>
         <node id="n2::n0">
           <data key="d6">
             <y:ShapeNode>
-              <y:Geometry height="40.0" width="80.0" x="1125.175622372702" y="577.8020555397496"/>
+              <y:Geometry height="40.0" width="80.0" x="996.425622372702" y="577.8020555397496"/>
               <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
               <y:BorderStyle color="#4D6991" type="line" width="1.0"/>
-              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="custom" textColor="#000000" visible="true" width="54.021484375" x="12.9892578125" y="10.6494140625">Service 1<y:LabelModel>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="custom" textColor="#000000" visible="true" width="54.021484375" x="12.9892578125" y="3.298828125">Custom
+Service 1<y:LabelModel>
                   <y:SmartNodeLabelModel distance="4.0"/>
                 </y:LabelModel>
                 <y:ModelParameter>
@@ -475,7 +476,8 @@ Tomcat7</y:NodeLabel>
               <y:Geometry height="40.0" width="80.0" x="1245.925622372702" y="577.8020555397496"/>
               <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
               <y:BorderStyle color="#4D6991" type="line" width="1.0"/>
-              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="18.701171875" modelName="custom" textColor="#000000" visible="true" width="54.021484375" x="12.9892578125" y="10.6494140625">Service 2<y:LabelModel>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="custom" textColor="#000000" visible="true" width="54.021484375" x="12.9892578125" y="3.298828125">Custom
+Service 2<y:LabelModel>
                   <y:SmartNodeLabelModel distance="4.0"/>
                 </y:LabelModel>
                 <y:ModelParameter>
@@ -567,10 +569,80 @@ Tomcat7</y:NodeLabel>
             </y:ShapeNode>
           </data>
         </node>
-        <node id="n2::n3">
+      </graph>
+    </node>
+    <node id="n3" yfiles.foldertype="group">
+      <data key="d4"/>
+      <data key="d6">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="140.8055109241809" width="652.0" x="710.425622372702" y="1068.1972565328774"/>
+              <y:Fill color="#F5F5F5" color2="#FFFFFF" transparent="false"/>
+              <y:BorderStyle color="#BFBFBF" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="node_width" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="22.37646484375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="652.0" x="0.0" y="0.0">Notes</y:NodeLabel>
+              <y:NodeLabel alignment="left" autoSizePolicy="content" borderDistance="32.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="106.908203125" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="647.65234375" x="2.173828125" y="32.0">1. The green arrows indicate how extension reference extenal services. The services are actually called by the core itself.
+    The red arrows indicate the data/request flow. 
+2. Routes define in which sequence extensions are called and under which conditions.
+3. The Fedora repository is considered not differently than other, custom-made services. Ingestion into a Fedora
+     repository may or may not be the last step of a route.
+4. Services accessed by API-X are RESTful services. They can be located anywhere on a network. 
+5. External services not directly called by API-X can be any type of API (or even system calls, etc,)</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="50.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15.0" left="15" leftF="15.0" right="15" rightF="15.0" top="15" topF="15.0"/>
+              <y:BorderInsets bottom="0" bottomF="2.2737367544323206E-13" left="18" leftF="18.328551349069755" right="195" rightF="194.9375333223079" top="0" topF="0.0"/>
+            </y:GroupNode>
+            <y:GroupNode>
+              <y:Geometry height="50.0" width="50.0" x="-109.07814012738845" y="1207.579872611465"/>
+              <y:Fill color="#F2F0D8" transparent="false"/>
+              <y:BorderStyle color="#000000" type="line" width="1.0"/>
+              <y:NodeLabel alignment="right" autoSizePolicy="node_width" backgroundColor="#B7B69E" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="plain" hasLineColor="false" height="22.37646484375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="50.0" x="0.0" y="0.0">Notes</y:NodeLabel>
+              <y:Shape type="rectangle"/>
+              <y:DropShadow color="#D2D2D2" offsetX="4" offsetY="4"/>
+              <y:State closed="true" closedHeight="50.0" closedWidth="50.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="5" bottomF="5.0" left="5" leftF="5.0" right="5" rightF="5.0" top="5" topF="5.0"/>
+              <y:BorderInsets bottom="0" bottomF="0.0" left="0" leftF="0.0" right="0" rightF="0.0" top="0" topF="0.0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="n3:"/>
+    </node>
+    <node id="n4" yfiles.foldertype="group">
+      <data key="d4"/>
+      <data key="d5"/>
+      <data key="d6">
+        <y:ProxyAutoBoundsNode>
+          <y:Realizers active="0">
+            <y:GroupNode>
+              <y:Geometry height="130.01213948301773" width="658.0" x="707.425622372702" y="373.6203878612732"/>
+              <y:Fill color="#FFFFFF" color2="#FFFFFF" transparent="false"/>
+              <y:BorderStyle color="#999999" type="dashed" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="node_width" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="bold" hasBackgroundColor="false" hasLineColor="false" height="22.37646484375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="658.0" x="0.0" y="0.0">External services (not directly accessed by API-X Core)</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="false" closedHeight="50.0" closedWidth="50.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="15" bottomF="15.0" left="15" leftF="15.0" right="15" rightF="15.0" top="15" topF="15.0"/>
+              <y:BorderInsets bottom="0" bottomF="0.0" left="13" leftF="12.764867337602936" right="1" rightF="1.4553570479079099" top="10" topF="10.0"/>
+            </y:GroupNode>
+            <y:GroupNode>
+              <y:Geometry height="50.0" width="50.0" x="0.0" y="60.0"/>
+              <y:Fill color="#F5F5F5" transparent="false"/>
+              <y:BorderStyle color="#000000" type="dashed" width="1.0"/>
+              <y:NodeLabel alignment="right" autoSizePolicy="node_width" backgroundColor="#EBEBEB" borderDistance="0.0" fontFamily="Dialog" fontSize="15" fontStyle="plain" hasLineColor="false" height="22.37646484375" modelName="internal" modelPosition="t" textColor="#000000" visible="true" width="372.466796875" x="-161.2333984375" y="0.0">External services (not directly accessed by API-X Core)</y:NodeLabel>
+              <y:Shape type="roundrectangle"/>
+              <y:State closed="true" closedHeight="50.0" closedWidth="50.0" innerGraphDisplayEnabled="false"/>
+              <y:Insets bottom="5" bottomF="5.0" left="5" leftF="5.0" right="5" rightF="5.0" top="5" topF="5.0"/>
+              <y:BorderInsets bottom="0" bottomF="0.0" left="0" leftF="0.0" right="0" rightF="0.0" top="0" topF="0.0"/>
+            </y:GroupNode>
+          </y:Realizers>
+        </y:ProxyAutoBoundsNode>
+      </data>
+      <graph edgedefault="directed" id="n4:">
+        <node id="n4::n0">
           <data key="d6">
             <y:GenericNode configuration="com.yworks.flowchart.dataBase">
-              <y:Geometry height="60.0" width="125.23026532479435" x="943.110489710305" y="567.8020555397496"/>
+              <y:Geometry height="60.0" width="125.23026532479435" x="902.2301121927553" y="428.6325273442909"/>
               <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
               <y:BorderStyle color="#4D6991" type="line" width="1.0"/>
               <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="10.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="b" textColor="#000000" visible="true" width="95.376953125" x="14.926656099897173" y="16.59765625">Fedora Index(es)
@@ -578,18 +650,54 @@ Tomcat7</y:NodeLabel>
             </y:GenericNode>
           </data>
         </node>
-      </graph>
-    </node>
-    <node id="n3">
-      <data key="d6">
-        <y:GenericNode configuration="com.yworks.flowchart.dataBase">
-          <y:Geometry height="60.0" width="103.47026532479413" x="735.190489710305" y="445.4770059417787"/>
-          <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
-          <y:BorderStyle color="#4D6991" type="line" width="1.0"/>
-          <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="10.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="b" textColor="#000000" visible="true" width="87.384765625" x="8.042749849897064" y="16.59765625">Fedora Storage
+        <node id="n4::n1">
+          <data key="d6">
+            <y:GenericNode configuration="com.yworks.flowchart.dataBase">
+              <y:Geometry height="60.0" width="103.47026532479413" x="735.190489710305" y="428.6325273442909"/>
+              <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
+              <y:BorderStyle color="#4D6991" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" borderDistance="10.0" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="internal" modelPosition="b" textColor="#000000" visible="true" width="87.384765625" x="8.042749849897064" y="16.59765625">Fedora Storage
 Back End</y:NodeLabel>
-        </y:GenericNode>
-      </data>
+            </y:GenericNode>
+          </data>
+        </node>
+        <node id="n4::n2">
+          <data key="d5"/>
+          <data key="d6">
+            <y:GenericNode configuration="com.yworks.flowchart.cloud">
+              <y:Geometry height="61.31054145498257" width="103.47026532479413" x="1091.0297346752059" y="420.9968527050232"/>
+              <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
+              <y:BorderStyle color="#000000" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="custom" textColor="#000000" visible="true" width="63.34375" x="20.063257662397064" y="13.954098852491256">Third-Party
+Service 1<y:LabelModel>
+                  <y:SmartNodeLabelModel distance="4.0"/>
+                </y:LabelModel>
+                <y:ModelParameter>
+                  <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+                </y:ModelParameter>
+              </y:NodeLabel>
+            </y:GenericNode>
+          </data>
+        </node>
+        <node id="n4::n3">
+          <data key="d5"/>
+          <data key="d6">
+            <y:GenericNode configuration="com.yworks.flowchart.cloud">
+              <y:Geometry height="61.31054145498257" width="103.47026532479413" x="1245.5" y="420.9968527050232"/>
+              <y:Fill color="#E8EEF7" color2="#B7C9E3" transparent="false"/>
+              <y:BorderStyle color="#000000" type="line" width="1.0"/>
+              <y:NodeLabel alignment="center" autoSizePolicy="content" fontFamily="Dialog" fontSize="12" fontStyle="plain" hasBackgroundColor="false" hasLineColor="false" height="33.40234375" modelName="custom" textColor="#000000" visible="true" width="63.34375" x="20.063257662397064" y="13.954098852491256">Third-Party
+Service 2<y:LabelModel>
+                  <y:SmartNodeLabelModel distance="4.0"/>
+                </y:LabelModel>
+                <y:ModelParameter>
+                  <y:SmartNodeLabelModelParameter labelRatioX="0.0" labelRatioY="0.0" nodeRatioX="0.0" nodeRatioY="0.0" offsetX="0.0" offsetY="0.0" upX="0.0" upY="-1.0"/>
+                </y:ModelParameter>
+              </y:NodeLabel>
+            </y:GenericNode>
+          </data>
+        </node>
+      </graph>
     </node>
     <edge id="e0" source="n0" target="n0">
       <data key="d10">
@@ -609,41 +717,31 @@ Back End</y:NodeLabel>
         </y:BezierEdge>
       </data>
     </edge>
-    <edge id="e1" source="n2::n2" target="n3">
+    <edge id="e1" source="n2::n2" target="n4::n1">
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
-          <y:LineStyle color="#4D6991" type="line" width="1.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
           <y:Arrows source="delta" target="delta"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
     </edge>
-    <edge id="e2" source="n2::n3" target="n0::n1">
+    <edge id="e2" source="n0::n1" target="n2::n2">
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
-          <y:LineStyle color="#4D6991" type="line" width="1.0"/>
-          <y:Arrows source="none" target="delta"/>
-          <y:BendStyle smoothed="false"/>
-        </y:PolyLineEdge>
-      </data>
-    </edge>
-    <edge id="e3" source="n0::n1" target="n2::n2">
-      <data key="d10">
-        <y:PolyLineEdge>
-          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
-          <y:LineStyle color="#4D6991" type="line" width="1.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
           <y:Arrows source="delta" target="delta"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
     </edge>
-    <edge id="e4" source="n1" target="n0::n1">
+    <edge id="e3" source="n1" target="n0::n1">
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
-          <y:LineStyle color="#4D6991" type="line" width="1.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
           <y:Arrows source="delta" target="delta"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
@@ -653,7 +751,7 @@ Back End</y:NodeLabel>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
-          <y:LineStyle color="#4D6991" type="line" width="1.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
           <y:Arrows source="delta" target="delta"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
@@ -663,7 +761,7 @@ Back End</y:NodeLabel>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
-          <y:LineStyle color="#4D6991" type="line" width="1.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
           <y:Arrows source="delta" target="delta"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
@@ -673,7 +771,7 @@ Back End</y:NodeLabel>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
-          <y:LineStyle color="#4D6991" type="line" width="1.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
           <y:Arrows source="delta" target="delta"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
@@ -683,13 +781,13 @@ Back End</y:NodeLabel>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
-          <y:LineStyle color="#4D6991" type="line" width="1.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
           <y:Arrows source="delta" target="delta"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
     </edge>
-    <edge id="e5" source="n2" target="n2">
+    <edge id="e4" source="n2" target="n2">
       <data key="d10">
         <y:BezierEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
@@ -707,14 +805,11 @@ Back End</y:NodeLabel>
         </y:BezierEdge>
       </data>
     </edge>
-    <edge id="n2::e0" source="n2::n3" target="n2::n0">
+    <edge id="e5" source="n4::n0" target="n2::n0">
       <data key="d10">
         <y:PolyLineEdge>
-          <y:Path sx="0.0" sy="0.0" tx="-2.2737367544323206E-13" ty="0.0">
-            <y:Point x="1072.6594522751939" y="597.8020555397496"/>
-            <y:Point x="1072.6594522751939" y="597.8020555397496"/>
-          </y:Path>
-          <y:LineStyle color="#4D6991" type="line" width="1.0"/>
+          <y:Path sx="0.0" sy="0.0" tx="-2.2737367544323206E-13" ty="0.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
           <y:Arrows source="none" target="delta"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
@@ -724,7 +819,7 @@ Back End</y:NodeLabel>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="-2.2737367544323206E-13" sy="0.0" tx="0.0" ty="0.0"/>
-          <y:LineStyle color="#4D6991" type="line" width="1.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
           <y:Arrows source="none" target="delta"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
@@ -734,7 +829,7 @@ Back End</y:NodeLabel>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="2.2737367544323206E-13" sy="0.0" tx="0.0" ty="0.0"/>
-          <y:LineStyle color="#4D6991" type="line" width="1.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
           <y:Arrows source="none" target="delta"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
@@ -744,8 +839,68 @@ Back End</y:NodeLabel>
       <data key="d10">
         <y:PolyLineEdge>
           <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
-          <y:LineStyle color="#4D6991" type="line" width="1.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
           <y:Arrows source="delta" target="delta"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e8" source="n4::n2" target="n2::n0">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
+          <y:Arrows source="none" target="delta"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e9" source="n4::n3" target="n2::n1">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
+          <y:Arrows source="none" target="delta"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e10" source="n4::n3" target="n2::n0">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#993300" type="line" width="1.0"/>
+          <y:Arrows source="none" target="delta"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e11" source="n0::n0" target="n2::n2">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#99CC00" type="line" width="1.0"/>
+          <y:Arrows source="transparent_circle" target="transparent_circle"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e12" source="n0::n2" target="n2::n0">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#99CC00" type="line" width="1.0"/>
+          <y:Arrows source="transparent_circle" target="transparent_circle"/>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+    <edge id="e13" source="n0::n3" target="n2::n1">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0.0" sy="0.0" tx="0.0" ty="0.0"/>
+          <y:LineStyle color="#99CC00" type="line" width="1.0"/>
+          <y:Arrows source="transparent_circle" target="transparent_circle"/>
           <y:BendStyle smoothed="false"/>
         </y:PolyLineEdge>
       </data>
