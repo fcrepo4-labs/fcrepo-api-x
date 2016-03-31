@@ -1,0 +1,93 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+Vagrant.require_version ">= 1.6.0"
+
+Vagrant.configure("2") do |config|
+
+  # Install docker on host VM
+  config.vm.provision "docker"
+
+  # Kill SSH so Vagrant reconnects and has Docker commands on $PATH
+  config.vm.provision "shell", inline:
+    "ps aux | grep 'sshd:' | awk '{print $2}' | xargs kill"
+
+  config.vm.provision "shell", inline:
+    "sudo mkdir -p /shared; sudo chown vagrant:vagrant /shared; sudo chmod g+rws /shared"
+
+  config.vm.provision "shell", inline:
+    "sudo docker build -t apix-poc/java:latest /vagrant/docker/docker-java/"
+
+  config.vm.provision "shell", inline: "sudo docker network create apix"
+
+  
+  ############ Networking ############
+
+  # This makes the VM appear as a host with the desinated IP to the local
+  # machine.  (e.g. this allows accessing http services running within the
+  # VM from the local OS like http://10.11.8.11/whatever).  This MUST be 
+  # enabled if the VM is to shared folders to the native machine via NFS 
+  # or SMB.  
+  config.vm.network "private_network", ip: "10.11.8.11"
+
+  # This forwards certain ports on the VM to the local host, so that they
+  # appear to be originating from the local host (e.g. this allows accessing
+  # http services from the local OS like http://localhost:8080/whatever)
+  #config.vm.network "forwarded_port",
+  #  guest: 8080, host: 8080
+  #config.vm.network "forwarded_port",
+  #  guest: 3030, host: 3030
+  
+
+
+  ########## File sharing ################
+
+  # NFS or SMB shared folders
+  #
+  # Alternate NFS or SMB configuration of LOCAL folders shared with the VM. 
+  # This causes your local machine to serve as an NFS or SMB server, sharing
+  # the contents of the specified directory with the VM.  *nix and MacOS
+  # hosts must use NFS, Windows must use SMB.  Windows hosts must have
+  # PowerShell 3 installed
+  #
+  # This option should provide better performance and reliability than
+  # Virtualbox file shares, but may have security implications as it turns your
+  # local host into a file server.
+  #
+  # See: https://www.vagrantup.com/docs/synced-folders/nfs.html
+  # See: https://www.vagrantup.com/docs/synced-folders/smb.html
+  #
+  # To use this, un-comment the below lines, and comment out the
+  # Virtualbox shared folders lines above.
+  #if Vagrant::Util::Platform.windows?
+  #  config.vm.synced_folder ".", "/vagrant", type: "smb"
+  #else
+  #  config.vm.synced_folder ".", "/vagrant", 
+  #  :nfs => true,
+  #  :mount_options => ['rw']
+  #end
+
+  
+  # VM hosted folders
+  #
+  # This causes the VM to share the entire "/shared" directory via SMB
+  # (Windows file shares).  If you mount the share on your local machine, you
+  # can read or write to it.  This can be used regardless of whether the
+  # contents of /shared primarily reside on the local host OS (and are 
+  # shared with the VM), or if the contents of /shared are hosted on the VM
+  # and shared with the local host.  
+  #config.vm.provision "shell", path: "dockerhost/samba.sh"
+
+
+  # This specifies the image to run in the VM
+  config.vm.define "dockerhost"
+  config.vm.box = "ubuntu/trusty64"
+
+  # This specifies that we want virtualbox to run the VM image, with
+  # a given amount of RAM.
+  config.vm.provider :virtualbox do |vb|
+      vb.memory = 2048
+      vb.name = "dockerhost"
+      vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+      vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+  end
+end

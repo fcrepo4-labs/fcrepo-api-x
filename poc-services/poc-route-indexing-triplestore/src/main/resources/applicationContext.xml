@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="
+        http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+  <bean class="org.fcrepo.camel.indexing.triplestore.TriplestoreRouter" />
+
+  <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+    <property name="brokerURL" value="${jms.brokerUrl}" />
+  </bean>
+
+  <bean id="fcrepo" class="org.fcrepo.camel.FcrepoComponent">
+    <property name="authUsername" value="${fcrepo.authUsername}" />
+    <property name="authPassword" value="${fcrepo.authPassword}" />
+    <property name="authHost" value="${fcrepo.authHost}" />
+  </bean>
+</beans>
