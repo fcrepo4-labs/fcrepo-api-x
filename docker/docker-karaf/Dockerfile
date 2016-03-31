@@ -10,8 +10,10 @@ RUN export KARAF_VERSION=4.0.4 && \
     curl -L http://apache.mirrors.lucidnetworks.net/karaf/${KARAF_VERSION}/apache-karaf-${KARAF_VERSION}.tar.gz | tar xzf - -C ${APPS} && \
     ln -s ${APPS}/apache-karaf-${KARAF_VERSION} ${KARAF_HOME} && \
     cat ${KARAF_HOME}/etc/org.ops4j.pax.logging.cfg \
-        | sed s/karaf.data/env:KARAF_SHARED/ > /tmp/org.ops4j.pax.logging.cfg && \
-    mv /tmp/org.ops4j.pax.logging.cfg ${KARAF_HOME}/etc/org.ops4j.pax.logging.cfg && \
+        | sed s/karaf.data/env:KARAF_SHARED/ \ 
+        | sed 's/osgi:/stdout, osgi:/' \
+        > /tmp/org.ops4j.pax.logging.cfg && \
+    mv /tmp/org.ops4j.pax.logging.cfg ${KARAF_HOME}/etc/ && \
     cat ${KARAF_HOME}/etc/org.apache.felix.fileinstall-deploy.cfg \
         | sed 's/${karaf.base}\/deploy/\${env:KARAF_SHARED}\/deploy/' \
         > ${KARAF_HOME}/etc/org.apache.felix.fileinstall-shared.cfg && \
