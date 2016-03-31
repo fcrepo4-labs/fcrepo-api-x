@@ -11,6 +11,6 @@
 
   <modules>
     <module>docker-java</module>
-    <module>docker-mvn</module>
+    <module>docker-karaf</module>
   </modules>
 </project>

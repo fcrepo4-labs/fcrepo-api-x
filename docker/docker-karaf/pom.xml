@@ -6,7 +6,7 @@
     <artifactId>docker</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>docker-mvn</artifactId>
+  <artifactId>docker-karaf</artifactId>
   <packaging>pom</packaging>
 
   <dependencies>
@@ -44,7 +44,7 @@
                   <arguments>
                     <argument>build</argument>
                     <argument>-t</argument>
-                    <argument>apix-poc/mvn:latest</argument>
+                    <argument>apix-poc/karaf:latest</argument>
                     <argument>.</argument>
                   </arguments>
                 </configuration>
