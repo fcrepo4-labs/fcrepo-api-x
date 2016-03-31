@@ -1,15 +1,21 @@
-# DCS Vagrant & Docker Images 
+# API-X development
 
-This document is for setting up Vagrant and Docker images. For more documentation on how to use the system once it's up, see  [User Documentation](USERDOC.md)
+This repository contains development and proof-of-concept code for API-X.  API-X may
+be demonstrated in action by running Vagrant using the included vagrantfile.  This will
+launch a VM into which several docker containers will be run, representing API-X and various
+backend services (e.g. fedora itself, message routing, API-X extensions, etc)
 
+## API-X POC/demo services
+A description of API-X services can be found in [poc-services/README.md](poc-services/README.md)
 
 ## Prerequisites 
 
-The below instruction assumes you have downloaded and installed Vagrant and Virtualbox. If not, please download and install Vagrant and Virtualbox before attempting the [Quickstart](#quickstart) instructions.
+Building the code requires Maven 3.x, and Java 8.
 
+Running API-X in Vagrant for demonstration/development purposes requires Vagrant and Virtualbox.  Linux users can avoid
+installing Virtualbox if they use their own local installed Docker engine to run containers.
 * [Vagrant Download](https://www.vagrantup.com/downloads.html) (tested on version 1.8.1)
 * [VirtualBox Download](https://www.virtualbox.org/wiki/Downloads) (tested on version 5.0.14 for OS X hosts, amd64; _not_ the extension pack)
-
 
 ## Quickstart
 By default, this will launch a Virtualbox VM running Ubuntu 14.04 LTS (a "docker host VM") and will run docker 
@@ -18,21 +24,29 @@ browser).  This pattern works on all platforms (Linux, Mac OS, and Windows).  Li
 Vagrant to launch Docker on their own machine, rather than launching a separate VM.  This is discussed in a separate 
 section.
 
-* Be default, the Virtualbox VM will expose ports `8080` and `8181` on your local machine.  If this will conflict
-  with anything you have running, you may change these ports by editing `DockerHostVagrantFile` or turn off
-  port forwarding entirely.  If the default port forwarding is OK, you do not need to do anything.
+### TL;DR
+* `mvn install`
+* `vagrant up`
+* try `vagrant up` again if something fails (e.g. faileed download)
+
+### Starting/Stopping
 * By default, the Virtualbox VM creates a private network on your machine, and is accessible at the IP address 
- `10.11.8.11`.  If this poses a problem, you mat edit `DockerHostVagrantFile` to change this IP, or turn it off entirely.
+ `10.11.8.11`.  If this poses a problem, you may edit `DockerHostVagrantFile` to change this IP, or turn it off entirely.
   If the default VM network address of `10.11.8.11` is OK, then you do not need to do anything.
     * If you wish, you may give `10.11.8.11` a human readable hostname (like `vagrant.local` or `dockerhost`) by 
       editing the hosts file on your local machine (`/etc/hosts` on unix-like systems).  
-* In the project's root directory (the one containing `Vagrantfile`), run `vagrant up`
+* In the project's root directory (the one containing `Vagrantfile`), run `mvn install`, then vagrant up`
 	* You'll see lots of text fly by as it launches a VM, builds a docker image, and starts.  
-	  This can take several minutes.
-* In order to share files with the VM (e.g. to deposit packages, read log files, update configuration), you need to 
-  mount a network share provided by the VM.  This is accessible at `\\10.11.8.11\shared`.  
+	  This can take several minutes.  Subsequent runs will be much faster as once the docker images
+	  have been built, there is no reason to re-build them unless changed (e.g. by a developer)
+* Optionally, in order to share files with the VM (e.g. read log files, update configuration), you may wish to
+  mount a network share provided by the VM.  This is accessible at `\\10.11.8.11\shared`.  This can
+  be convenient for inspecting data files of various services.
 * When you are finished, type `vagrant halt`.  Type `vagrant up` at any time to re-launch the docker images, with your
   data intact.
+* Suunce docker images are built from scratch if they don't already, exist, and downloading content can always
+  fail due to network effects, you may end up with one or more failed image buildds.  If this happens, just run
+  `vagrant up` again.  It will attempt to build any images that have not successfully resulted in running containers
 
 ## Verification
 These verification steps can be used to assure that the docker instance(s) are running and are accessible.  The
@@ -41,98 +55,73 @@ Additionally, because the VM appears to your local machine as a separate network
 use something like `http://10.11.8.11` (or `http://dockerhost` if you gave it a name like `dockerhost` in your hosts
 file) instead of `http://localhost`.
 
-* Point your browser to [http://localhost:8181/system/console/components](http://localhost:8181/system/console/components).
-	* You should see an Apache Karaf page
-	* You should see a list of org.dataconservancy components with status `active`
-* point your browser to Fedora at [http://localhost:8080/fcrepo/rest](http://localhost:8080/fcrepo/rest)
-	* You should see an empty root container
-* Drop some packages into the deposit dir(s) and watch them ingest
-	* The default deposit directory is available on the network share as `\\10.11.8.11\shared\package-ingest\packages`, 
-	  packages deposited here will be deposited into Fedora's root container;  
-      [http://localhost:8080/fcrepo/rest](http://localhost:8080/fcrepo/rest)
-	* The service is configured to wait 30 seconds before ingesting a package
-	    * You can change this by going into [OSGI-> components](http://localhost:8181/system/console/components) menu 
-	      of the webconsole, clicking on the wrench icon by the by PackageFileDepositWorkflow service, and editing the 
-          value of the package poll interval, in milliseconds.  Default is 30000 (30 seconds).  Click 'save', and the 
-          changes will be in effect immediately
-	* You may wish to set up e-mail notifications (see below)
-* Once a package has been processed, it will disappear from the deposit directory.  If it has failed, it will appear in 
-  the package fail directory (`\\10.11.8.11\shared\package-ingest\packages`).  Otherwise, it's in Fedora!
+* Point your browser to [http://10.11.8.11:8080/rest](http://10.11.8.11:8808/rest).
+	* You should see Fedora, with an empty root container
+	* Create an object through Fedora's UI
+* point your browser to Fuseki at [http://10.11.8.11:3030/fcrepo](http://10.11.8.11:3030/fuseki)
+	* You should see some triples!
 
-## E-mail notification Configuration
-By default, the service is configured to simply log deposits to the karaf log.  You may want to set it up to send 
-e-mails once a deposit is finished.  You can do this in two ways:
+## Working with Vagrant and Docker
+This section gives some useful commands for interacting with the api-x docker containers via Vagrant at the
+command line.  Note:  the Vagrant docker provider is a little quirky, and doesn't seem to work entirely as advertised
+all the time.
 
-### Via webconsole
-This method of storing configuration is persistent within a single container instance.  The container can be started/stopped, but the configuration is persisted in that container's filesystem locally.  If the container is destroyed, a new container will not retain configuration created through the webconsole.  Also, any configuration via files (see below) will override the webconsole config if the container is re-started.
+All Vagrant commands assume you are in the root of the fcrepo-api-x reposiory working directory.
 
- - Navigate to [OSGi->Configuration](http://localhost:8181/system/console/configMgr)
- - Find `org.dataconservancy.packaging.ingest.camel.impl.EmailNotifications` and click on it to bring up a form.
- - Fill out all the requested values and click 'save'
- - Go to [OSGi->Components](http://localhost:8181/system/console/components) and click the stop button (black square) next to LoggerNotifications.
+### See the status of containers or host vm
+Run `vagrant status` to just get the status of all docker containers
+Run `vagrant global-status` to get the status of docker containers and the host VM _and their identities_.
+The identity of the docker host (available from global-status) is particularly important if you want to ssh into it
 
 
-### Via configuration files
-This method of storing configuration is persistent across containers - you can completely erase a container, create a new
-one, point it to the config, and it should work as configured.  We'll use the convention `${SHARED}` to refer to the 
-shared folder location (typically `\\10.11.8.11\shared`)
-* Create a `${SHARED}/karaf/deploy` directory.
-    * Create a file in the deploy directory named `org.dataconservancy.packaging.ingest.camel.impl.EmailNotifications.cfg`
-      with the following contents: 
-      <pre>
-      mail.smtpHost = YOUR_SMTP_SERVER (e.g. smtp.gmail.com)
-      mail.smtpUser = YOUR_EMAIL
-      mail.smtpPass = YOUR_PASSWORD
-      mail.from = FROM_ADDRESS
-      mail.to = TO_ADDRESS
-      </pre>
-* Create a file in the deploy directory named `org.dataconservancy.packaging.ingest.camel.impl.LoggerNotifications.cfg` 
-  with the following contents: <pre>
-  service.ranking = -2
-  </pre>
-    * This explicitly disables/de-prioritizes the default logging notification.  Ideally, this step wouldn't be 
-      necessary, but testing has revealed that the notification implementation won't be swapped out until this happens.
+<pre>
+$ vagrant status
+$ vagrant global-status
+id       name                       provider   state   directory
+--------------------------------------------------------------------------------------------
+34ff311  dockerhost                 virtualbox running /home/me/fcrepo-api-x
+6161192  fcrepo                     docker     running /home/me/fcrepo-api-x
+f58adfb  route-indexing-triplestore docker     running /home/me/fcrepo-api-x
+5394c08  fuseki                     docker     running /home/me/fcrepo-api-x
+</pre>
+
+### Start and stop docker containers, or the VM
+* To start all containers (building images from scratch if necessary), `vagrant up`
+   * This is an idempotent operation, call it as many times as necessary.
+* To stop a container `vagrant halt <name>`
+* To completely remove a container (including the image) `vagrant destroy <name>`
+* To stop the docker host vm `vagrant halt <id>`, where the id is the hexadecimal id from `vagrant global-status`
+* To delete all data from the docker host vm, `vagrant destroy <id>`
+* To destroy the entire world:
+  * Launch the VirtualBox console `virtualbox`, click on the host vm, stop it, then remove it (say 'yes' to delete files)
+  * `rm -rf .vagrant`
+  * `rm -rf ~/.vagrant.d/*`
+
+### SSH into the VM
+Use `vagrant global-status` to get dockerhost's id, then
+`vagrant ssh 34ff311` (use the id given).
+
+This will bring you into the virtual machine.  All docker images that persist stuff to disk will write into some
+subdirectory of `/shared`.  From within the VM, you can use regular docker commands to manually interact with the containers,
+creat new ones, etc.  For example:
+<pre>
+$ vagrant ssh 34ff311
+vagrant@vagrant-ubuntu-trusty-64:~$ docker images
+REPOSITORY                            TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
+apix-poc/service-fuseki               latest              88d1aaaa89b8        18 minutes ago      138.9 MB
+apix-poc/service-fcrepo               latest              5331be6f8825        38 minutes ago      154.4 MB
+apix-poc/route-indexing-triplestore   latest              871c218df2bc        44 minutes ago      133.1 MB
+apix-poc/karaf                        latest              9ac45354c674        45 minutes ago      144.1 MB
+apix-poc/java                         latest              e4da5f99e763        About an hour ago   109 MB
+alpine                                3.3                 9a686d8dd34c        4 weeks ago         4.798 MB
+</pre>
+
+### View the log output of the service
+Do `vagrant docker-logs <name>`
 
 
-## Setting up new deposit locations
-In order to deposit into a non-root container in Fedora (like adding collections to a project), you need to add a package
-deposit workflow that monitors a directory and ingests packages into a given Fedora container.
-
-### Via configuration files
-This method of storing configuration is persistent across containers - you can completely erase a container, create a new one, point it to the config, and it should work as configured.   Again, we'll use the convention `${SHARED}` to refer 
-to the shared folder location (typically `\\10.11.8.11\shared`)
-
- * Create a `${SHARED}/karaf/deploy` directory, if one doesn't exist already.  This is where you will put the 
-   Karaf configuration
- * Create a new directory for packages to be deposited into the container.  It has to be somewhere underneath
-   `${SHARED}/package-ingest` Let's call this `${SHARED}/package-ingest/myPackages` for the sake of argument.
- * Optionally, create a directory for failed packages.  Only do this if you want to keep track of where failed packages
-   came from.  Otherwise, it's fine to use the same failed package directory for every deposit workflow (e.g. 
-   `${SHARED}/package-ingest/failed-packages`
- * Create a text file in the `deploy` directory named 
-   `org.dataconservancy.packaging.ingest.camel.impl.PackageFileDepositWorkflow-myPackages.cfg`.  
-    * The part after the dash, `-myPackages.cfg` has to be unique for each workflow, and should be an informative name,
-	   like `-ELOKAProject.cfg` or `-cowImagesCollection.cfg`.   
-	* Populate the config file with the following content: <pre>
-		deposit.location = http://CONTAINER-URI
-        package.deposit.dir = /shared/package-ingest/PATH-TO-PACKAGE_DIR
-        package.fail.dir = /shared/package-ingest/failed-packages
-        package.poll.interval.ms = 1000
-        </pre>
-        where `CONTAINER-URI` is a URI of a Fedora container (e.g. from a notification e-mail), `PATH-TO-PACKAGE-DIR` 
-        is the relative path to an package deposit dir.  
-    * Important:  The deposit and fail dirs are filesystem paths _on the docker container_ and therefore always
-	  start with `/shared/package-ingest`.
-        * The `package.poll.interval.ms` is optional.  Default is 30 seconds (30000) if unspecified.
-
-## Editing `DockerHostVagrantfile`
-The `DockerHostVagrantfile` defines the characteristics of the docker host VM, including how it exposes networked
-resources to the local host machine running vagrant, and how it shares folders and files.  If vagrant used on a Linux
-system set up directly provision docker images on that host (instead of in the VM), this section is irrelevant to 
-those setups.
-
-### Networking
-#### Private network
+## Networking
+### Private network
 The docker host VM appears as a networked machine with its own IP address, in a private IP address space that cannot
 be routed to the outside world.  By default, it is given a fixed IP address of `10.11.8.11`.  If this address
 conflicts with the local host, it may be changed by editing the line:
@@ -142,17 +131,14 @@ config.vm.network "private_network", ip: "10.11.8.11"
 If you want to disable the private network entirely, you may comment out this line.  Note, if this is commented out,
 this entirely disables file sharing from the VM to the host.
 
-#### Port forwarding
+### Port forwarding
 Completely separate from any private network settings, ports from the docker host VM can be forwarded to the local host.
-Forwarding port `8080` from the VM will bind to port `8080` on the local machine, and appear as if there is a service
-at port `8080` running on the local machine.  If you _already_ have a service running at that port on your local 
-machine, the ports will conflict, and the VM will not be able to bind to it.  In these cases, you may wish to change the
-port numbers that are exposed on the local machine.   At a minumum, change the `host` ports in:
+This is disabled by default.  To enable, edit `DockerhostVagrantfile` to add the desired ports:
 <pre>
   config.vm.network "forwarded_port",
     guest: 8080, host: 8080
   config.vm.network "forwarded_port",
-    guest: 8181, host: 8181
+    guest: 3030, host: 3030
 </pre>
 
 ### File sharing
@@ -163,51 +149,27 @@ primary location.  In this situation, you machine would share the files with the
 situations.  Please ignore it if you have no desire to have your local machine as the primary storage location of
 shared data files.
 
-#### Virtualbox shared folders
+### Virtualbox shared folders
 This is the easiest to set up and the most uniform across platforms, but is the most problematic due to limitations in the
-way Virtualbox implements shared folders.  You'll need to uncomment the `Virtualbox shared folders` section of 
-the DockerHostVagrantfile
+way Virtualbox implements shared folders.  For example, memory mapped files (`mmap()`) always fail.  As Modeshape/infinispan
+utilized memory mapped Files, Fedora cannot be run within virtualbox shared folders.
 
-By default the following directories on your local filesystem are shared with the DCS Vagrant and Docker images
-* `/shared/package-ingest`: Subdirectories of this directory are where you'll place packages for deposit and where failed
-   packages will appear.
-* `/shared/jetty`: This directory will contain the logs for the Fedora instance that your packages are deposited to.
-* `/shared/karaf`: This directory will contain the logs for the Karaf instance that runs the Package Ingest Service.
 
-_Shared_ means that the contents of these directories can be read from or written to by your local operating system _and_ the DCS Vagrant and Docker images.  As the virtual machines update content in these directories, you can see the updates (e.g. `tail -f /shared/karaf/log/karaf.log`).  Likewise the virtual machines can see the content you place in these shared directories (e.g. `cp my-package.tar.gz /shared/package-ingest/packages`).
-
-If you want to use different paths other than those above, open `DockerHostVagrantfile` and edit the section:
+To share specific directories, open `DockerHostVagrantfile` and add something like:
 
 <pre>
   # Local folders for packages and karaf config
-  config.vm.synced_folder "/shared/package-ingest", "/shared/package-ingest",
-     mount_options: ["dmode=777", "fmode=666"]
-  config.vm.synced_folder "/shared/karaf", "/shared/karaf",
-     mount_options: ["dmode=777", "fmode=666"]
-  config.vm.synced_folder "/shared/jetty", "/shared/jetty",
-     mount_options: ["dmode=777", "fmode=666"]
-</pre>
-
-The left and right parameters to `config.vm.synced_folder` govern where these directories reside on the local and remote (virtual machine) file systems respectively.  If you wanted to keep everything under a specific user's home directory, for example, you could replace the left parameters with `/home/esm/packageingestservice-runtime/package-dir`, `/home/esm/packageingestservice-runtime/karaf`, and `/home/esm/packageingestservice-runtime/jetty`:
-
-<pre>
-    # Local folders for packages and karaf config
-  config.vm.synced_folder "/home/esm/packageingestservice-runtime/package-dir", "/shared/package-ingest",
-     mount_options: ["dmode=777", "fmode=666"]
-  config.vm.synced_folder "/home/esm/packageingestservice-runtime/karaf", "/shared/karaf",
-     mount_options: ["dmode=777", "fmode=666"]
-  config.vm.synced_folder "/home/esm/packageingestservice-runtime/jetty", "/shared/jetty",
+  config.vm.synced_folder "/path/to/my/fcrepo-data", "/shared/fcrepo-data",
      mount_options: ["dmode=777", "fmode=666"]
 </pre>
 
 
-*_You need to create these directories yourself_*
+*_You need to create any local directories yourself_*
 
 *_Do not change the right-hand parameters_*
 
-After verifying that the services are up and running, you should be able to deposit a new package by copying it to `/home/esm/packageingestservice-runtime/package-dir/packages`, and see log files appear in `/home/esm/packageingestservice-runtime/jetty/logs` and `/home/esm/packageingestservice-runtime/karaf/log`.
 
-#### NFS or SMB shared folders
+### NFS or SMB shared folders
 Alternate NFS or SMB configuration of LOCAL folders shared with the VM. 
 This causes your local machine to serve as an NFS or SMB server, sharing
 the contents of the specified directory with the VM.  *nix and MacOS

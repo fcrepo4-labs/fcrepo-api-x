@@ -19,11 +19,12 @@ RUN export FUSEKI_DIST=apache-jena-fuseki-${FUSEKI_VERSION}.tar.gz && \
     rm /tmp/${FUSEKI_DIST}
 
 
-## Default command.
+# Start fuseki.  For some reasonm shutdowns are not clean, so remove lock file if it exists
 CMD mkdir -p ${FUSEKI_BASE} && \
     mkdir -p ${FUSEKI_BASE}/databases/${FUSEKI_DEFAULT_DATASET} && \
+    find ${FUSEKI_BASE} -name *.lock | xargs rm && \
     java -jar ${FUSEKI_HOME}/${FUSEKI_JAR} \
     --update \
     --loc=${FUSEKI_BASE}/databases/${FUSEKI_DEFAULT_DATASET} \
-    ${FUSEKI_DEFAULT_DATASET} \
-    >> ${FUSEKI_BASE}/fuseki.log 2>&1
+    ${FUSEKI_DEFAULT_DATASET} 2>&1 \
+    | tee -a ${FUSEKI_BASE}/fuseki.log 
