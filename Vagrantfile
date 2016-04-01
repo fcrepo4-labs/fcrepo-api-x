@@ -3,9 +3,13 @@
 #
 Vagrant.require_version ">= 1.6.0"
 
+# NOTE:  Due to virtualbox mounting constraints, this must be run in squential mode:
+# export VAGRANT_NO_PARALLEL=yes
+# or
+# vagrant up --no-parallel 
 ENV['VAGRANT_DEFAULT_PROVIDER'] = 'docker'
 
-DOCKER_HOST_NAME = "dockerhost"
+DOCKER_HOST_NAME = "dockerhost-apix"
 DOCKER_HOST_VAGRANTFILE = "./DockerHostVagrantfile"
 DOCKER_HOST_FORCE_VM = true
 DOCKER_HOST_USER = "1000:1000"
@@ -72,6 +76,28 @@ Vagrant.configure("2") do |config|
       d.create_args = [ "--user=#{DOCKER_HOST_USER}", "--net=apix"]
 
       d.force_host_vm = DOCKER_HOST_FORCE_VM 
+      d.vagrant_machine = DOCKER_HOST_NAME
+      d.vagrant_vagrantfile = DOCKER_HOST_VAGRANTFILE
+    end
+  end
+
+  config.vm.define "acrepo-apix" do |m|
+    m.vm.provider :docker do |d|
+      d.name = 'acrepo-apix'
+      d.build_dir = "poc-services/poc-service-acrepo-apix"
+      d.build_args = ["-t", "apix-poc/service-acrepo-apix"]
+      d.volumes = ["/shared:/shared"]
+      d.expose = [8081]
+      d.ports = ["8081:8081"]
+      d.remains_running = true
+      d.env = {
+        FCREPO_BASEURL: "fcrepo:8080/rest",
+        APIX_REST_PROXY: "/rest"
+      }
+
+      d.create_args = [ "--user=#{DOCKER_HOST_USER}", "--net=apix"]
+
+      d.force_host_vm = DOCKER_HOST_FORCE_VM
       d.vagrant_machine = DOCKER_HOST_NAME
       d.vagrant_vagrantfile = DOCKER_HOST_VAGRANTFILE
     end

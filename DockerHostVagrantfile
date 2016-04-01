@@ -6,6 +6,9 @@ Vagrant.configure("2") do |config|
 
   # Install docker on host VM
   config.vm.provision "docker"
+ 
+  config.vm.synced_folder ".", "/vagrant", type: "rsync",
+	rsync__auto: "true"
 
   # Kill SSH so Vagrant reconnects and has Docker commands on $PATH
   config.vm.provision "shell", inline:
@@ -83,14 +86,14 @@ Vagrant.configure("2") do |config|
 
 
   # This specifies the image to run in the VM
-  config.vm.define "dockerhost"
+  config.vm.define "dockerhost-apix"
   config.vm.box = "ubuntu/trusty64"
 
   # This specifies that we want virtualbox to run the VM image, with
   # a given amount of RAM.
   config.vm.provider :virtualbox do |vb|
       vb.memory = 2048
-      vb.name = "dockerhost"
+      vb.name = "dockerhost-apix"
       vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
       vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
   end
