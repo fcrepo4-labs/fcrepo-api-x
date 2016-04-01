@@ -44,7 +44,7 @@ section.
   be convenient for inspecting data files of various services.
 * When you are finished, type `vagrant halt`.  Type `vagrant up` at any time to re-launch the docker images, with your
   data intact.
-* Suunce docker images are built from scratch if they don't already, exist, and downloading content can always
+* Since docker images are built from scratch if they don't already, exist, and downloading content can always
   fail due to network effects, you may end up with one or more failed image buildds.  If this happens, just run
   `vagrant up` again.  It will attempt to build any images that have not successfully resulted in running containers
 
@@ -55,10 +55,10 @@ Additionally, because the VM appears to your local machine as a separate network
 use something like `http://10.11.8.11` (or `http://dockerhost` if you gave it a name like `dockerhost` in your hosts
 file) instead of `http://localhost`.
 
-* Point your browser to [http://10.11.8.11:8080/rest](http://10.11.8.11:8808/rest).
+* Point your browser to [http://10.11.8.11:8080/rest](http://10.11.8.11:8080/rest).
 	* You should see Fedora, with an empty root container
 	* Create an object through Fedora's UI
-* point your browser to Fuseki at [http://10.11.8.11:3030/fcrepo](http://10.11.8.11:3030/fuseki)
+* point your browser to Fuseki at [http://10.11.8.11:3030/fcrepo](http://10.11.8.11:3030/fcrepo)
 	* You should see some triples!
 
 ## Working with Vagrant and Docker
