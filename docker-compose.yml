@@ -1,0 +1,80 @@
+version: '2'
+
+networks:
+  apix:
+    driver: bridge
+
+volumes:
+  fcrepo-data: {}
+  fuseki-data: {}
+
+services:
+
+  image-java:
+    build: docker/docker-java
+    image: apix-poc/java
+    command: /bin/true
+
+  image-karaf:
+    build: docker/docker-karaf
+    image: apix-poc/karaf
+    depends_on:
+      - image-java
+    command: /bin/true
+
+  fcrepo:
+    build: poc-services/poc-service-fcrepo
+    image: apix-poc/service-fcrepo
+    depends_on:
+      - image-java
+    volumes:
+      - fcrepo-data:/shared
+    networks:
+      - apix
+    environment:
+        #TODO: port 8983 is baked into edu.amherst.acdc.apix.ApixRouter, submit a fix for that
+      - FCREPO_PORT=8983
+    ports:
+      - "8983:8983"
+      - "61613:61613"
+      - "61616:61616"
+
+  fuseki:
+    build: poc-services/poc-service-fuseki
+    image: apix-poc/service-fuseki
+    depends_on:
+      - image-java
+    volumes:
+      - fuseki-data:/shared
+    networks:
+      - apix
+    ports:
+      - "3030:3030"
+    environment:
+      - FUSEKI_DEFAULT_DATASET=/fcrepo
+
+  route-indexing-triplestore:
+    build: poc-services/poc-route-indexing-triplestore
+    image: apix-poc/route-indexing-triplestore
+    networks:
+      - apix
+    depends_on:
+      - image-java
+    environment:
+      - FCREPO_BASEURL=fcrepo:8983/rest
+      - JMS_BROKERURL=tcp://fcrepo:61616
+      - TRIPLESTORE_BASEURL=fuseki:3030/fcrepo/update
+      - ERROR_MAMXREDELIVERIES=100000
+
+  acrepo-apix:
+    build: poc-services/poc-service-acrepo-apix
+    image: apix-poc/service-acrepo-apix
+    depends_on:
+      - image-karaf
+    networks:
+      - apix
+    ports:
+      - "13431:13431"
+    environment:
+      - APIX_REST_HOST=0.0.0.0
+      - FCREPO_BASEURL=fcrepo:8983/rest
