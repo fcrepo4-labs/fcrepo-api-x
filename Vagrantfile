@@ -87,12 +87,12 @@ Vagrant.configure("2") do |config|
       d.build_dir = "poc-services/poc-service-acrepo-apix"
       d.build_args = ["-t", "apix-poc/service-acrepo-apix"]
       d.volumes = ["/shared:/shared"]
-      d.expose = [8081]
-      d.ports = ["8081:8081"]
+      d.expose = [13431]
+      d.ports = ["13431:13431"]
       d.remains_running = true
       d.env = {
         FCREPO_BASEURL: "fcrepo:8080/rest",
-        APIX_REST_PROXY: "/rest"
+        APIX_REST_HOST: "0.0.0.0"
       }
 
       d.create_args = [ "--user=#{DOCKER_HOST_USER}", "--net=apix"]
