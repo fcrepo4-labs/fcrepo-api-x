@@ -11,5 +11,6 @@
 
   <modules>
     <module>poc-route-indexing-triplestore</module>
+    <module>poc-service-acrepo-apix</module>
   </modules>
 </project>
