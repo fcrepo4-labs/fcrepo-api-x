@@ -27,5 +27,5 @@ RUN export KARAF_VERSION=4.0.4 && \
 # are shared and editable, which can be helpful for development
 CMD mkdir -p ${KARAF_SHARED}/deploy && \
     find ${KARAF_LOCAL_CONFIG}/* \
-       | xargs -I{} echo "false | cp -i {} KARAF_SHARED}/deploy" | sh && \
+       | xargs -I{} echo "false | cp -i {} ${KARAF_SHARED}/deploy" | sh && \
     ${KARAF_HOME}/bin/karaf
