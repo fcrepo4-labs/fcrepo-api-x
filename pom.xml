@@ -23,6 +23,7 @@
     </pluginManagement>
   </build>
   <modules>
+    <module>proof-of-concept/amherst-apix</module>
     <module>poc-services</module>
     <module>docker</module>
   </modules>

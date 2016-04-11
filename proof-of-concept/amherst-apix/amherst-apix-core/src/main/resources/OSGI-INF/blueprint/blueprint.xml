@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+       xsi:schemaLocation="
+       http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+       http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
+       http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+
+   <!-- OSGI blueprint property placeholder -->
+   <cm:property-placeholder persistent-id="org.fcrepo.apix.poc.amherst" update-strategy="reload">
+     <cm:default-properties>
+       <cm:property name="rest.proxy" value="/fcrepo/rest"/>
+       <cm:property name="rest.binding" value="/apix/bind"/>
+       <cm:property name="rest.registry" value="/apix/registry"/>
+       <cm:property name="rest.port" value="13431"/>
+       <cm:property name="rest.host" value="localhost"/>
+       <cm:property name="fcrepo.baseUrl" value="localhost:8080/fcrepo/rest"/>
+       <cm:property name="fcrepo.authUsername" value=""/>
+       <cm:property name="fcrepo.authPassword" value=""/>
+       <cm:property name="apix.prefix" value="svc:"/>
+     </cm:default-properties>
+   </cm:property-placeholder>
+
+  <reference id="registryService" interface="org.fcrepo.apix.poc.amherst.registry.api.RegistryService" filter="(osgi.jndi.service.name=registry)" />
+  <reference id="bindingService" interface="org.fcrepo.apix.poc.amherst.binding.api.BindingService" filter="(osgi.jndi.service.name=binding)" />
+
+  <bean id="linkProcessor" class="org.fcrepo.apix.poc.amherst.LinkProcessor"/>
+
+  <camelContext xmlns="http://camel.apache.org/schema/blueprint">
+
+    <package>org.fcrepo.apix.poc.amherst</package>
+
+    <restConfiguration component="jetty" host="{{rest.host}}" port="{{rest.port}}"/>
+
+    <route id="ApixInstanceList">
+      <from uri="direct:list-bindings"/>
+      <setHeader headerName="CamelApixServiceList">
+        <method ref="bindingService" method="list(${header.service})"/>
+      </setHeader>
+      <process ref="linkProcessor"/>
+      <setBody>
+        <simple>These are the instances for the ${header.service} service: ${headers.CamelApixServiceList}</simple>
+      </setBody>
+    </route>
+
+    <route id="ApixBind">
+      <from uri="direct:bind"/>
+      <convertBodyTo type="java.lang.String"/>
+      <choice>
+        <when>
+          <method ref="bindingService" method="bind(${header.service}, ${body})"/>
+          <setBody>
+            <constant>OK</constant>
+          </setBody>
+        </when>
+        <otherwise>
+          <setBody>
+            <constant>Not OK</constant>
+          </setBody>
+        </otherwise>
+      </choice>
+    </route>
+
+    <route id="ApixUnbind">
+      <from uri="direct:unbind"/>
+      <choice>
+        <when>
+          <method ref="bindingService" method="unbind(${header.service}, ${header.identifier})"/>
+          <setBody>
+            <constant>OK</constant>
+          </setBody>
+        </when>
+        <otherwise>
+          <setBody>
+            <constant>Not OK</constant>
+          </setBody>
+        </otherwise>
+      </choice>
+    </route>
+
+    <route id="ApixUnregister">
+      <from uri="direct:unregister"/>
+      <choice>
+        <when>
+          <method ref="registryService" method="remove(${header.service})"/>
+          <setBody>
+            <constant>OK</constant>
+          </setBody>
+        </when>
+        <otherwise>
+          <setBody>
+            <constant>Not OK</constant>
+          </setBody>
+        </otherwise>
+      </choice>
+    </route>
+
+     <route id="ApixRegister">
+      <from uri="direct:register"/>
+      <convertBodyTo type="java.lang.String"/>
+      <choice>
+        <when>
+          <method ref="registryService" method="put(${header.service}, ${body})"/>
+          <setBody>
+            <constant>OK</constant>
+          </setBody>
+        </when>
+        <otherwise>
+          <setBody>
+            <constant>Not OK</constant>
+          </setBody>
+        </otherwise>
+      </choice>
+    </route>
+
+    <route id="ApixDescribe">
+      <from uri="direct:describe"/>
+      <setBody>
+        <method ref="registryService" method="get(${header.service})"/>
+      </setBody>
+    </route>
+
+    <route id="ApixCheckRegistered">
+      <from uri="direct:check-registered"/>
+      <filter>
+        <method ref="registryService" method="exists(${header.CamelApixService})"/>
+        <setHeader headerName="CamelApixRegistration">
+          <simple>{{rest.registry}}/${header.CamelApixService}</simple>
+        </setHeader>
+        <setHeader headerName="CamelApixEndpoint">
+          <method ref="bindingService" method="findAny(${header.CamelApixService})"/>
+        </setHeader>
+      </filter>
+    </route>
+
+    <route id="ApixServiceList">
+      <from uri="direct:list"/>
+      <setHeader headerName="CamelApixServiceList">
+        <method ref="registryService" method="list()"/>
+      </setHeader>
+      <process ref="linkProcessor"/>
+      <setBody>
+        <simple>These are the services: ${headers.CamelApixServiceList}</simple>
+      </setBody>
+    </route>
+
+  </camelContext>
+
+</blueprint>

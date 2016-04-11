@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.0.0" name="amherst-apix-${project.version}">
+  <repository>mvn:org.fcrepo.camel/fcrepo-camel/${fcrepo-camel.version}/xml/features</repository>
+  <repository>mvn:org.apache.camel.karaf/apache-camel/${camel.version}/xml/features</repository>
+  <repository>mvn:org.fcrepo/fcrepo-karaf/${fcrepo.version}/xml/features</repository>
+  
+  <feature name="amherst-apix-registry-api" version="${project.version}"  start-level="50">
+    <details>Installs the registry API</details>
+
+    <bundle>mvn:org.fcrepo.apix.poc/amherst-apix-registry-api/${project.version}</bundle>
+  </feature>
+
+  <feature name="amherst-apix-registry-memory" version="${project.version}"  start-level="50">
+    <details>Installs an in-memory implementation of the API-X registry API</details>
+
+    <feature version="${project.version}">amherst-apix-registry-api</feature>
+
+    <bundle>mvn:org.fcrepo.apix.poc/amherst-apix-registry-memory/${project.version}</bundle>
+  </feature>
+
+  <feature name="amherst-apix-binding-api" version="${project.version}"  start-level="50">
+    <details>Installs the binding API</details>
+
+    <bundle>mvn:org.fcrepo.apix.poc/amherst-apix-binding-api/${project.version}</bundle>
+  </feature>
+
+  <feature name="amherst-apix-binding-memory" version="${project.version}"  start-level="50">
+    <details>Installs an in-memory implementation of the API-X binding API</details>
+
+    <feature version="${project.version}">amherst-apix-binding-api</feature>
+
+    <bundle>mvn:org.fcrepo.apix.poc/amherst-apix-binding-memory/${project.version}</bundle>
+  </feature>
+
+
+  <feature name="amherst-apix-core" version="${project.version}"  start-level="50">
+    <details>Installs the API-X Framework</details>
+    
+    <feature version="${camel.version}">camel-core</feature>
+    <feature version="${camel.version}">camel-http4</feature>
+    <feature version="${camel.version}">camel-jetty9</feature>
+    <feature version="${camel.version}">camel-blueprint</feature>
+    <feature version="${fcrepo-camel.version}">fcrepo-camel</feature>
+
+
+    <feature version="${project.version}">amherst-apix-registry-api</feature>
+    <feature version="${project.version}">amherst-apix-binding-api</feature>
+
+    <bundle>mvn:org.fcrepo.apix.poc/amherst-apix-core/${project.version}</bundle>
+  </feature>
+
+</features>
