@@ -1,3 +1,0 @@
-[submodule "poc-services/poc-service-acrepo-apix/repository-extension-services"]
-	path = poc-services/poc-service-acrepo-apix/repository-extension-services
-	url = https://gitlab.amherst.edu/acdc/repository-extension-services.git
