@@ -23,7 +23,7 @@ Vagrant.configure("2") do |config|
     m.vm.provider :docker do |d|
       d.name = 'fcrepo'
       d.build_dir = "poc-services/poc-service-fcrepo"
-      d.build_args = ["-t", "apix-poc/service-fcrepo"]
+      d.build_args = ["-t", "apix-poc/fcrepo"]
       d.volumes = ["/shared:/shared"]
       d.expose = [8080, 61613,61616]
       d.ports = ["8080:8080"]
@@ -41,7 +41,7 @@ Vagrant.configure("2") do |config|
     m.vm.provider :docker do |d|
       d.name = 'fuseki'
       d.build_dir = "poc-services/poc-service-fuseki"
-      d.build_args = ["-t", "apix-poc/service-fuseki"]
+      d.build_args = ["-t", "apix-poc/fuseki"]
       d.volumes = ["/shared:/shared"]
       d.expose = [3030]
       d.ports = ["3030:3030"]
@@ -81,11 +81,11 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  config.vm.define "acrepo-apix" do |m|
+  config.vm.define "amherst-apix" do |m|
     m.vm.provider :docker do |d|
-      d.name = 'acrepo-apix'
-      d.build_dir = "poc-services/poc-service-acrepo-apix"
-      d.build_args = ["-t", "apix-poc/service-acrepo-apix"]
+      d.name = 'amherst-apix'
+      d.build_dir = "proof-of-concept/amherst-apix"
+      d.build_args = ["-t", "apix-poc/amherst-apix"]
       d.volumes = ["/shared:/shared"]
       d.expose = [13431]
       d.ports = ["13431:13431"]

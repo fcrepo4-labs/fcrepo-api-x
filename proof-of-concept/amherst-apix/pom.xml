@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.fcrepo</groupId>
+    <artifactId>fcrepo-parent</artifactId>
+    <version>4.4.0</version>
+  </parent>
+
+  <groupId>org.fcrepo.apix.poc</groupId>
+  <artifactId>amherst-apix</artifactId>
+  <version>1.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <url>https://acdc.amherst.edu/wiki</url>
+  <inceptionYear>2015</inceptionYear>
+
+  <name>Amherst API-X proof-of-concept</name>
+
+  <organization>
+    <name>Amherst College</name>
+    <url>https://www.amherst.edu/</url>
+  </organization>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+      <comments>Copyright (c) 2015 Amherst College</comments>
+    </license>
+  </licenses>
+
+  <properties>
+    <project.copyrightYear>2015</project.copyrightYear>
+    <activemq.version>5.11.1</activemq.version>
+    <camel.version>2.16.1</camel.version>
+    <commons-lang.version>3.4</commons-lang.version>
+    <commons-io.version>2.4</commons-io.version>
+    <derby.version>10.11.1.1</derby.version>
+    <fcrepo-camel.version>4.4.0</fcrepo-camel.version>
+    <fcrepo.version>4.4.0</fcrepo.version>
+    <junit.version>4.11</junit.version>
+    <jsonld.version>0.6.0</jsonld.version>
+    <logback.version>1.1.2</logback.version>
+    <postgresql.version>9.4-1201-jdbc41</postgresql.version>
+    <saxon.version>9.6.0-7</saxon.version>
+    <slf4j.version>1.7.7</slf4j.version>
+    <spring.version>4.1.7.RELEASE</spring.version>
+    <pax-jdbc.version>0.7.0</pax-jdbc.version>
+    <woodstox.version>4.4.1</woodstox.version>
+
+    <!-- transitive dependencies for karaf -->
+    <httpclient.version>4.2.6</httpclient.version>
+    <httpcore.version>4.2.5</httpcore.version>
+    <commons-codec.version>1.10</commons-codec.version>
+
+    <!-- OSGi -->
+    <osgi.import.packages>*</osgi.import.packages>
+  </properties>
+
+  <modules>
+    <module>amherst-apix-registry-api</module>
+    <module>amherst-apix-registry-memory</module>
+    <module>amherst-apix-binding-api</module>
+    <module>amherst-apix-binding-memory</module>
+    <module>amherst-apix-core</module>
+    <module>amherst-apix-karaf</module>
+  </modules>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-core</artifactId>
+        <version>${camel.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-blueprint</artifactId>
+        <version>${camel.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-jackson</artifactId>
+        <version>${camel.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-mustache</artifactId>
+        <version>${camel.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-jetty9</artifactId>
+        <version>${camel.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-saxon</artifactId>
+        <version>${camel.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-sql</artifactId>
+        <version>${camel.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-http4</artifactId>
+        <version>${camel.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.activemq</groupId>
+        <artifactId>activemq-camel</artifactId>
+        <version>${activemq.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.jsonld-java</groupId>
+        <artifactId>jsonld-java</artifactId>
+        <version>${jsonld.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.fcrepo</groupId>
+        <artifactId>fcrepo-kernel-api</artifactId>
+        <version>${fcrepo.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.fcrepo.camel</groupId>
+        <artifactId>fcrepo-camel</artifactId>
+        <version>${fcrepo-camel.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>org.codehaus.woodstox</groupId>
+        <artifactId>woodstox-core-asl</artifactId>
+        <version>${woodstox.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>${postgresql.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>${commons-lang.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.derby</groupId>
+        <artifactId>derby</artifactId>
+        <version>${derby.version}</version>
+      </dependency>
+
+
+      <!-- logging -->
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-core</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>ch.qos.logback</groupId>
+        <artifactId>logback-classic</artifactId>
+        <version>${logback.version}</version>
+      </dependency>
+
+      <!-- testing -->
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <scope>test</scope>
+        <version>${junit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.camel</groupId>
+        <artifactId>camel-test-blueprint</artifactId>
+        <version>${camel.version}</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <defaultGoal>install</defaultGoal>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.camel</groupId>
+          <artifactId>camel-maven-plugin</artifactId>
+          <version>${camel.version}</version>
+          <configuration>
+            <useBlueprint>true</useBlueprint>
+          </configuration>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <argLine>${jacoco.agent.it.arg}</argLine>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <mailingLists>
+    <mailingList />
+  </mailingLists>
+</project>

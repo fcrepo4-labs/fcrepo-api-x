@@ -24,7 +24,7 @@ services:
 
   fcrepo:
     build: poc-services/poc-service-fcrepo
-    image: apix-poc/service-fcrepo
+    image: apix-poc/fcrepo
     depends_on:
       - image-java
     volumes:
@@ -32,7 +32,6 @@ services:
     networks:
       - apix
     environment:
-        #TODO: port 8983 is baked into edu.amherst.acdc.apix.ApixRouter, submit a fix for that
       - FCREPO_PORT=8983
     ports:
       - "8983:8983"
@@ -41,7 +40,7 @@ services:
 
   fuseki:
     build: poc-services/poc-service-fuseki
-    image: apix-poc/service-fuseki
+    image: apix-poc/fuseki
     depends_on:
       - image-java
     volumes:
@@ -67,8 +66,8 @@ services:
       - ERROR_MAMXREDELIVERIES=100000
 
   acrepo-apix:
-    build: poc-services/poc-service-acrepo-apix
-    image: apix-poc/service-acrepo-apix
+    build: proof-of-concept/amherst-apix/
+    image: apix-poc/amherst-apix
     depends_on:
       - image-karaf
     networks:
