@@ -11,19 +11,19 @@ volumes:
 services:
 
   image-java:
-    build: docker/docker-java
+    build: docker/java
     image: apix-poc/java
     command: /bin/true
 
   image-karaf:
-    build: docker/docker-karaf
+    build: docker/karaf
     image: apix-poc/karaf
     depends_on:
       - image-java
     command: /bin/true
 
   fcrepo:
-    build: poc-services/poc-service-fcrepo
+    build: docker/fcrepo
     image: apix-poc/fcrepo
     depends_on:
       - image-java
@@ -39,7 +39,7 @@ services:
       - "61616:61616"
 
   fuseki:
-    build: poc-services/poc-service-fuseki
+    build: docker/fuseki
     image: apix-poc/fuseki
     depends_on:
       - image-java
@@ -52,9 +52,9 @@ services:
     environment:
       - FUSEKI_DEFAULT_DATASET=/fcrepo
 
-  route-indexing-triplestore:
-    build: poc-services/poc-route-indexing-triplestore
-    image: apix-poc/route-indexing-triplestore
+  indexing-triplestore:
+    build: proof-of-concept/indexing-triplestore
+    image: apix-poc/indexing-triplestore
     networks:
       - apix
     depends_on:

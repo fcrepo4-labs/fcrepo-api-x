@@ -24,7 +24,6 @@
   </build>
   <modules>
     <module>proof-of-concept/amherst-apix</module>
-    <module>poc-services</module>
-    <module>docker</module>
+    <module>proof-of-concept/indexing-triplestore</module>
   </modules>
 </project>
