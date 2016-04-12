@@ -22,7 +22,7 @@ Vagrant.configure("2") do |config|
   config.vm.define "fcrepo" do |m|
     m.vm.provider :docker do |d|
       d.name = 'fcrepo'
-      d.build_dir = "poc-services/poc-service-fcrepo"
+      d.build_dir = "docker/java"
       d.build_args = ["-t", "apix-poc/fcrepo"]
       d.volumes = ["/shared:/shared"]
       d.expose = [8080, 61613,61616]
@@ -40,7 +40,7 @@ Vagrant.configure("2") do |config|
  config.vm.define "fuseki" do |m|
     m.vm.provider :docker do |d|
       d.name = 'fuseki'
-      d.build_dir = "poc-services/poc-service-fuseki"
+      d.build_dir = "docker/fuseki"
       d.build_args = ["-t", "apix-poc/fuseki"]
       d.volumes = ["/shared:/shared"]
       d.expose = [3030]
@@ -59,11 +59,11 @@ Vagrant.configure("2") do |config|
   end
 
 
-  config.vm.define "route-indexing-triplestore" do |m|
+  config.vm.define "indexing-triplestore" do |m|
     m.vm.provider :docker do |d|
-      d.name = 'route-indexing-triplestore'
-      d.build_dir = "poc-services/poc-route-indexing-triplestore"
-      d.build_args = ["-t", "apix-poc/route-indexing-triplestore"]
+      d.name = 'indexing-triplestore'
+      d.build_dir = "proof-of-concept/indexing-triplestore"
+      d.build_args = ["-t", "apix-poc/indexing-triplestore"]
       d.volumes = ["/shared:/shared"]
       d.remains_running = true
       d.env = {
