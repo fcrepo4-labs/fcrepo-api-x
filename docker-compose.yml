@@ -10,43 +10,54 @@ volumes:
 
 services:
 
-  image-java:
-    build: docker/java
+# Base images
+
+  base-java:
+    container_name: base-java
+    build: docker/base/java
     image: apix-poc/java
     command: /bin/true
 
-  image-karaf:
-    build: docker/karaf
+  base-karaf:
+    container_name: base-karaf
+    build: docker/base/karaf
     image: apix-poc/karaf
     depends_on:
-      - image-java
+      - base-java
     command: /bin/true
 
+# Services
+
   fcrepo:
-    build: docker/fcrepo
+    container_name: fcrepo
+    build: docker/services/fcrepo
     image: apix-poc/fcrepo
     depends_on:
-      - image-java
+      - base-java
     volumes:
       - fcrepo-data:/shared
     networks:
-      - apix
+      apix:
+        aliases:
+          - fcrepo.docker.local
     environment:
-      - FCREPO_PORT=8983
+      - FCREPO_PORT=80
     ports:
-      - "8983:8983"
+      - "8080:80"
       - "61613:61613"
       - "61616:61616"
 
   fuseki:
-    build: docker/fuseki
+    build: docker/services/fuseki
     image: apix-poc/fuseki
     depends_on:
-      - image-java
+      - base-java
     volumes:
       - fuseki-data:/shared
     networks:
-      - apix
+      apix:
+        aliases:
+          - fuseki.docker.local
     ports:
       - "3030:3030"
     environment:
@@ -58,22 +69,82 @@ services:
     networks:
       - apix
     depends_on:
-      - image-java
+      - base-java
     environment:
-      - FCREPO_BASEURL=fcrepo:8983/rest
-      - JMS_BROKERURL=tcp://fcrepo:61616
-      - TRIPLESTORE_BASEURL=fuseki:3030/fcrepo/update
+      - FCREPO_BASEURL=fcrepo.docker.local/rest
+      - JMS_BROKERURL=tcp://fcrepo.docker.local:61616
+      - TRIPLESTORE_BASEURL=fusek.docker.local:3030/fcrepo/update
       - ERROR_MAMXREDELIVERIES=100000
 
-  acrepo-apix:
+  amherst-apix:
     build: proof-of-concept/amherst-apix/
     image: apix-poc/amherst-apix
     depends_on:
-      - image-karaf
+      - base-karaf
+    networks:
+      apix:
+        aliases:
+          - amherst-apix.docker.local
+    ports:
+      - "8081:80"
+    environment:
+      - APIX_REST_PORT=80
+      - APIX_REST_HOST=0.0.0.0
+      - FCREPO_BASEURL=fcrepo.docker.local/rest
+
+  go-proxy:
+    build: proof-of-concept/go-proxy
+    image: apix-poc/go-proxy
+    depends_on:
+      - build-go-proxy
+    networks:
+      apix:
+        aliases:
+          - go-proxy.docker.local
+    ports:
+      - "8082:80"
+    environment:
+      - PROXY_ADDR=fcrepo.docker.local
+      - BIND_ADDR=:80
+
+# Tools & Utilities
+
+  # Contains gcc and go
+  builder:
+    container_name: builder
+    build: docker/builder
+    image: apix-poc/builder
+    command: /bin/true
+
+  # 'wrk' utility for measuring latency and throughput
+  wrk:
+    container_name: wrk
+    build: docker/tools/wrk/target
+    image: apix-poc/wrk
     networks:
       - apix
-    ports:
-      - "13431:13431"
+    depends_on:
+      - build-wrk
+
+# Builders.  These use Docker to build some artifact necessary for creating an image later on.
+
+  build-go-proxy:
+    container_name: build_go_proxy
+    image: apix-poc/builder
+    depends_on:
+      - builder
+    volumes:
+      - ./proof-of-concept/go-proxy/target:/go/src/go-proxy
+    command: go build --ldflags '-linkmode external -extldflags "-static"'
+    working_dir: /go/src/go-proxy
+
+  build-wrk:
+    container_name: build_wrk
+    image: apix-poc/builder
+    depends_on:
+      - builder
+    volumes: 
+      - ./docker/tools/wrk/target:/mnt/wrk
+    command: /bin/sh /mnt/wrk/build.sh
     environment:
-      - APIX_REST_HOST=0.0.0.0
-      - FCREPO_BASEURL=fcrepo:8983/rest
+      - WRK_DIR=/mnt/wrk
