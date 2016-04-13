@@ -1,27 +1,15 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>org.fcrepo.apix</groupId>
-  <artifactId>apix</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <parent>
+    <groupId>org.fcrepo.apix</groupId>
+    <artifactId>apix</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <groupId>org.fcrepo.apix.poc</groupId>
+  <artifactId>docker-builder</artifactId>
   <packaging>pom</packaging>
 
-  <properties>
-    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-  </properties>
-
   <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.codehaus.mojo</groupId>
-          <artifactId>exec-maven-plugin</artifactId>
-          <version>1.4.0</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -29,8 +17,10 @@
         <version>1.8</version>
         <executions>
           <execution>
-            <phase>initialize</phase>
+            <id>check</id>
+            <phase>validate</phase>
             <configuration>
+              <exportAntProperties>true</exportAntProperties>
               <target>
                 <property environment="env"/>
                   <path id="combined-PATH">
@@ -50,15 +40,24 @@
               <goal>run</goal>
             </goals>
           </execution>
+          <execution>
+            <id>build</id>
+            <phase>install</phase>
+            <configuration>
+              <target if="docker">
+                <exec executable="docker">
+                  <arg value="build"/>
+                  <arg value="--tag=apix-poc/builder"/>
+                  <arg value="."/>
+                  </exec>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
         </executions>
       </plugin>
     </plugins>
   </build>
-  <modules>
-    <module>docker/builder</module>
-    <module>docker/tools/wrk</module>
-    <module>proof-of-concept/go-proxy</module>
-    <module>proof-of-concept/amherst-apix</module>
-    <module>proof-of-concept/indexing-triplestore</module>
-  </modules>
 </project>

@@ -18,10 +18,17 @@ Vagrant.configure("2") do |config|
     "sudo mkdir -p /shared; sudo chown vagrant:vagrant /shared; sudo chmod g+rws /shared"
 
   config.vm.provision "shell", inline:
-    "sudo docker build -t apix-poc/java:latest /vagrant/docker/docker-java/"
+    "sudo docker build -t apix-poc/java:latest /vagrant/docker/base/java"
 
   config.vm.provision "shell", inline:
-    "sudo docker build -t apix-poc/karaf:latest /vagrant/docker/docker-karaf/"
+    "sudo docker build -t apix-poc/karaf:latest /vagrant/docker/base/karaf"
+
+   config.vm.provision "shell", inline:
+    "sudo docker build -t apix-poc/builder:latest /vagrant/docker/builder"
+
+   config.vm.provision "shell", inline:
+    "sudo docker run --rm -w=/go/src/go-proxy --volume=/vagrant/proof-of-concept/go-proxy/target:/go/src/go-proxy apix-poc/builder go build --ldflags '-linkmode external -extldflags \"-static\"'"
+
 
   config.vm.provision "shell", inline: 
     "if [[ -z $(docker network ls | grep apix) ]]; then sudo docker network create apix; fi"

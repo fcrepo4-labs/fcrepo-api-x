@@ -1,0 +1,118 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.fcrepo.apix</groupId>
+    <artifactId>apix</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <groupId>org.fcrepo.apix.poc</groupId>
+  <artifactId>docker-wrk</artifactId>
+  <packaging>pom</packaging>
+
+  <build>
+    <plugins>
+      <plugin>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.7</version>
+        <executions>
+          <execution>
+            <id>copy-resources</id>
+            <!-- here the phase you need -->
+            <phase>validate</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <outputDirectory>${basedir}/target</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>${basedir}/src/main/resources</directory>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.8</version>
+        <executions>
+          <execution>
+            <id>check</id>
+            <phase>validate</phase>
+            <configuration>
+              <exportAntProperties>true</exportAntProperties>
+              <target>
+                <property environment="env"/>
+                  <path id="combined-PATH">
+                    <pathelement path="${env.PATH}"/>
+                    <pathelement path="${env.Path}"/>
+                  </path>
+                <property name="PATH" refid="combined-PATH"/>
+                <condition property="docker">
+                  <or>
+                    <available file="docker.exe" filepath="${PATH}"/>
+                    <available file="docker" filepath="${PATH}"/>
+                  </or>
+                </condition>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+
+          <execution>
+            <id>build</id>
+            <phase>compile</phase>
+            <configuration>
+              <target if="docker">
+                <exec executable="docker">
+                  <arg value="run"/>
+                  <arg value="--rm"/>
+                  <arg value="-e" />
+                  <arg value="WRK_DIR=/mnt/wrk" />
+                  <arg value="--volume=${basedir}/target:/mnt/wrk"/>
+                  <arg value="apix-poc/builder"/>
+                  <arg value="/bin/sh"/>
+                  <arg value="/mnt/wrk/build.sh"/>
+                </exec>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+
+          <execution>
+            <id>install</id>
+            <phase>install</phase>
+            <configuration>
+              <target if="docker">
+                <exec executable="docker">
+                  <arg value="build"/>
+                  <arg value="--tag=apix-poc/wrk"/>
+                  <arg value="target"/>
+                  </exec>
+              </target>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.fcrepo.apix.poc</groupId>
+      <artifactId>docker-builder</artifactId>
+      <version>${project.version}</version>
+      <type>pom</type>
+      <scope>compile</scope>
+    </dependency>
+  </dependencies>
+</project>

@@ -1,0 +1,420 @@
+Apache Maven 3.2.5 (12a6b3acb947671f09b81f49094c53f426d8cea1; 2014-12-14T12:29:23-05:00)
+Maven home: /opt/apache/apache-maven-3.2.5
+Java version: 1.8.0_66, vendor: Oracle Corporation
+Java home: /usr/java/jdk1.8.0_66/jre
+Default locale: en_US, platform encoding: UTF-8
+OS name: "linux", version: "4.1.13-100.fc21.x86_64", arch: "amd64", family: "unix"
+[INFO] Error stacktraces are turned on.
+[DEBUG] Reading global settings from /opt/apache/apache-maven-3.2.5/conf/settings.xml
+[DEBUG] Reading user settings from /home/apb18/.m2/settings.xml
+[DEBUG] Using local repository at /home/apb18/.m2/repository
+[DEBUG] Using manager EnhancedLocalRepositoryManager with priority 10.0 for /home/apb18/.m2/repository
+[INFO] Scanning for projects...
+[DEBUG] Skipped remote request for org.fcrepo.apix:apix:0.0.1-SNAPSHOT/maven-metadata.xml, locally installed metadata up-to-date.
+[DEBUG] Skipped remote request for org.fcrepo.apix:apix:0.0.1-SNAPSHOT/maven-metadata.xml, locally installed metadata up-to-date.
+[DEBUG] Extension realms for project org.fcrepo.apix:docker-builder:pom:0.0.1-SNAPSHOT: (none)
+[DEBUG] Looking up lifecyle mappings for packaging pom from ClassRealm[plexus.core, parent: null]
+[DEBUG] Extension realms for project org.fcrepo.apix:apix:pom:0.0.1-SNAPSHOT: (none)
+[DEBUG] Looking up lifecyle mappings for packaging pom from ClassRealm[plexus.core, parent: null]
+[DEBUG] === REACTOR BUILD PLAN ================================================
+[DEBUG] Project: org.fcrepo.apix:docker-builder:pom:0.0.1-SNAPSHOT
+[DEBUG] Tasks:   [install]
+[DEBUG] Style:   Regular
+[DEBUG] =======================================================================
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building docker-builder 0.0.1-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[DEBUG] Lifecycle default -> [validate, initialize, generate-sources, process-sources, generate-resources, process-resources, compile, process-classes, generate-test-sources, process-test-sources, generate-test-resources, process-test-resources, test-compile, process-test-classes, test, prepare-package, package, pre-integration-test, integration-test, post-integration-test, verify, install, deploy]
+[DEBUG] Lifecycle clean -> [pre-clean, clean, post-clean]
+[DEBUG] Lifecycle site -> [pre-site, site, post-site, site-deploy]
+[DEBUG] Lifecycle default -> [validate, initialize, generate-sources, process-sources, generate-resources, process-resources, compile, process-classes, generate-test-sources, process-test-sources, generate-test-resources, process-test-resources, test-compile, process-test-classes, test, prepare-package, package, pre-integration-test, integration-test, post-integration-test, verify, install, deploy]
+[DEBUG] Lifecycle clean -> [pre-clean, clean, post-clean]
+[DEBUG] Lifecycle site -> [pre-site, site, post-site, site-deploy]
+[DEBUG] Lifecycle default -> [validate, initialize, generate-sources, process-sources, generate-resources, process-resources, compile, process-classes, generate-test-sources, process-test-sources, generate-test-resources, process-test-resources, test-compile, process-test-classes, test, prepare-package, package, pre-integration-test, integration-test, post-integration-test, verify, install, deploy]
+[DEBUG] Lifecycle clean -> [pre-clean, clean, post-clean]
+[DEBUG] Lifecycle site -> [pre-site, site, post-site, site-deploy]
+[DEBUG] === PROJECT BUILD PLAN ================================================
+[DEBUG] Project:       org.fcrepo.apix:docker-builder:0.0.1-SNAPSHOT
+[DEBUG] Dependencies (collect): []
+[DEBUG] Dependencies (resolve): [test]
+[DEBUG] Repositories (dependencies): [dc.maven.releases (http://maven.dataconservancy.org/public/releases/, default, releases), dc.maven.stage.releases (http://maven.dataconservancy.org/stage/stage/releases, default, releases), dc.maven.snapshots (http://maven.dataconservancy.org/public/snapshots/, default, snapshots), dc.maven.private.releases (http://maven.dataconservancy.org/private/releases/, default, releases), dc.maven.private.snapshots (http://maven.dataconservancy.org/private/snapshots/, default, snapshots), local.stage (file:///home/apb18/projects/DC/local_repo/stage/, default, releases), central (https://repo.maven.apache.org/maven2, default, releases)]
+[DEBUG] Repositories (plugins)     : [central (https://repo.maven.apache.org/maven2, default, releases)]
+[DEBUG] -----------------------------------------------------------------------
+[DEBUG] Goal:          org.apache.maven.plugins:maven-antrun-plugin:1.8:run (default)
+[DEBUG] Style:         Regular
+[DEBUG] Configuration: <?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <exportAntProperties default-value="false"/>
+  <failOnError default-value="true"/>
+  <localRepository>${localRepository}</localRepository>
+  <pluginArtifacts>${plugin.artifacts}</pluginArtifacts>
+  <project default-value="${project}"/>
+  <skip default-value="false">${maven.antrun.skip}</skip>
+  <sourceRoot>${sourceRoot}</sourceRoot>
+  <target>
+    <property environment="env"/>
+    <path id="combined-PATH">
+      <pathelement path="/usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:/home/apb18/projects/go/bin:/home/apb18/projects/go/bin"/>
+      <pathelement path="${env.Path}"/>
+    </path>
+    <property name="PATH" refid="combined-PATH"/>
+    <condition property="docker">
+      <or>
+        <available file="docker.exe" filepath="/usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:/home/apb18/projects/go/bin:/home/apb18/projects/go/bin"/>
+        <available file="docker" filepath="/usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:/home/apb18/projects/go/bin:/home/apb18/projects/go/bin"/>
+      </or>
+    </condition>
+  </target>
+  <testSourceRoot>${testSourceRoot}</testSourceRoot>
+  <versionsPropertyName default-value="maven.project.dependencies.versions"/>
+</configuration>
+[DEBUG] -----------------------------------------------------------------------
+[DEBUG] Goal:          org.apache.maven.plugins:maven-install-plugin:2.4:install (default-install)
+[DEBUG] Style:         Regular
+[DEBUG] Configuration: <?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <artifact default-value="${project.artifact}"/>
+  <attachedArtifacts default-value="${project.attachedArtifacts}"/>
+  <createChecksum default-value="false">${createChecksum}</createChecksum>
+  <localRepository>${localRepository}</localRepository>
+  <packaging default-value="${project.packaging}"/>
+  <pomFile default-value="${project.file}"/>
+  <skip default-value="false">${maven.install.skip}</skip>
+  <updateReleaseInfo default-value="false">${updateReleaseInfo}</updateReleaseInfo>
+</configuration>
+[DEBUG] =======================================================================
+[DEBUG] Dependency collection stats: {ConflictMarker.analyzeTime=0, ConflictMarker.markTime=0, ConflictMarker.nodeCount=1, ConflictIdSorter.graphTime=1, ConflictIdSorter.topsortTime=0, ConflictIdSorter.conflictIdCount=0, ConflictIdSorter.conflictIdCycleCount=0, ConflictResolver.totalTime=2, ConflictResolver.conflictItemCount=0, DefaultDependencyCollector.collectTime=1, DefaultDependencyCollector.transformTime=4}
+[DEBUG] org.fcrepo.apix:docker-builder:pom:0.0.1-SNAPSHOT
+[INFO] 
+[INFO] --- maven-antrun-plugin:1.8:run (default) @ docker-builder ---
+[DEBUG] Created new class realm maven.api
+[DEBUG] Importing foreign packages into class realm maven.api
+[DEBUG]   Imported: org.apache.maven.cli < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.internal.impl < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.lifecycle < plexus.core
+[DEBUG]   Imported: org.apache.maven.lifecycle < plexus.core
+[DEBUG]   Imported: org.apache.maven.repository < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.personality < plexus.core
+[DEBUG]   Imported: org.apache.maven.usability < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.configuration < plexus.core
+[DEBUG]   Imported: javax.enterprise.inject.* < plexus.core
+[DEBUG]   Imported: org.apache.maven.* < plexus.core
+[DEBUG]   Imported: org.apache.maven.project < plexus.core
+[DEBUG]   Imported: org.apache.maven.exception < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.spi < plexus.core
+[DEBUG]   Imported: org.apache.maven.plugin < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.collection < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.* < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.logging < plexus.core
+[DEBUG]   Imported: org.apache.maven.profiles < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.transfer < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.util.xml.pull.XmlPullParserException < plexus.core
+[DEBUG]   Imported: org.apache.maven.execution.scope < plexus.core
+[DEBUG]   Imported: org.apache.maven.wagon.* < plexus.core
+[DEBUG]   Imported: org.apache.maven.rtinfo < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.impl < plexus.core
+[DEBUG]   Imported: org.apache.maven.monitor < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.graph < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.metadata < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.context < plexus.core
+[DEBUG]   Imported: org.apache.maven.wagon.observers < plexus.core
+[DEBUG]   Imported: org.apache.maven.wagon.resource < plexus.core
+[DEBUG]   Imported: javax.inject.* < plexus.core
+[DEBUG]   Imported: org.apache.maven.model < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.util.xml.Xpp3Dom < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.deployment < plexus.core
+[DEBUG]   Imported: org.apache.maven.artifact < plexus.core
+[DEBUG]   Imported: org.apache.maven.toolchain < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.resolution < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.util.xml.pull.XmlSerializer < plexus.core
+[DEBUG]   Imported: org.apache.maven.settings < plexus.core
+[DEBUG]   Imported: org.apache.maven.wagon.authorization < plexus.core
+[DEBUG]   Imported: org.apache.maven.wagon.events < plexus.core
+[DEBUG]   Imported: org.apache.maven.wagon.authentication < plexus.core
+[DEBUG]   Imported: org.apache.maven.reporting < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.repository < plexus.core
+[DEBUG]   Imported: org.slf4j.* < plexus.core
+[DEBUG]   Imported: org.apache.maven.wagon.repository < plexus.core
+[DEBUG]   Imported: javax.enterprise.util.* < plexus.core
+[DEBUG]   Imported: org.apache.maven.configuration < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.classworlds < plexus.core
+[DEBUG]   Imported: org.codehaus.classworlds < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.util.xml.pull.XmlPullParser < plexus.core
+[DEBUG]   Imported: org.apache.maven.classrealm < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.* < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.artifact < plexus.core
+[DEBUG]   Imported: org.apache.maven.execution < plexus.core
+[DEBUG]   Imported: org.apache.maven.wagon.proxy < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.container < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.version < plexus.core
+[DEBUG]   Imported: org.eclipse.aether.installation < plexus.core
+[DEBUG]   Imported: org.codehaus.plexus.component < plexus.core
+[DEBUG] Populating class realm maven.api
+[DEBUG] Dependency collection stats: {ConflictMarker.analyzeTime=1, ConflictMarker.markTime=0, ConflictMarker.nodeCount=37, ConflictIdSorter.graphTime=1, ConflictIdSorter.topsortTime=0, ConflictIdSorter.conflictIdCount=18, ConflictIdSorter.conflictIdCycleCount=0, ConflictResolver.totalTime=3, ConflictResolver.conflictItemCount=37, DefaultDependencyCollector.collectTime=90, DefaultDependencyCollector.transformTime=5}
+[DEBUG] org.apache.maven.plugins:maven-antrun-plugin:jar:1.8:
+[DEBUG]    org.apache.maven:maven-plugin-api:jar:2.2.1:compile
+[DEBUG]    org.apache.maven:maven-project:jar:2.2.1:compile
+[DEBUG]       org.apache.maven:maven-settings:jar:2.2.1:compile
+[DEBUG]       org.apache.maven:maven-profile:jar:2.2.1:compile
+[DEBUG]       org.apache.maven:maven-model:jar:2.2.1:compile
+[DEBUG]       org.apache.maven:maven-artifact-manager:jar:2.2.1:compile
+[DEBUG]          org.apache.maven:maven-repository-metadata:jar:2.2.1:compile
+[DEBUG]          backport-util-concurrent:backport-util-concurrent:jar:3.1:compile
+[DEBUG]       org.apache.maven:maven-plugin-registry:jar:2.2.1:compile
+[DEBUG]       org.codehaus.plexus:plexus-interpolation:jar:1.11:compile
+[DEBUG]       org.codehaus.plexus:plexus-container-default:jar:1.0-alpha-9-stable-1:compile
+[DEBUG]          junit:junit:jar:3.8.1:compile
+[DEBUG]          classworlds:classworlds:jar:1.1-alpha-2:compile
+[DEBUG]    org.apache.maven:maven-artifact:jar:2.2.1:compile
+[DEBUG]    org.codehaus.plexus:plexus-utils:jar:3.0.20:compile
+[DEBUG]    org.apache.ant:ant:jar:1.9.4:compile
+[DEBUG]       org.apache.ant:ant-launcher:jar:1.9.4:compile
+[DEBUG] Created new class realm plugin>org.apache.maven.plugins:maven-antrun-plugin:1.8
+[DEBUG] Importing foreign packages into class realm plugin>org.apache.maven.plugins:maven-antrun-plugin:1.8
+[DEBUG]   Imported:  < maven.api
+[DEBUG] Populating class realm plugin>org.apache.maven.plugins:maven-antrun-plugin:1.8
+[DEBUG]   Included: org.apache.maven.plugins:maven-antrun-plugin:jar:1.8
+[DEBUG]   Included: backport-util-concurrent:backport-util-concurrent:jar:3.1
+[DEBUG]   Included: org.codehaus.plexus:plexus-interpolation:jar:1.11
+[DEBUG]   Included: junit:junit:jar:3.8.1
+[DEBUG]   Included: org.codehaus.plexus:plexus-utils:jar:3.0.20
+[DEBUG]   Included: org.apache.ant:ant:jar:1.9.4
+[DEBUG]   Included: org.apache.ant:ant-launcher:jar:1.9.4
+[DEBUG]   Excluded: org.apache.maven:maven-plugin-api:jar:2.2.1
+[DEBUG]   Excluded: org.apache.maven:maven-project:jar:2.2.1
+[DEBUG]   Excluded: org.apache.maven:maven-settings:jar:2.2.1
+[DEBUG]   Excluded: org.apache.maven:maven-profile:jar:2.2.1
+[DEBUG]   Excluded: org.apache.maven:maven-model:jar:2.2.1
+[DEBUG]   Excluded: org.apache.maven:maven-artifact-manager:jar:2.2.1
+[DEBUG]   Excluded: org.apache.maven:maven-repository-metadata:jar:2.2.1
+[DEBUG]   Excluded: org.apache.maven:maven-plugin-registry:jar:2.2.1
+[DEBUG]   Excluded: org.codehaus.plexus:plexus-container-default:jar:1.0-alpha-9-stable-1
+[DEBUG]   Excluded: classworlds:classworlds:jar:1.1-alpha-2
+[DEBUG]   Excluded: org.apache.maven:maven-artifact:jar:2.2.1
+[DEBUG] Configuring mojo org.apache.maven.plugins:maven-antrun-plugin:1.8:run from plugin realm ClassRealm[plugin>org.apache.maven.plugins:maven-antrun-plugin:1.8, parent: sun.misc.Launcher$AppClassLoader@70dea4e]
+[DEBUG] Configuring mojo 'org.apache.maven.plugins:maven-antrun-plugin:1.8:run' with basic configurator -->
+[DEBUG]   (f) exportAntProperties = false
+[DEBUG]   (f) failOnError = true
+[DEBUG]   (f) localRepository =       id: local
+      url: file:///home/apb18/.m2/repository/
+   layout: default
+snapshots: [enabled => true, update => always]
+ releases: [enabled => true, update => always]
+
+[DEBUG]   (f) pluginArtifacts = [org.apache.maven.plugins:maven-antrun-plugin:maven-plugin:1.8:, backport-util-concurrent:backport-util-concurrent:jar:3.1:compile, org.codehaus.plexus:plexus-interpolation:jar:1.11:compile, junit:junit:jar:3.8.1:compile, org.codehaus.plexus:plexus-utils:jar:3.0.20:compile, org.apache.ant:ant:jar:1.9.4:compile, org.apache.ant:ant-launcher:jar:1.9.4:compile]
+[DEBUG]   (f) project = MavenProject: org.fcrepo.apix:docker-builder:0.0.1-SNAPSHOT @ /home/apb18/projects/DC/fcrepo-api-x/docker/builder/pom.xml
+[DEBUG]   (f) skip = false
+[DEBUG]   (f) target = <target><property environment="env"/>
+<path id="combined-PATH"><pathelement path="/usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:/home/apb18/projects/go/bin:/home/apb18/projects/go/bin"/>
+<pathelement path="${env.Path}"/>
+</path>
+<property name="PATH" refid="combined-PATH"/>
+<condition property="docker"><or><available file="docker.exe" filepath="/usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:/home/apb18/projects/go/bin:/home/apb18/projects/go/bin"/>
+<available file="docker" filepath="/usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:/home/apb18/projects/go/bin:/home/apb18/projects/go/bin"/>
+</or>
+</condition>
+</target>
+
+[DEBUG]   (f) versionsPropertyName = maven.project.dependencies.versions
+[DEBUG] -- end configuration --
+Project base dir set to: /home/apb18/projects/DC/fcrepo-api-x/docker/builder
+Adding reference: maven.dependency.classpath
+Adding reference: maven.compile.classpath
+Adding reference: maven.runtime.classpath
+Adding reference: maven.test.classpath
+Adding reference: maven.plugin.classpath
+Adding reference: maven.project
+Adding reference: maven.project.helper
+Adding reference: maven.local.repository
+[DEBUG] Initialize Maven Ant Tasks
+parsing buildfile jar:file:/home/apb18/.m2/repository/org/apache/maven/plugins/maven-antrun-plugin/1.8/maven-antrun-plugin-1.8.jar!/org/apache/maven/ant/tasks/antlib.xml with URI = jar:file:/home/apb18/.m2/repository/org/apache/maven/plugins/maven-antrun-plugin/1.8/maven-antrun-plugin-1.8.jar!/org/apache/maven/ant/tasks/antlib.xml from a zip file
+parsing buildfile jar:file:/home/apb18/.m2/repository/org/apache/ant/ant/1.9.4/ant-1.9.4.jar!/org/apache/tools/ant/antlib.xml with URI = jar:file:/home/apb18/.m2/repository/org/apache/ant/ant/1.9.4/ant-1.9.4.jar!/org/apache/tools/ant/antlib.xml from a zip file
+Class org.apache.maven.ant.tasks.AttachArtifactTask loaded from parent loader (parentFirst)
+ +Datatype attachartifact org.apache.maven.ant.tasks.AttachArtifactTask
+Class org.apache.maven.ant.tasks.DependencyFilesetsTask loaded from parent loader (parentFirst)
+ +Datatype dependencyfilesets org.apache.maven.ant.tasks.DependencyFilesetsTask
+Setting project property: project.reporting.outputEncoding -> UTF-8
+Setting project property: project.build.sourceEncoding -> UTF-8
+Setting project property: ant.file -> /home/apb18/projects/DC/fcrepo-api-x/docker/builder/pom.xml
+[DEBUG] Setting properties with prefix: 
+Setting project property: project.groupId -> org.fcrepo.apix
+Setting project property: project.artifactId -> docker-builder
+Setting project property: project.name -> docker-builder
+Setting project property: project.version -> 0.0.1-SNAPSHOT
+Setting project property: project.packaging -> pom
+Setting project property: project.build.directory -> /home/apb18/projects/DC/fcrepo-api-x/docker/builder/target
+Setting project property: project.build.outputDirectory -> /home/apb18/projects/DC/fcrepo-api-x/docker/builder/target/classes
+Setting project property: project.build.testOutputDirectory -> /home/apb18/projects/DC/fcrepo-api-x/docker/builder/target/test-classes
+Setting project property: project.build.sourceDirectory -> /home/apb18/projects/DC/fcrepo-api-x/docker/builder/src/main/java
+Setting project property: project.build.testSourceDirectory -> /home/apb18/projects/DC/fcrepo-api-x/docker/builder/src/test/java
+Setting project property: localRepository ->       id: local
+      url: file:///home/apb18/.m2/repository/
+   layout: default
+snapshots: [enabled => true, update => always]
+ releases: [enabled => true, update => always]
+Setting project property: settings.localRepository -> /home/apb18/.m2/repository
+Setting project property: maven.project.dependencies.versions -> 
+[INFO] Executing tasks
+Build sequence for target(s) `main' is [main]
+Complete build sequence is [main, ]
+
+main:
+ [property] Loading Environment env.
+Setting project property: env.TERM -> xterm-256color
+Setting project property: env.PWD -> /home/apb18/projects/DC/fcrepo-api-x/docker/builder
+Setting project property: env.SESSION_MANAGER -> local/unix:@/tmp/.ICE-unix/2210,unix/unix:/tmp/.ICE-unix/2210
+Setting project property: env.LANG -> en_US.utf8
+Setting project property: env.LESSOPEN -> ||/usr/bin/lesspipe.sh %s
+Setting project property: env.QTINC -> /usr/lib64/qt-3.3/include
+Setting project property: env.HOME -> /home/apb18
+Setting project property: env.QT_IM_MODULE -> ibus
+Setting project property: env.DISPLAY -> :0
+Setting project property: env.MODULESHOME -> /usr/share/Modules
+Setting project property: env.GOPATH -> /home/apb18/projects/go
+Setting project property: env.KDEDIRS -> /usr
+Setting project property: env.QT_GRAPHICSSYSTEM_CHECKED -> 1
+Setting project property: env.BASH_FUNC_module() -> () {  eval `/usr/bin/modulecmd bash $*`
+}
+Setting project property: env.JAVA_HOME -> /usr/java/jdk1.8.0_66
+Setting project property: env.GDMSESSION -> gnome
+Setting project property: env.CVS_RSH -> ssh
+Setting project property: env.NLSPATH -> /usr/dt/lib/nls/msg/%L/%N.cat
+Setting project property: env.LOADEDMODULES -> 
+Setting project property: env.GPG_AGENT_INFO -> /run/user/1000/keyring/gpg:0:1
+Setting project property: env.DOCKER_MACHINE_NAME -> default
+Setting project property: env.GO15VENDOREXPERIMENT -> 1
+Setting project property: env.DOCKER_HOST -> tcp://192.168.99.100:2376
+Setting project property: env.GNOME_DESKTOP_SESSION_ID -> this-is-deprecated
+Setting project property: env.GJS_DEBUG_OUTPUT -> stderr
+Setting project property: env.WRK_DIR -> /home/apb18/projects/DC/fcrepo-api-x/docker/tools/wrk
+Setting project property: env.XDG_MENU_PREFIX -> gnome-
+Setting project property: env.GDM_LANG -> en_US.utf8
+Setting project property: env.DBUS_SESSION_BUS_ADDRESS -> unix:abstract=/tmp/dbus-t4SigFEekv,guid=9f980db76f09c52777372890570c31b4
+Setting project property: env.SSH_ASKPASS -> /usr/libexec/openssh/gnome-ssh-askpass
+Setting project property: env.WINDOWID -> 29361176
+Setting project property: env.BASH_FUNC_scl() -> () {  local CMD=$1;
+ if [ "$CMD" = "load" -o "$CMD" = "unload" ]; then
+ eval "module $@";
+ else
+ /usr/bin/scl "$@";
+ fi
+}
+Setting project property: env.DOCKER_CERT_PATH -> /home/apb18/.docker/machine/machines/default
+Setting project property: env.DOCKER_TLS_VERIFY -> 1
+Setting project property: env.PATH -> /usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:/home/apb18/projects/go/bin:/home/apb18/projects/go/bin
+Setting project property: env.LS_COLORS -> rs=0:di=38;5;33:ln=38;5;51:mh=00:pi=40;38;5;11:so=38;5;13:do=38;5;5:bd=48;5;232;38;5;11:cd=48;5;232;38;5;3:or=48;5;232;38;5;9:mi=01;05;37;41:su=48;5;196;38;5;15:sg=48;5;11;38;5;16:ca=48;5;196;38;5;226:tw=48;5;10;38;5;16:ow=48;5;10;38;5;21:st=48;5;21;38;5;15:ex=38;5;40:*.tar=38;5;9:*.tgz=38;5;9:*.arc=38;5;9:*.arj=38;5;9:*.taz=38;5;9:*.lha=38;5;9:*.lz4=38;5;9:*.lzh=38;5;9:*.lzma=38;5;9:*.tlz=38;5;9:*.txz=38;5;9:*.tzo=38;5;9:*.t7z=38;5;9:*.zip=38;5;9:*.z=38;5;9:*.Z=38;5;9:*.dz=38;5;9:*.gz=38;5;9:*.lrz=38;5;9:*.lz=38;5;9:*.lzo=38;5;9:*.xz=38;5;9:*.bz2=38;5;9:*.bz=38;5;9:*.tbz=38;5;9:*.tbz2=38;5;9:*.tz=38;5;9:*.deb=38;5;9:*.rpm=38;5;9:*.jar=38;5;9:*.war=38;5;9:*.ear=38;5;9:*.sar=38;5;9:*.rar=38;5;9:*.alz=38;5;9:*.ace=38;5;9:*.zoo=38;5;9:*.cpio=38;5;9:*.7z=38;5;9:*.rz=38;5;9:*.cab=38;5;9:*.jpg=38;5;13:*.jpeg=38;5;13:*.gif=38;5;13:*.bmp=38;5;13:*.pbm=38;5;13:*.pgm=38;5;13:*.ppm=38;5;13:*.tga=38;5;13:*.xbm=38;5;13:*.xpm=38;5;13:*.tif=38;5;13:*.tiff=38;5;13:*.png=38;5;13:*.svg=38;5;13:*.svgz=38;5;13:*.mng=38;5;13:*.pcx=38;5;13:*.mov=38;5;13:*.mpg=38;5;13:*.mpeg=38;5;13:*.m2v=38;5;13:*.mkv=38;5;13:*.webm=38;5;13:*.ogm=38;5;13:*.mp4=38;5;13:*.m4v=38;5;13:*.mp4v=38;5;13:*.vob=38;5;13:*.qt=38;5;13:*.nuv=38;5;13:*.wmv=38;5;13:*.asf=38;5;13:*.rm=38;5;13:*.rmvb=38;5;13:*.flc=38;5;13:*.avi=38;5;13:*.fli=38;5;13:*.flv=38;5;13:*.gl=38;5;13:*.dl=38;5;13:*.xcf=38;5;13:*.xwd=38;5;13:*.yuv=38;5;13:*.cgm=38;5;13:*.emf=38;5;13:*.ogv=38;5;13:*.ogx=38;5;13:*.aac=38;5;45:*.au=38;5;45:*.flac=38;5;45:*.m4a=38;5;45:*.mid=38;5;45:*.midi=38;5;45:*.mka=38;5;45:*.mp3=38;5;45:*.mpc=38;5;45:*.ogg=38;5;45:*.ra=38;5;45:*.wav=38;5;45:*.oga=38;5;45:*.opus=38;5;45:*.spx=38;5;45:*.xspf=38;5;45:
+Setting project property: env.LOGNAME -> apb18
+Setting project property: env.MODULEPATH -> /etc/scl/modulefiles:/etc/scl/modulefiles:/usr/share/Modules/modulefiles:/etc/modulefiles:/usr/share/modulefiles
+Setting project property: env.QTDIR -> /usr/lib64/qt-3.3
+Setting project property: env.GJS_DEBUG_TOPICS -> JS ERROR;JS LOG
+Setting project property: env.XDG_SESSION_ID -> 1
+Setting project property: env.XDG_SEAT -> seat0
+Setting project property: env.MAIL -> /var/spool/mail/apb18
+Setting project property: env.XDG_VTNR -> 1
+Setting project property: env.HOSTNAME -> portable
+Setting project property: env.HISTCONTROL -> ignoredups
+Setting project property: env.QTLIB -> /usr/lib64/qt-3.3/lib
+Setting project property: env.SHELL -> /bin/bash
+Setting project property: env.SHLVL -> 2
+Setting project property: env.XDG_SESSION_DESKTOP -> gnome
+Setting project property: env.MAVEN_CMD_LINE_ARGS -> -X install
+Setting project property: env.HISTSIZE -> 1000
+Setting project property: env.VTE_VERSION -> 3803
+Setting project property: env.SSH_AUTH_SOCK -> /run/user/1000/keyring/ssh
+Setting project property: env.USERNAME -> apb18
+Setting project property: env.XDG_RUNTIME_DIR -> /run/user/1000
+Setting project property: env.XMODIFIERS -> @im=ibus
+Setting project property: env.XDG_CURRENT_DESKTOP -> GNOME
+Setting project property: env.DESKTOP_SESSION -> gnome
+Setting project property: env.WINDOWPATH -> 1
+Setting project property: env.XFILESEARCHPATH -> /usr/dt/app-defaults/%L/Dt
+Setting project property: env.USER -> apb18
+Setting project property: env.XAUTHORITY -> /run/gdm/auth-for-apb18-2tvWpl/database
+Setting project property: env.OLDPWD -> /home/apb18/projects/DC/fcrepo-api-x/docker/builder
+Adding reference: combined-PATH
+Property "env.Path" has not been set
+Setting project property: PATH -> /usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:/home/apb18/projects/go/bin:/home/apb18/projects/DC/fcrepo-api-x/docker/builder/${env.Path}
+Class org.apache.tools.ant.taskdefs.condition.Or loaded from parent loader (parentFirst)
+Class org.apache.tools.ant.types.resources.selectors.Or loaded from parent loader (parentFirst)
+[available] Searching /usr/lib64/qt-3.3/bin
+[available] Searching /usr/local/bin
+[available] Searching /usr/local/sbin
+[available] Searching /usr/bin
+[available] Searching /usr/sbin
+[available] Searching /bin
+[available] Searching /sbin
+[available] Searching /home/apb18/projects/go/bin
+[available] Unable to find docker.exe
+[available] Searching /usr/lib64/qt-3.3/bin
+[available] Searching /usr/local/bin
+[available] Searching /usr/local/sbin
+[available] Searching /usr/bin
+[available] Found: docker in /usr/bin
+Condition true; setting docker to true
+Setting project property: docker -> true
+[INFO] Executed tasks
+[INFO] 
+[INFO] --- maven-install-plugin:2.4:install (default-install) @ docker-builder ---
+[DEBUG] Dependency collection stats: {ConflictMarker.analyzeTime=0, ConflictMarker.markTime=0, ConflictMarker.nodeCount=38, ConflictIdSorter.graphTime=1, ConflictIdSorter.topsortTime=0, ConflictIdSorter.conflictIdCount=15, ConflictIdSorter.conflictIdCycleCount=0, ConflictResolver.totalTime=1, ConflictResolver.conflictItemCount=35, DefaultDependencyCollector.collectTime=34, DefaultDependencyCollector.transformTime=2}
+[DEBUG] org.apache.maven.plugins:maven-install-plugin:jar:2.4:
+[DEBUG]    org.apache.maven:maven-plugin-api:jar:2.0.6:compile
+[DEBUG]    org.apache.maven:maven-project:jar:2.0.6:compile
+[DEBUG]       org.apache.maven:maven-settings:jar:2.0.6:compile
+[DEBUG]       org.apache.maven:maven-profile:jar:2.0.6:compile
+[DEBUG]       org.apache.maven:maven-plugin-registry:jar:2.0.6:compile
+[DEBUG]       org.codehaus.plexus:plexus-container-default:jar:1.0-alpha-9-stable-1:compile
+[DEBUG]          junit:junit:jar:3.8.1:compile
+[DEBUG]          classworlds:classworlds:jar:1.1-alpha-2:compile
+[DEBUG]    org.apache.maven:maven-model:jar:2.0.6:compile
+[DEBUG]    org.apache.maven:maven-artifact-manager:jar:2.0.6:compile
+[DEBUG]       org.apache.maven:maven-repository-metadata:jar:2.0.6:compile
+[DEBUG]    org.apache.maven:maven-artifact:jar:2.0.6:compile
+[DEBUG]    org.codehaus.plexus:plexus-utils:jar:3.0.5:compile
+[DEBUG]    org.codehaus.plexus:plexus-digest:jar:1.0:compile
+[DEBUG] Created new class realm plugin>org.apache.maven.plugins:maven-install-plugin:2.4
+[DEBUG] Importing foreign packages into class realm plugin>org.apache.maven.plugins:maven-install-plugin:2.4
+[DEBUG]   Imported:  < maven.api
+[DEBUG] Populating class realm plugin>org.apache.maven.plugins:maven-install-plugin:2.4
+[DEBUG]   Included: org.apache.maven.plugins:maven-install-plugin:jar:2.4
+[DEBUG]   Included: junit:junit:jar:3.8.1
+[DEBUG]   Included: org.codehaus.plexus:plexus-utils:jar:3.0.5
+[DEBUG]   Included: org.codehaus.plexus:plexus-digest:jar:1.0
+[DEBUG]   Excluded: org.apache.maven:maven-plugin-api:jar:2.0.6
+[DEBUG]   Excluded: org.apache.maven:maven-project:jar:2.0.6
+[DEBUG]   Excluded: org.apache.maven:maven-settings:jar:2.0.6
+[DEBUG]   Excluded: org.apache.maven:maven-profile:jar:2.0.6
+[DEBUG]   Excluded: org.apache.maven:maven-plugin-registry:jar:2.0.6
+[DEBUG]   Excluded: org.codehaus.plexus:plexus-container-default:jar:1.0-alpha-9-stable-1
+[DEBUG]   Excluded: classworlds:classworlds:jar:1.1-alpha-2
+[DEBUG]   Excluded: org.apache.maven:maven-model:jar:2.0.6
+[DEBUG]   Excluded: org.apache.maven:maven-artifact-manager:jar:2.0.6
+[DEBUG]   Excluded: org.apache.maven:maven-repository-metadata:jar:2.0.6
+[DEBUG]   Excluded: org.apache.maven:maven-artifact:jar:2.0.6
+[DEBUG] Configuring mojo org.apache.maven.plugins:maven-install-plugin:2.4:install from plugin realm ClassRealm[plugin>org.apache.maven.plugins:maven-install-plugin:2.4, parent: sun.misc.Launcher$AppClassLoader@70dea4e]
+[DEBUG] Configuring mojo 'org.apache.maven.plugins:maven-install-plugin:2.4:install' with basic configurator -->
+[DEBUG]   (f) artifact = org.fcrepo.apix:docker-builder:pom:0.0.1-SNAPSHOT
+[DEBUG]   (f) attachedArtifacts = []
+[DEBUG]   (f) createChecksum = false
+[DEBUG]   (f) localRepository =       id: local
+      url: file:///home/apb18/.m2/repository/
+   layout: default
+snapshots: [enabled => true, update => always]
+ releases: [enabled => true, update => always]
+
+[DEBUG]   (f) packaging = pom
+[DEBUG]   (f) pomFile = /home/apb18/projects/DC/fcrepo-api-x/docker/builder/pom.xml
+[DEBUG]   (s) skip = false
+[DEBUG]   (f) updateReleaseInfo = false
+[DEBUG] -- end configuration --
+[INFO] Installing /home/apb18/projects/DC/fcrepo-api-x/docker/builder/pom.xml to /home/apb18/.m2/repository/org/fcrepo/apix/docker-builder/0.0.1-SNAPSHOT/docker-builder-0.0.1-SNAPSHOT.pom
+[DEBUG] Writing tracking file /home/apb18/.m2/repository/org/fcrepo/apix/docker-builder/0.0.1-SNAPSHOT/_remote.repositories
+[DEBUG] Installing org.fcrepo.apix:docker-builder:0.0.1-SNAPSHOT/maven-metadata.xml to /home/apb18/.m2/repository/org/fcrepo/apix/docker-builder/0.0.1-SNAPSHOT/maven-metadata-local.xml
+[DEBUG] Installing org.fcrepo.apix:docker-builder/maven-metadata.xml to /home/apb18/.m2/repository/org/fcrepo/apix/docker-builder/maven-metadata-local.xml
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 0.641 s
+[INFO] Finished at: 2016-04-14T00:24:03-04:00
+[INFO] Final Memory: 7M/153M
+[INFO] ------------------------------------------------------------------------
