@@ -93,7 +93,7 @@ services:
       - FCREPO_BASEURL=fcrepo.docker.local/rest
 
   go-proxy:
-    build: proof-of-concept/go-proxy
+    build: proof-of-concept/go-proxy/target
     image: apix-poc/go-proxy
     depends_on:
       - build-go-proxy
