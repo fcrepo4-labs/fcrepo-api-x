@@ -73,7 +73,7 @@ services:
     environment:
       - FCREPO_BASEURL=fcrepo.docker.local/rest
       - JMS_BROKERURL=tcp://fcrepo.docker.local:61616
-      - TRIPLESTORE_BASEURL=fusek.docker.local:3030/fcrepo/update
+      - TRIPLESTORE_BASEURL=fuseki.docker.local:3030/fcrepo/update
       - ERROR_MAMXREDELIVERIES=100000
 
   amherst-apix:
