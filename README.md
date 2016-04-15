@@ -78,11 +78,11 @@ For more information see [docker/README.md](docker/README.md)
 ## Verification
 These verification steps can be used to assure that the docker instance(s) are running and are accessible.
 
-First, determine the address `${ADDR} of the machine running Docker
+First, determine the address `${ADDR}` of the machine running Docker
 * For Vagrant users, this is pre-configured to be `10.11.8.11`
 * For Docker Compose users:
-*   For Linux duning services directly on a local docker, this is `localhost`
-*   For Docker Machine users, you can find this by running `docker-machine ip apix`
+	* For Linux duning services directly on a local docker, this is `localhost`
+	* For Docker Machine users, you can find this by running `docker-machine ip apix`
 
 Next, verify that some services are running
 * Verify Fedora is running. Point your browser to `http://${ADDR}:8080/rest`
