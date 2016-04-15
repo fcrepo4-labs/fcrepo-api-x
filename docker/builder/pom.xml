@@ -4,6 +4,7 @@
     <groupId>org.fcrepo.apix</groupId>
     <artifactId>apix</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+     <relativePath>../../pom.xml/</relativePath>
   </parent>
   <groupId>org.fcrepo.apix.poc</groupId>
   <artifactId>docker-builder</artifactId>
