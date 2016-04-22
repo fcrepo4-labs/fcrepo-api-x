@@ -2,7 +2,6 @@
 <features xmlns="http://karaf.apache.org/xmlns/features/v1.0.0" name="amherst-apix-${project.version}">
   <repository>mvn:org.fcrepo.camel/fcrepo-camel/${fcrepo-camel.version}/xml/features</repository>
   <repository>mvn:org.apache.camel.karaf/apache-camel/${camel.version}/xml/features</repository>
-  <repository>mvn:org.fcrepo/fcrepo-karaf/${fcrepo.version}/xml/features</repository>
   
   <feature name="amherst-apix-registry-api" version="${project.version}"  start-level="50">
     <details>Installs the registry API</details>
@@ -37,9 +36,9 @@
     <details>Installs the API-X Framework</details>
     
     <feature version="${camel.version}">camel-core</feature>
-    <feature version="${camel.version}">camel-http4</feature>
     <feature version="${camel.version}">camel-jetty9</feature>
     <feature version="${camel.version}">camel-blueprint</feature>
+
     <feature version="${fcrepo-camel.version}">fcrepo-camel</feature>
 
 
