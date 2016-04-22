@@ -68,9 +68,10 @@ public class ApixRouter extends RouteBuilder {
                     .to("direct:route-service")
                 .otherwise()
                     .log("Headers: ${headers}")
-                    .to("http4://{{fcrepo.baseUrl}}?authUsername={{fcrepo.authUsername}}" +
+                    .to("jetty:http://{{fcrepo.baseUrl}}?authUsername={{fcrepo.authUsername}}" +
                             "&authPassword={{fcrepo.authPassword}}&bridgeEndpoint=true" +
-                            "&throwExceptionOnFailure=false&disableStreamCache=true")
+                            "&throwExceptionOnFailure=false&disableStreamCache=true" +
+                            "&preserveHostHeader=true")
                     .setHeader("Link")
                         .simple("<${headers.CamelHttpUri}/{{apix.prefix}}list>; rel=\"service\"");
 
@@ -106,7 +107,7 @@ public class ApixRouter extends RouteBuilder {
             .setHeader("Link").simple("<${headers.CamelApixRegistration}>; rel=\"describedby\"")
             .setHeader(HTTP_URI).header(SERVICE_ENDPOINT)
             .setHeader(HTTP_PATH).header(FCREPO_IDENTIFIER)
-            .to("http4://localhost");
+            .to("jetty://localhost");
 
     }
 }

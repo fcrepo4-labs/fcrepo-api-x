@@ -12,8 +12,14 @@ ENV APIX_REST_HOST=localhost \
 COPY cfg/*.cfg amherst-apix-karaf/target/*.kar ${KARAF_HOME}/deploy/
     
 # Doesn't seem to be an other way to assure all features and 
-# dependencies are installed.  kar:install has NullPointerException bug
+# dependencies are installed.  kar:install has NullPointerException bug,
+# When using Camel snapshot versions, it appears that Spring needs to be
+# explicitly enabled via feature:install
 RUN ${KARAF_HOME}/bin/start && \
+    echo "service:wait -t 60000 org.fcrepo.apix.poc.amherst.binding.api.BindingService " \
+      | ${KARAF_HOME}/bin/client -u karaf -b -r 10 ; \
+    echo "feature:install spring spring-tx amherst-apix-core "\
+        | ${KARAF_HOME}/bin/client -u karaf -b -r 10 ; \
     echo "service:wait -t 60000 org.apache.camel.CamelContext; " \
           | ${KARAF_HOME}/bin/client -u karaf -b -r 10 ; \ 
     ${KARAF_HOME}/bin/stop && \
