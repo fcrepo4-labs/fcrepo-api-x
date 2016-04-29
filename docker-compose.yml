@@ -61,7 +61,7 @@ services:
     ports:
       - "3030:3030"
     environment:
-      - FUSEKI_DEFAULT_DATASET=/fcrepo
+      - FUSEKI_DEFAULT_DATASET=/fcrepo-triple-index
 
   indexing-triplestore:
     build: proof-of-concept/indexing-triplestore
@@ -73,7 +73,7 @@ services:
     environment:
       - FCREPO_BASEURL=fcrepo.docker.local/rest
       - JMS_BROKERURL=tcp://fcrepo.docker.local:61616
-      - TRIPLESTORE_BASEURL=fuseki.docker.local:3030/fcrepo/update
+      - TRIPLESTORE_BASEURL=fuseki.docker.local:3030/fcrepo-triple-index/update
       - ERROR_MAMXREDELIVERIES=100000
 
   amherst-apix:

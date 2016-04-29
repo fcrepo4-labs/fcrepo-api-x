@@ -6,7 +6,7 @@ ENV FUSEKI_VERSION=2.3.1 \
     FUSEKI_HOME=${APPS}/apache-jena-fuseki-2.3.1 \
     FUSEKI_BASE=${SHARED}/fuseki-data \
     FUSEKI_JAR=fuseki-server.jar \
-    FUSEKI_DEFAULT_DATASET=/fcrepo
+    FUSEKI_DEFAULT_DATASET=/fcrepo-triple-index
 
 RUN export FUSEKI_DIST=apache-jena-fuseki-${FUSEKI_VERSION}.tar.gz && \
     mkdir -p ${APPS} && \

@@ -47,7 +47,7 @@ Vagrant.configure("2") do |config|
       d.ports = ["3030:3030"]
       d.remains_running = true
       d.env = {
-        FUSEKI_DEFAULT_DATASET: "/fcrepo"
+        FUSEKI_DEFAULT_DATASET: "/fcrepo-triple-index"
       }
 
       d.create_args = ["--user=#{DOCKER_HOST_USER}", "--net=apix"]
@@ -69,7 +69,7 @@ Vagrant.configure("2") do |config|
       d.env = {
         FCREPO_BASEURL: "fcrepo:8080/rest",
         JMS_BROKERURL: "tcp://fcrepo:61616",
-        TRIPLESTORE_BASEURL: "fuseki:3030/fcrepo/update",
+        TRIPLESTORE_BASEURL: "fuseki:3030/fcrepo-triple-index/update",
         ERROR_MAMXREDELIVERIES: "100000"
       }
  
