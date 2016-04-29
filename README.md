@@ -88,7 +88,7 @@ Next, verify that some services are running
 * Verify Fedora is running. Point your browser to `http://${ADDR}:8080/rest`
 	* You should see Fedora, with an empty root container
 	* Create an object through Fedora's UI
-* point your browser to Fuseki at `http://${ADDR}:3030/fcrepo`
+* point your browser to Fuseki at `http://${ADDR}:3030/fcrepo-triple-index`
 	* You should see some triples!
 	* Note, ths indexing process is asynchronous, so there may be a delay before these are visible
 * Look at the Fedora as seen through the Amherst API-X proof of concept `http://${ADDR}:8081/fcrepo/rest`
