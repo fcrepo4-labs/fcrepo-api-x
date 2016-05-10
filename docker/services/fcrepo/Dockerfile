@@ -16,4 +16,5 @@ CMD mkdir -p ${DATA_DIR} && \
     -jar ${APPS}/fcrepo-webapp-${FCREPO_VERSION}-jetty-console.jar \
     --port ${FCREPO_PORT} \
     --headless 2>&1 \
+    --contextPath /fcrepo
     | tee -a ${DATA_DIR}/fcrepo.log
