@@ -94,5 +94,9 @@ Next, verify that some services are running
 * Look at the Fedora as seen through the Amherst API-X proof of concept `http://${ADDR}:8081/fcrepo/rest`
 * Look at Fedora as seen through a simple reverse proxy service `http://${ADDR}:8082/rest`
 
+## Contributing
+Contributors to DuraSpace projects should complete a [Contributor License Agreement](https://wiki.duraspace.org/x/ILsQAg)
+or be covered by a corporate agreement.
 
-
+## License
+[Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0)
