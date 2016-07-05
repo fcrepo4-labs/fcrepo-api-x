@@ -114,7 +114,7 @@ services:
   # Contains gcc and go
   builder:
     container_name: builder
-    build: docker/builder
+    build: docker/tools/builder-native
     image: apix-poc/builder
     command: /bin/true
 

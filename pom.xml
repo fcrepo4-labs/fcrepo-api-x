@@ -9,6 +9,9 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+    <maven-bundle-plugin.version>3.0.1</maven-bundle-plugin.version>
+    <jena.version>3.1.0</jena.version>
+    <junit.version>4.12</junit.version>
   </properties>
 
   <build>
@@ -23,6 +26,19 @@
     </pluginManagement>
 
     <plugins>
+             <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>3.0.1</version>
+      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
@@ -32,16 +48,16 @@
             <phase>initialize</phase>
             <configuration>
               <target>
-                <property environment="env"/>
-                  <path id="combined-PATH">
-                    <pathelement path="${env.PATH}"/>
-                    <pathelement path="${env.Path}"/>
-                  </path>
-                <property name="PATH" refid="combined-PATH"/>
+                <property environment="env" />
+                <path id="combined-PATH">
+                  <pathelement path="${env.PATH}" />
+                  <pathelement path="${env.Path}" />
+                </path>
+                <property name="PATH" refid="combined-PATH" />
                 <condition property="docker">
                   <or>
-                    <available file="docker.exe" filepath="${PATH}"/>
-                    <available file="docker" filepath="${PATH}"/>
+                    <available file="docker.exe" filepath="${PATH}" />
+                    <available file="docker" filepath="${PATH}" />
                   </or>
                 </condition>
               </target>
@@ -54,11 +70,26 @@
       </plugin>
     </plugins>
   </build>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-osgi</artifactId>
+        <version>${jena.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
   <modules>
-    <module>docker/builder</module>
-    <module>docker/tools/wrk</module>
+    <module>docker/tools</module>
     <module>proof-of-concept/go-proxy</module>
     <module>proof-of-concept/amherst-apix</module>
     <module>proof-of-concept/indexing-triplestore</module>
+    <module>proof-of-concept/service-binding</module>
   </modules>
 </project>

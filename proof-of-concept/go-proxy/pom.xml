@@ -57,6 +57,12 @@
                                         <available file="docker" filepath="${PATH}"/>
                                     </or>
                                 </condition>
+                                <path id="default-basedir">
+                                    <pathelement path="${basedir}" />
+                                </path>
+                                <pathconvert targetos="unix" property="basedir.docker" refid="default-basedir">
+                                    <map from="c:" to="/c"/>
+                                </pathconvert>
                             </target>
                         </configuration>
                         <goals>
@@ -73,7 +79,7 @@
                                     <arg value="run"/>
                                     <arg value="--rm"/>
                                     <arg value="-w=/go/src/go-proxy" />
-                                    <arg value="--volume=${basedir}/target:/go/src/go-proxy"/>
+                                    <arg value="--volume=${basedir}${file.separator}target:/go/src/go-proxy"/>
                                     <arg value="apix-poc/builder"/>
                                     <arg value="go" />
                                     <arg value="build" />

@@ -23,5 +23,6 @@ RUN ${KARAF_HOME}/bin/start && \
     echo "service:wait -t 60000 org.apache.camel.CamelContext; " \
           | ${KARAF_HOME}/bin/client -u karaf -b -r 10 ; \ 
     ${KARAF_HOME}/bin/stop && \
+    rm -rf ${KARAF_HOME}/instances/* && \
     chmod a+rw -R ${KARAF_HOME}/data ${KARAF_HOME}/etc ${KARAF_HOME}/instances ${KARAF_HOME}/lock && \
     rm -rf ~/.m2
