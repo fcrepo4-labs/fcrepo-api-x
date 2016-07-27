@@ -1,0 +1,96 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>org.fcrepo.apix</groupId>
+    <artifactId>apix</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+  </parent>
+  <artifactId>fcrepo-api-x-registry</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.fcrepo.apix</groupId>
+      <artifactId>fcrepo-api-x-model</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.osgi</groupId>
+      <artifactId>org.osgi.service.component.annotations</artifactId>
+      <version>1.3.0</version>
+      <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-osgi</artifactId>
+      <version>3.1.0</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.osgi</groupId>
+          <artifactId>org.osgi.core</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpcore-osgi</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpclient-osgi</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpcore-osgi</artifactId>
+      <version>4.4.5</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpcore</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpcore-nio</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.servicemix.bundles</groupId>
+      <artifactId>org.apache.servicemix.bundles.xerces</artifactId>
+      <version>2.11.0_1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.httpcomponents</groupId>
+      <artifactId>httpclient-osgi</artifactId>
+      <version>4.5.2</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpclient</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpcore</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpclient-cache</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>httpmime</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.httpcomponents</groupId>
+          <artifactId>fluent-hc</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+
+  </dependencies>
+</project>

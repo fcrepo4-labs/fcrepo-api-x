@@ -91,5 +91,11 @@
     <module>proof-of-concept/amherst-apix</module>
     <module>proof-of-concept/indexing-triplestore</module>
     <module>proof-of-concept/service-binding</module>
+    <module>fcrepo-api-x-registry</module>
+    <module>fcrepo-api-x-api</module>
+    <module>fcrepo-api-x-model</module>
+    <module>fcrepo-api-x-routing</module>
+    <module>fcrepo-api-x-binding</module>
+    <module>fcrepo-api-x-executiion</module>
   </modules>
 </project>
