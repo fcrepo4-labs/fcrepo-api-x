@@ -28,6 +28,8 @@ import java.util.Set;
  */
 public interface OntologyService<T> {
 
+    public T loadOntology(WebResource ont);
+
     public T getOntology(URI uri);
 
     public T merge(T ontology1, T ontology2);

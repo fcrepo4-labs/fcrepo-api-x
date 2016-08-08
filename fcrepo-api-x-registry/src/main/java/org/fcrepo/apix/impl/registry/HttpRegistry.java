@@ -26,6 +26,7 @@ import static org.osgi.service.component.annotations.ConfigurationPolicy.REQUIRE
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.nio.charset.Charset;
 
 import org.fcrepo.apix.model.Registry;
 import org.fcrepo.apix.model.WebResource;
@@ -106,7 +107,7 @@ public class HttpRegistry implements Registry {
 
         if (response.getStatusLine().getStatusCode() != SC_OK) {
             try {
-                LOG.warn(IOUtils.toString(response.getEntity().getContent()));
+                LOG.warn(IOUtils.toString(response.getEntity().getContent(), Charset.forName("UTF_8")));
             } catch (final Exception e) {
                 LOG.warn(Integer.toString(response.getStatusLine().getStatusCode()));
             } finally {

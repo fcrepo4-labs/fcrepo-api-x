@@ -16,9 +16,10 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.impl.registry;
+package org.fcrepo.apix.impl.jena;
 
 import java.net.URI;
+import java.util.HashSet;
 import java.util.Set;
 
 import org.fcrepo.apix.model.OntologyService;
@@ -31,6 +32,7 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.ModelGetter;
 import org.apache.jena.rdf.model.ModelReader;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
@@ -46,8 +48,11 @@ public class JenaOntologyService implements OntologyService<OntModel> {
 
     private OntModelSpec defaultSpec = OntModelSpec.OWL_MEM_MICRO_RULE_INF;
 
+    static final String OWL_IMPORTS = "http://www.w3.org/2002/07/owl#imports";
+
     public void setOntModelSpec(OntModelSpec spec) {
-        defaultSpec = spec;
+        defaultSpec = new OntModelSpec(spec);
+        spec.setImportModelGetter(new NullGetter());
     }
 
     @Reference
@@ -57,14 +62,49 @@ public class JenaOntologyService implements OntologyService<OntModel> {
 
     @Override
     public OntModel getOntology(URI uri) {
-        final OntModelSpec spec = new OntModelSpec(defaultSpec);
-        spec.setImportModelGetter(new RegistryGetter());
 
-        final OntModel model = ModelFactory.createOntologyModel(spec);
-        model.add(load(uri.toString()));
+        return resolveImports(ModelFactory.createOntologyModel(defaultSpec, load(uri.toString())));
+    }
 
-        return model;
+    @Override
+    public OntModel loadOntology(WebResource ont) {
+        try (WebResource ontology = ont) {
+            return resolveImports(ModelFactory.createOntologyModel(defaultSpec, parse(ontology)));
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    private OntModel resolveImports(OntModel model) {
+
+        // if no imports, nothing to resolve
+        if (model.listObjectsOfProperty(model.getProperty(OWL_IMPORTS)).toSet().isEmpty()) {
+            return model;
+        }
+
+        final OntModel out = ModelFactory.createOntologyModel(defaultSpec, model.getBaseModel());
+
+        final Set<String> resolvedImports = new HashSet<>();
+        Set<String> unresolvedImports = imports(model, resolvedImports);
+
+        while (!unresolvedImports.isEmpty()) {
+
+            for (final String unresolved : unresolvedImports) {
+                model.add(load(unresolved));
+                resolvedImports.add(unresolved);
+
+            }
+            unresolvedImports = imports(model, resolvedImports);
+        }
+
+        out.removeAll(null, model.getProperty(OWL_IMPORTS), null);
+
+        return out;
+    }
+
+    private Set<String> imports(Model model, Set<String> resolved) {
+        return model.listObjectsOfProperty(model.getProperty(OWL_IMPORTS)).mapWith(RDFNode::asResource).mapWith(
+                Resource::getURI).filterDrop(uri -> resolved.contains(uri)).toSet();
     }
 
     private Model load(String uri) {
@@ -81,42 +121,39 @@ public class JenaOntologyService implements OntologyService<OntModel> {
         final Model model = ModelFactory.createDefaultModel();
 
         final Lang lang = RDFLanguages.contentTypeToLang(r.contentType());
-        RDFDataMgr.read(model, r.representation(), r.uri().toString(), lang);
+        RDFDataMgr.read(model, r.representation(), r.uri() != null ? r.uri().toString() : null, lang);
         return model;
     }
 
-    private class RegistryGetter implements ModelGetter {
+    // Make sure Jena doesn't resolve imported ontologies, we're doing that;
+    private class NullGetter implements ModelGetter {
 
         @Override
         public Model getModel(String uri) {
-            return load(uri);
+            return null;
         }
 
         @Override
         public Model getModel(String uri, ModelReader reader) {
-            // We don't use the reader
-            return load(uri);
+            return ModelFactory.createDefaultModel();
         }
 
     }
 
     @Override
     public OntModel merge(OntModel ontology1, OntModel ontology2) {
-        final OntModelSpec spec = new OntModelSpec(defaultSpec);
-        final OntModel model = ModelFactory.createOntologyModel(spec);
+        final OntModel model = ModelFactory.createOntologyModel(defaultSpec);
 
-        model.add(ontology1);
-        model.add(ontology2);
+        model.add(ontology1.getBaseModel());
+        model.add(ontology2.getBaseModel());
 
         return model;
     }
 
     @Override
     public Set<URI> inferClasses(URI individual, WebResource resource, OntModel ontology) {
-        final OntModelSpec spec = new OntModelSpec(defaultSpec);
-        final OntModel model = ModelFactory.createOntologyModel(spec);
 
-        model.add(ontology);
+        final OntModel model = resolveImports(ontology);
         model.add(parse(resource));
 
         return model.getIndividual(individual.toString())

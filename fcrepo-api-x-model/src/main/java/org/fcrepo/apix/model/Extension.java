@@ -28,4 +28,6 @@ public interface Extension {
      * @return URI of the <code>rdf:type</code> this extension binds to.
      */
     public URI bindingClass();
+
+    public WebResource getResource();
 }

@@ -6,7 +6,7 @@
     <artifactId>apix</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>fcrepo-api-x-registry</artifactId>
+  <artifactId>fcrepo-api-x-jena</artifactId>
   <packaging>bundle</packaging>
 
   <build>
@@ -19,7 +19,6 @@
   </build>
 
   <dependencies>
-
     <dependency>
       <groupId>org.fcrepo.apix</groupId>
       <artifactId>fcrepo-api-x-model</artifactId>
@@ -33,23 +32,14 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpcore-osgi</artifactId>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-osgi</artifactId>
     </dependency>
-
+    
     <dependency>
-      <groupId>org.apache.httpcomponents</groupId>
-      <artifactId>httpclient-osgi</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>commons-io</groupId>
-      <artifactId>commons-io</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
+      <groupId>org.apache.servicemix.bundles</groupId>
+      <artifactId>org.apache.servicemix.bundles.xerces</artifactId>
+      <version>2.11.0_1</version>
     </dependency>
 
     <dependency>
@@ -63,6 +53,13 @@
       <artifactId>mockito-all</artifactId>
       <scope>test</scope>
     </dependency>
-
+    
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-core</artifactId>
+      <version>${jena.version}</version>
+      <scope>test</scope> 
+    </dependency>
   </dependencies>
+
 </project>

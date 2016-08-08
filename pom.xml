@@ -9,9 +9,18 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-    <maven-bundle-plugin.version>3.0.1</maven-bundle-plugin.version>
+
+    <commons-io.version>2.5</commons-io.version>
+    <httpclient.version>4.5.2</httpclient.version>
+    <httpcore.version>4.4.5</httpcore.version>
     <jena.version>3.1.0</jena.version>
     <junit.version>4.12</junit.version>
+    <maven-antrun-plugin.version>1.8</maven-antrun-plugin.version>
+    <maven-bundle-plugin.version>3.2.0</maven-bundle-plugin.version>
+    <maven-exec-plugin.version>1.4.0</maven-exec-plugin.version>
+    <mockito.version>1.10.19</mockito.version>
+    <osgi.scr.version>1.3.0</osgi.scr.version>
+    <slf4j.version>1.7.21</slf4j.version>
   </properties>
 
   <build>
@@ -20,13 +29,14 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
-          <version>1.4.0</version>
+          <version>${maven-exec-plugin.version}</version>
         </plugin>
       </plugins>
+
     </pluginManagement>
 
     <plugins>
-             <plugin>
+      <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
           <source>1.8</source>
@@ -37,12 +47,23 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
-        <version>3.0.1</version>
+        <version>${maven-bundle-plugin.version}</version>
+        <extensions>true</extensions>
+        <configuration>
+          <niceManifest>true</niceManifest>
+          <instructions>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Import-Package>*</Import-Package>
+            <_dsannotations>*</_dsannotations>
+          </instructions>
+        </configuration>
+
       </plugin>
+
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.8</version>
+        <version>${maven-antrun-plugin.version}</version>
         <executions>
           <execution>
             <phase>initialize</phase>
@@ -73,15 +94,102 @@
 
   <dependencyManagement>
     <dependencies>
+
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
+      </dependency>
+
       <dependency>
         <groupId>org.apache.jena</groupId>
         <artifactId>jena-osgi</artifactId>
         <version>${jena.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+          </exclusion>
+        </exclusions>
       </dependency>
       <dependency>
         <groupId>junit</groupId>
         <artifactId>junit</artifactId>
         <version>${junit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore-osgi</artifactId>
+        <version>${httpcore.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore-nio</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient-osgi</artifactId>
+        <version>${httpclient.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient-cache</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>fluent-hc</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.service.component.annotations</artifactId>
+        <version>${osgi.scr.version}</version>
+        <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-all</artifactId>
+        <version>${mockito.version}</version>
+        <scope>test</scope>
       </dependency>
     </dependencies>
   </dependencyManagement>
@@ -92,10 +200,10 @@
     <module>proof-of-concept/indexing-triplestore</module>
     <module>proof-of-concept/service-binding</module>
     <module>fcrepo-api-x-registry</module>
-    <module>fcrepo-api-x-api</module>
     <module>fcrepo-api-x-model</module>
     <module>fcrepo-api-x-routing</module>
     <module>fcrepo-api-x-binding</module>
-    <module>fcrepo-api-x-executiion</module>
+    <module>fcrepo-api-x-execution</module>
+    <module>fcrepo-api-x-jena</module>
   </modules>
 </project>

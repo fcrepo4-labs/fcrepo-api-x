@@ -6,7 +6,7 @@
     <artifactId>apix</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
-  <artifactId>fcrepo-api-x-model</artifactId>
+  <artifactId>fcrepo-api-x-execution</artifactId>
   <packaging>bundle</packaging>
 
   <build>
