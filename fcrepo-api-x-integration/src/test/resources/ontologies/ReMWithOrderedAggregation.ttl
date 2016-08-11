@@ -1,0 +1,25 @@
+@prefix owl:<http://www.w3.org/2002/07/owl#> .
+@prefix iana:<http://www.iana.org/assignments/relation/> .
+@prefix ore:<http://www.openarchives.org/ore/terms/> .
+
+<> a owl:Class;
+    owl:intersectionOf (
+        ore:ResourceMap
+        [ a owl:Restriction;
+            owl:onProperty ore:describes;
+            owl:someValuesFrom <#OrderedAggregation>;
+        ]
+    ) .
+
+<#OrderedAggregation> a owl:Class;
+    owl:intersectionOf (
+        ore:Aggregation
+        [ a owl:Restriction;
+            owl:onProperty iana:last;
+            owl:someValuesFrom ore:Proxy
+        ]
+        [ a owl:Restriction;
+            owl:onProperty iana:first;
+            owl:someValuesFrom ore:Proxy
+        ]
+    ) .

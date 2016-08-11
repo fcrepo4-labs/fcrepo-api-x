@@ -18,22 +18,13 @@
 
 package org.fcrepo.apix.model;
 
-import java.net.URI;
-import java.util.Set;
+/** Marker interface for ontologies */
+public interface Ontology {
 
-/**
- * Serializes and deserializes ontologies.
- *
- * @param T Class for representing ontologies.
- */
-public interface OntologyService extends Registry {
+    public static final String APIX_NS = "http://example.org/apix#";
 
-    public Ontology loadOntology(WebResource ont);
+    public static final String LDP_NS = "http://www.w3.org/ns/ldp#";
 
-    public Ontology getOntology(URI uri);
-
-    public Ontology merge(Ontology ontology1, Ontology ontology2);
-
-    public Set<URI> inferClasses(URI individual, WebResource resource, Ontology ontology);
+    public static final String EXTENSION_BINDING_CLASS = APIX_NS + "bindsTo";
 
 }

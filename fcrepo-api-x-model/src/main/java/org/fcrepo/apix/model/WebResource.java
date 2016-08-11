@@ -33,4 +33,39 @@ public interface WebResource extends AutoCloseable {
     public long length();
 
     public InputStream representation();
+
+    public static WebResource of(final InputStream stream, final String contentType) {
+        return of(stream, contentType, null, null);
+    }
+
+    public static WebResource of(final InputStream stream, final String contentType, final URI uri,
+            final Long length) {
+        return new WebResource() {
+
+            @Override
+            public void close() throws Exception {
+                stream.close();
+            }
+
+            @Override
+            public URI uri() {
+                return uri;
+            }
+
+            @Override
+            public InputStream representation() {
+                return stream;
+            }
+
+            @Override
+            public long length() {
+                return length;
+            }
+
+            @Override
+            public String contentType() {
+                return contentType;
+            }
+        };
+    }
 }

@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.impl.registry;
+package org.fcrepo.apix.registry.impl;
 
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.junit.Assert.assertEquals;
@@ -29,6 +29,8 @@ import static org.mockito.Mockito.when;
 
 import java.io.InputStream;
 import java.net.URI;
+
+import org.fcrepo.apix.registry.impl.HttpRegistry;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;

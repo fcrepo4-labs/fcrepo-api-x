@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.ExtensionBinding;
 import org.fcrepo.apix.model.ExtensionRegistry;
+import org.fcrepo.apix.model.Ontology;
 import org.fcrepo.apix.model.OntologyService;
 import org.fcrepo.apix.model.WebResource;
 
@@ -45,7 +46,7 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
 
     private ExtensionRegistry extensionRegistry;
 
-    private OntologyService<Object> ontologies;
+    private OntologyService ontologies;
 
     @Reference
     public void setExtensionRegistry(ExtensionRegistry exr) {
@@ -53,8 +54,8 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
     }
 
     @Reference
-    public void setOntologyService(OntologyService<Object> oss) {
-        ontologies = oss;
+    public void setOntologyService(OntologyService os) {
+        ontologies = os;
     }
 
     @Override
@@ -63,9 +64,9 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
         final Collection<Extension> extensions = extensionRegistry.getExtensions();
 
         // Create a union ontology of all extensions and included ontologies
-        final Object unionOntology = extensions.stream().map(Extension::getResource).map(ontologies::loadOntology)
+        final Ontology unionOntology = extensions.stream().map(Extension::getResource).map(ontologies::loadOntology)
                 .reduce(
-                        ontologies::merge);
+                        ontologies::merge).get();
 
         // Infer all types from the union ontology
         final Set<URI> rdfTypes = ontologies.inferClasses(resource.uri(), resource, unionOntology);

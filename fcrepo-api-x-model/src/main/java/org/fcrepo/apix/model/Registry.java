@@ -19,35 +19,46 @@
 package org.fcrepo.apix.model;
 
 import java.net.URI;
+import java.util.Collection;
 
 /**
- * Registry for retrieving ontologies.
+ * Registry for retrieving some sort of resource.
  *
  * @author apb@jhu.edu
  */
 public interface Registry {
 
     /**
-     * Get an ontology by IRI .
+     * Get a resource
      *
-     * @param id owl2 ontology IRI.
-     * @return A serialized ontology resource.
+     * @param id URI of the resource
+     * @return A serialized resource.
      */
     public WebResource get(URI id);
 
     /**
-     * Persist an ontology in the registry.
+     * Persist a resource in the registry.
      *
-     * @param id owl2 ontology IRI.
-     * @param ontologyResource serialized ontology resource;
+     * @param id URI of the resource
+     * @param resource serialized resource;
+     * @return URI of the resource, as persisted in the registry;
      */
-    public URI put(URI id, WebResource ontologyResource);
+    public URI put(WebResource resource);
+
+    public void delete(URI uri);
 
     /**
-     * Determines if ontologies can be written to this registry.
+     * Determines if resources can be written to this registry.
      *
      * @return true if writable via {@link #put(URI, WebResource)}
      */
     public boolean canWrite();
+
+    /**
+     * Lists all resources in the registry.
+     *
+     * @return possibly unordered list of all resource URIs in the registry.
+     */
+    public Collection<URI> list();
 
 }

@@ -16,12 +16,16 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.impl.jena;
+package org.fcrepo.apix.jena.impl;
+
+import static org.fcrepo.apix.jena.impl.Util.parse;
 
 import java.net.URI;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.fcrepo.apix.model.Ontology;
 import org.fcrepo.apix.model.OntologyService;
 import org.fcrepo.apix.model.Registry;
 import org.fcrepo.apix.model.WebResource;
@@ -34,15 +38,12 @@ import org.apache.jena.rdf.model.ModelGetter;
 import org.apache.jena.rdf.model.ModelReader;
 import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class JenaOntologyService implements OntologyService<OntModel> {
+public class JenaOntologyService implements OntologyService {
 
     private Registry registry;
 
@@ -56,20 +57,20 @@ public class JenaOntologyService implements OntologyService<OntModel> {
     }
 
     @Reference
-    public void setOntologyRegistry(Registry registry) {
+    public void setRegistryDelegate(Registry registry) {
         this.registry = registry;
     }
 
     @Override
-    public OntModel getOntology(URI uri) {
+    public Ont getOntology(URI uri) {
 
-        return resolveImports(ModelFactory.createOntologyModel(defaultSpec, load(uri.toString())));
+        return new Ont(resolveImports(ModelFactory.createOntologyModel(defaultSpec, load(uri.toString()))));
     }
 
     @Override
-    public OntModel loadOntology(WebResource ont) {
+    public Ont loadOntology(WebResource ont) {
         try (WebResource ontology = ont) {
-            return resolveImports(ModelFactory.createOntologyModel(defaultSpec, parse(ontology)));
+            return new Ont(resolveImports(ModelFactory.createOntologyModel(defaultSpec, parse(ontology))));
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
@@ -117,14 +118,6 @@ public class JenaOntologyService implements OntologyService<OntModel> {
         }
     }
 
-    private static Model parse(WebResource r) {
-        final Model model = ModelFactory.createDefaultModel();
-
-        final Lang lang = RDFLanguages.contentTypeToLang(r.contentType());
-        RDFDataMgr.read(model, r.representation(), r.uri() != null ? r.uri().toString() : null, lang);
-        return model;
-    }
-
     // Make sure Jena doesn't resolve imported ontologies, we're doing that;
     private class NullGetter implements ModelGetter {
 
@@ -141,19 +134,19 @@ public class JenaOntologyService implements OntologyService<OntModel> {
     }
 
     @Override
-    public OntModel merge(OntModel ontology1, OntModel ontology2) {
+    public Ont merge(Ontology ontology1, Ontology ontology2) {
         final OntModel model = ModelFactory.createOntologyModel(defaultSpec);
 
-        model.add(ontology1.getBaseModel());
-        model.add(ontology2.getBaseModel());
+        model.add(ont(ontology1).getBaseModel());
+        model.add(ont(ontology2).getBaseModel());
 
-        return model;
+        return new Ont(model);
     }
 
     @Override
-    public Set<URI> inferClasses(URI individual, WebResource resource, OntModel ontology) {
+    public Set<URI> inferClasses(URI individual, WebResource resource, Ontology ontology) {
 
-        final OntModel model = resolveImports(ontology);
+        final OntModel model = resolveImports(ont(ontology));
         model.add(parse(resource));
 
         return model.getIndividual(individual.toString())
@@ -164,4 +157,41 @@ public class JenaOntologyService implements OntologyService<OntModel> {
 
     }
 
+    OntModel ont(Ontology o) {
+        return ((Ont) o).model;
+    }
+
+    static class Ont implements Ontology {
+
+        final OntModel model;
+
+        private Ont(OntModel model) {
+            this.model = model;
+        }
+    }
+
+    @Override
+    public WebResource get(URI id) {
+        return registry.get(id);
+    }
+
+    @Override
+    public URI put(WebResource ontologyResource) {
+        return registry.put(ontologyResource);
+    }
+
+    @Override
+    public boolean canWrite() {
+        return registry.canWrite();
+    }
+
+    @Override
+    public Collection<URI> list() {
+        return registry.list();
+    }
+
+    @Override
+    public void delete(URI uri) {
+        registry.delete(uri);
+    }
 }

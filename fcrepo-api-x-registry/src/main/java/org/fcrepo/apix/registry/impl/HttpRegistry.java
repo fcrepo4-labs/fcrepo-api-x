@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.impl.registry;
+package org.fcrepo.apix.registry.impl;
 
 import static org.apache.http.HttpHeaders.ACCEPT;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
+import java.util.Collection;
 
 import org.fcrepo.apix.model.Registry;
 import org.fcrepo.apix.model.WebResource;
@@ -125,12 +126,22 @@ public class HttpRegistry implements Registry {
     }
 
     @Override
-    public URI put(URI id, WebResource resource) {
+    public URI put(WebResource resource) {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public boolean canWrite() {
         return false;
+    }
+
+    @Override
+    public Collection<URI> list() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void delete(URI uri) {
+        throw new UnsupportedOperationException();
     }
 }

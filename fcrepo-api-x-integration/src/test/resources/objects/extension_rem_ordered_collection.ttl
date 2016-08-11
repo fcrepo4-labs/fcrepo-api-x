@@ -1,0 +1,3 @@
+@prefix apix:<http://example.org/apix#> .
+
+<> a apix:Extension ;

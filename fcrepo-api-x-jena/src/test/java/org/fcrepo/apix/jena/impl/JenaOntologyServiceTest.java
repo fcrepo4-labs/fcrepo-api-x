@@ -1,5 +1,5 @@
 
-package org.fcrepo.apix.impl.jena;
+package org.fcrepo.apix.jena.impl;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
@@ -10,6 +10,8 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
 
+import org.fcrepo.apix.jena.impl.JenaOntologyService;
+import org.fcrepo.apix.model.Ontology;
 import org.fcrepo.apix.model.Registry;
 import org.fcrepo.apix.model.WebResource;
 
@@ -94,13 +96,13 @@ public class JenaOntologyServiceTest {
     @Before
     public void setUp() {
         toTest = new JenaOntologyService();
-        toTest.setOntologyRegistry(ONTOLOGY_REGISTRY);
+        toTest.setRegistryDelegate(ONTOLOGY_REGISTRY);
     }
 
     // Verify that an ontology can be retrieved (from the underlying registry) in the first place
     @Test
     public void ontologyRetrievalTest() {
-        final OntModel model = toTest.getOntology(URI.create(ONT1));
+        final OntModel model = toTest.getOntology(URI.create(ONT1)).model;
 
         final Model expectedTriples = ModelFactory.createDefaultModel();
         expectedTriples.read(ONTOLOGY_REGISTRY.get(URI.create(ONT1)).representation(), null, "N-TRIPLES");
@@ -111,10 +113,10 @@ public class JenaOntologyServiceTest {
     // Verify that ontologies are merged.
     @Test
     public void ontologyMergeTest() {
-        final OntModel model1 = toTest.getOntology(URI.create(ONT1));
-        final OntModel model2 = toTest.getOntology(URI.create(ONT2));
+        final Ontology model1 = toTest.getOntology(URI.create(ONT1));
+        final Ontology model2 = toTest.getOntology(URI.create(ONT2));
 
-        final OntModel merged = toTest.merge(model1, model2);
+        final OntModel merged = toTest.merge(model1, model2).model;
 
         final Model expectedTriples = ModelFactory.createDefaultModel();
         expectedTriples.read(ONTOLOGY_REGISTRY.get(URI.create(ONT1)).representation(), null, "N-TRIPLES");
@@ -127,7 +129,7 @@ public class JenaOntologyServiceTest {
     // and incorporated into the result ontology
     @Test
     public void followOwlImportsTest() {
-        final OntModel model_includes_1_and_2 = toTest.getOntology(URI.create(ONT3));
+        final OntModel model_includes_1_and_2 = toTest.getOntology(URI.create(ONT3)).model;
 
         final Model expectedTriples = ModelFactory.createDefaultModel();
         expectedTriples.read(ONTOLOGY_REGISTRY.get(URI.create(ONT1)).representation(), null, "N-TRIPLES");
@@ -142,7 +144,7 @@ public class JenaOntologyServiceTest {
     // Verify that imports are resolved transitively
     @Test
     public void transitiveImportsTest() throws Exception {
-        final OntModel transitive = toTest.getOntology(URI.create(ONT5));
+        final OntModel transitive = toTest.getOntology(URI.create(ONT5)).model;
 
         // 5 includes 4, 4 includes 1
         final Model expectedTriples = ModelFactory.createDefaultModel();
@@ -158,10 +160,32 @@ public class JenaOntologyServiceTest {
         assertTrue(transitive.containsAll(expectedTriples));
     }
 
+    // verifies that an ontology can be loaded manually, and transitive imports resolved with the registry
+    @Test
+    public void loadOntologyTest() {
+        final WebResource resource = ONTOLOGY_REGISTRY.get(URI.create(ONT5));
+
+        final OntModel transitive = toTest.loadOntology(resource).model;
+
+        // 5 includes 4, 4 includes 1
+        final Model expectedTriples = ModelFactory.createDefaultModel();
+        expectedTriples.add(ModelFactory.createDefaultModel().read(ONTOLOGY_REGISTRY.get(URI.create(ONT1))
+                .representation(), null, "N-TRIPLES"));
+        expectedTriples.add(ModelFactory.createDefaultModel().read(ONTOLOGY_REGISTRY.get(URI.create(ONT4))
+                .representation(), null, "N-TRIPLES"));
+        expectedTriples.add(ModelFactory.createDefaultModel().read(ONTOLOGY_REGISTRY.get(URI.create(ONT5))
+                .representation(), null, "N-TRIPLES"));
+
+        expectedTriples.removeAll(null, expectedTriples.getProperty(OWL_IMPORTS), null);
+
+        assertTrue(transitive.containsAll(expectedTriples));
+
+    }
+
     // Verify that classes of an instance are inferred.
     @Test
     public void inferClassesTest() {
-        final OntModel ontology = toTest.getOntology(URI.create(ONT1));
+        final Ontology ontology = toTest.getOntology(URI.create(ONT1));
 
         final String individualURI = "test:/individual";
 
@@ -178,7 +202,7 @@ public class JenaOntologyServiceTest {
     // Verify that inference is over the closure of owl:imports
     @Test
     public void inferClassesUsingImportsTest() {
-        final OntModel ontology = toTest.getOntology(URI.create(ONT5));
+        final Ontology ontology = toTest.getOntology(URI.create(ONT5));
 
         final String individualURI = "test:/individual";
 
