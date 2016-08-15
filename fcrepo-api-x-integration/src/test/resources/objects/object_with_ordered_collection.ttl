@@ -30,5 +30,5 @@
 
 <#proxyC> a ore:Proxy;
     ore:proxyIn <#collection>;
-    ore:proxyFor <$C>;
+    ore:proxyFor <#C>;
     iana:previous <#proxyB> .

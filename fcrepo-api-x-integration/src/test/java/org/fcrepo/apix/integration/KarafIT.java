@@ -22,6 +22,11 @@ import org.ops4j.pax.exam.options.MavenUrlReference;
 
 public interface KarafIT {
 
+    static final String fcrepoBaseURI = String.format("http://localhost:%s/%s/rest/", System.getProperty(
+            "fcrepo.dynamic.test.port"), System.getProperty("fcrepo.cxtPath", "fcrepo"));
+
+    static final File testResources = new File(System.getProperty("project.basedir"), "src/test/resources");
+
     @Configuration
     public default Option[] config() {
         final MavenArtifactUrlReference karafUrl = maven().groupId("org.apache.karaf")

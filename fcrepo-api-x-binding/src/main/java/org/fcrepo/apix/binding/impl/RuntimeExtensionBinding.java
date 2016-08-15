@@ -74,5 +74,4 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
         // Now return all extensions that are
         return extensions.stream().filter(e -> rdfTypes.contains(e.bindingClass())).collect(Collectors.toList());
     }
-
 }

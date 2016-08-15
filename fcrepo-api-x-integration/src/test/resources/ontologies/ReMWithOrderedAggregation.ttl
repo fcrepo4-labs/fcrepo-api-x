@@ -1,8 +1,11 @@
 @prefix owl:<http://www.w3.org/2002/07/owl#> .
+@prefix test:<http://example.org/test#> .
 @prefix iana:<http://www.iana.org/assignments/relation/> .
 @prefix ore:<http://www.openarchives.org/ore/terms/> .
 
-<> a owl:Class;
+<test:Ontology> a owl:Ontology .
+
+test:RemWithOrderedAggregation a owl:Class;
     owl:intersectionOf (
         ore:ResourceMap
         [ a owl:Restriction;
@@ -11,7 +14,7 @@
         ]
     ) .
 
-<#OrderedAggregation> a owl:Class;
+test:OrderedAggregation a owl:Class;
     owl:intersectionOf (
         ore:Aggregation
         [ a owl:Restriction;

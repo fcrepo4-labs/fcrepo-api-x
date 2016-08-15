@@ -23,7 +23,9 @@ import static org.fcrepo.apix.jena.impl.Util.parse;
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.fcrepo.apix.model.Ontology;
 import org.fcrepo.apix.model.OntologyService;
@@ -45,9 +47,15 @@ import org.osgi.service.component.annotations.Reference;
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class JenaOntologyService implements OntologyService {
 
+    private final Map<URI, URI> registeredOntoloies = new ConcurrentHashMap<>();
+
     private Registry registry;
 
     private OntModelSpec defaultSpec = OntModelSpec.OWL_MEM_MICRO_RULE_INF;
+
+    static final String RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
+
+    static final String OWL_ONTOLOGY = "http://www.w3.org/2002/07/owl#Ontology";
 
     static final String OWL_IMPORTS = "http://www.w3.org/2002/07/owl#imports";
 
@@ -56,15 +64,48 @@ public class JenaOntologyService implements OntologyService {
         spec.setImportModelGetter(new NullGetter());
     }
 
+    public void init() {
+        index();
+    }
+
+    private void index() {
+        for (final URI registeredOntologyResource : registry.list()) {
+            index(registeredOntologyResource);
+        }
+    }
+
+    private void index(URI registeredOntologyResource) {
+        System.out.println("Indexing " + registeredOntologyResource);
+        for (final URI ontologyURI : ontologyURIs(load(registeredOntologyResource))) {
+            if (registeredOntoloies.containsKey(ontologyURI) && !registeredOntologyResource.equals(
+                    registeredOntoloies.get(ontologyURI))) {
+                throw new RuntimeException(String.format(
+                        "There is already a resource for ontology %s at %s, attempted to add a new one at %s",
+                        ontologyURI, registeredOntoloies.get(ontologyURI), registeredOntologyResource));
+            }
+            registeredOntoloies.put(ontologyURI, registeredOntologyResource);
+        }
+    }
+
     @Reference
     public void setRegistryDelegate(Registry registry) {
         this.registry = registry;
     }
 
     @Override
-    public Ont getOntology(URI uri) {
+    public Ont getOntology(final URI uri) {
 
-        return new Ont(resolveImports(ModelFactory.createOntologyModel(defaultSpec, load(uri.toString()))));
+        URI toLoad = uri;
+        System.out.println("Registered ontologoes " + registeredOntoloies);
+        if (registeredOntoloies.containsKey(uri)) {
+            System.out.println("get this ontologu " + uri);
+            toLoad = registeredOntoloies.get(uri);
+            System.out.println(toLoad);
+        } else {
+            System.out.println("NO ontology " + uri);
+        }
+
+        return new Ont(resolveImports(ModelFactory.createOntologyModel(defaultSpec, load(toLoad.toString()))));
     }
 
     @Override
@@ -109,8 +150,21 @@ public class JenaOntologyService implements OntologyService {
     }
 
     private Model load(String uri) {
-        try (WebResource wr = registry.get(URI.create(uri))) {
+        return load(URI.create(uri));
+    }
 
+    private Set<URI> ontologyURIs(Model ontology) {
+        System.out.println("Getting ontologies from ");
+        ontology.write(System.out);
+        return ontology.listSubjectsWithProperty(ontology.getProperty(RDF_TYPE), OWL_ONTOLOGY)
+                .mapWith(Resource::getURI)
+                .mapWith(URI::create).toSet();
+    }
+
+    private Model load(URI uri) {
+        try (WebResource wr = registry.get(uri)) {
+
+            System.out.println("LOADING FROM URI " + uri + "; " + wr);
             return parse(wr);
 
         } catch (final Exception e) {
@@ -177,7 +231,13 @@ public class JenaOntologyService implements OntologyService {
 
     @Override
     public URI put(WebResource ontologyResource) {
-        return registry.put(ontologyResource);
+        System.out.println("putting " + ontologyResource.uri());
+        final URI uri = registry.put(ontologyResource);
+        System.out.println("OK, put " + uri);
+
+        index(uri);
+
+        return uri;
     }
 
     @Override

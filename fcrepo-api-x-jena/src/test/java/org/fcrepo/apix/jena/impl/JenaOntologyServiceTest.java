@@ -1,6 +1,8 @@
 
 package org.fcrepo.apix.jena.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -10,7 +12,6 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
 
-import org.fcrepo.apix.jena.impl.JenaOntologyService;
 import org.fcrepo.apix.model.Ontology;
 import org.fcrepo.apix.model.Registry;
 import org.fcrepo.apix.model.WebResource;
@@ -213,6 +214,42 @@ public class JenaOntologyServiceTest {
 
         assertTrue(toTest.inferClasses(URI.create(individualURI), individual, ontology).contains(URI.create(
                 CLASS_A)));
+    }
+
+    @Test
+    public void indexedOntologyTest() {
+        final URI resolvableURI = URI.create("http://example.org/resolvable/indexedOntologyTest");
+        final URI ontologyURI = URI.create("http://example.org/indexedOntologyTest");
+
+        final String testClass = "http://example.org/indexedOntologyTest#class";
+
+        final String rdf =
+                triple(ontologyURI.toString(), RDF_TYPE, OWL_ONTOLOGY) +
+                        triple(ontologyURI.toString(), OWL_IMPORTS, ONT4) +
+                        triple(testClass, SUBCLASS_OF, CLASS_D);
+
+        final WebResource resource =
+                ontResource(resolvableURI.toString(),
+                        rdf);
+
+        System.err.println("TO TEST XXXXXXXXXXXXX\nXXX\nXXX\nXXX\nXXX" + toTest);
+
+        System.out.println("PUTTING ONTOLOGY");
+
+        when(ONTOLOGY_REGISTRY.put(resource)).thenReturn(resolvableURI);
+        when(ONTOLOGY_REGISTRY.get(eq(resolvableURI))).thenReturn(resource);
+        toTest.put(resource);
+
+        try {
+
+            System.out.println("OK, should have indexed by now");
+            final Ontology myOntology = toTest.getOntology(ontologyURI);
+            assertNotNull(myOntology);
+            assertEquals(resolvableURI, toTest.get(ontologyURI).uri());
+        } catch (final Exception e) {
+            e.printStackTrace(System.err);
+            throw (e);
+        }
     }
 
     private static String triple(String s, String p, String o) {
