@@ -24,15 +24,16 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.fcrepo.apix.model.Extension;
-import org.fcrepo.apix.model.ExtensionBinding;
-import org.fcrepo.apix.model.ExtensionRegistry;
-import org.fcrepo.apix.model.Ontology;
-import org.fcrepo.apix.model.OntologyService;
 import org.fcrepo.apix.model.WebResource;
+import org.fcrepo.apix.model.components.ExtensionBinding;
+import org.fcrepo.apix.model.components.ExtensionRegistry;
+import org.fcrepo.apix.model.components.OntologyService;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Simple extension binding based on runtime lookup and reasoning.
@@ -44,9 +45,11 @@ import org.osgi.service.component.annotations.Reference;
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RuntimeExtensionBinding implements ExtensionBinding {
 
+    private static final Logger LOG = LoggerFactory.getLogger(RuntimeExtensionBinding.class);
+
     private ExtensionRegistry extensionRegistry;
 
-    private OntologyService ontologies;
+    private OntologyService ontologySvc;
 
     @Reference
     public void setExtensionRegistry(ExtensionRegistry exr) {
@@ -55,7 +58,7 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
 
     @Reference
     public void setOntologyService(OntologyService os) {
-        ontologies = os;
+        ontologySvc = os;
     }
 
     @Override
@@ -63,15 +66,17 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
 
         final Collection<Extension> extensions = extensionRegistry.getExtensions();
 
-        // Create a union ontology of all extensions and included ontologies
-        final Ontology unionOntology = extensions.stream().map(Extension::getResource).map(ontologies::loadOntology)
-                .reduce(
-                        ontologies::merge).get();
+        LOG.debug("Checking {} against {} extensions", resource.uri(), extensions.size());
 
-        // Infer all types from the union ontology
-        final Set<URI> rdfTypes = ontologies.inferClasses(resource.uri(), resource, unionOntology);
+        final Set<URI> rdfTypes = extensions.stream()
+                .map(Extension::getResource)
+                .map(ontologySvc::parseOntology)
+                .flatMap(o -> ontologySvc.inferClasses(resource.uri(), resource, o).stream())
+                .collect(Collectors.toSet());
 
-        // Now return all extensions that are
+        LOG.debug("inferred {} classes for resource {}", rdfTypes, resource.uri());
+
+        // Now return all extensions that are bound to any of the inferred classes;
         return extensions.stream().filter(e -> rdfTypes.contains(e.bindingClass())).collect(Collectors.toList());
     }
 }

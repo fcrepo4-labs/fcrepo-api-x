@@ -54,6 +54,7 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
+        <version>1.12</version>
         <configuration>
           <portNames>
             <portName>fcrepo.dynamic.test.port</portName>
@@ -131,12 +132,6 @@
   </build>
 
   <dependencies>
-
-    <dependency>
-      <groupId>org.fcrepo.apix</groupId>
-      <artifactId>fcrepo-api-x-model</artifactId>
-      <version>${project.version}</version>
-    </dependency>
 
     <dependency>
       <groupId>org.fcrepo.apix</groupId>
@@ -247,6 +242,12 @@
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.core</artifactId>
       <version>${osgi.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
       <scope>test</scope>
     </dependency>
 

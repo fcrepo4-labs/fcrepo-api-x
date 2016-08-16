@@ -21,16 +21,13 @@ package org.fcrepo.apix.jena.impl;
 import static org.fcrepo.apix.jena.impl.Util.parse;
 
 import java.net.URI;
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.fcrepo.apix.model.Ontology;
-import org.fcrepo.apix.model.OntologyService;
-import org.fcrepo.apix.model.Registry;
 import org.fcrepo.apix.model.WebResource;
+import org.fcrepo.apix.model.components.OntologyRegistry;
+import org.fcrepo.apix.model.components.OntologyService;
 
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
@@ -44,12 +41,13 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 
+/**
+ * Uses Jena to parse and provide reasoning over ontologies.
+ */
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class JenaOntologyService implements OntologyService {
 
-    private final Map<URI, URI> registeredOntoloies = new ConcurrentHashMap<>();
-
-    private Registry registry;
+    private OntologyRegistry registry;
 
     private OntModelSpec defaultSpec = OntModelSpec.OWL_MEM_MICRO_RULE_INF;
 
@@ -61,55 +59,25 @@ public class JenaOntologyService implements OntologyService {
 
     public void setOntModelSpec(OntModelSpec spec) {
         defaultSpec = new OntModelSpec(spec);
-        spec.setImportModelGetter(new NullGetter());
+        defaultSpec.setImportModelGetter(new NullGetter());
     }
 
-    public void init() {
-        index();
-    }
-
-    private void index() {
-        for (final URI registeredOntologyResource : registry.list()) {
-            index(registeredOntologyResource);
-        }
-    }
-
-    private void index(URI registeredOntologyResource) {
-        System.out.println("Indexing " + registeredOntologyResource);
-        for (final URI ontologyURI : ontologyURIs(load(registeredOntologyResource))) {
-            if (registeredOntoloies.containsKey(ontologyURI) && !registeredOntologyResource.equals(
-                    registeredOntoloies.get(ontologyURI))) {
-                throw new RuntimeException(String.format(
-                        "There is already a resource for ontology %s at %s, attempted to add a new one at %s",
-                        ontologyURI, registeredOntoloies.get(ontologyURI), registeredOntologyResource));
-            }
-            registeredOntoloies.put(ontologyURI, registeredOntologyResource);
-        }
+    public JenaOntologyService() {
+        defaultSpec.setImportModelGetter(new NullGetter());
     }
 
     @Reference
-    public void setRegistryDelegate(Registry registry) {
+    public void setRegistryDelegate(OntologyRegistry registry) {
         this.registry = registry;
     }
 
     @Override
     public Ont getOntology(final URI uri) {
-
-        URI toLoad = uri;
-        System.out.println("Registered ontologoes " + registeredOntoloies);
-        if (registeredOntoloies.containsKey(uri)) {
-            System.out.println("get this ontologu " + uri);
-            toLoad = registeredOntoloies.get(uri);
-            System.out.println(toLoad);
-        } else {
-            System.out.println("NO ontology " + uri);
-        }
-
-        return new Ont(resolveImports(ModelFactory.createOntologyModel(defaultSpec, load(toLoad.toString()))));
+        return new Ont(resolveImports(ModelFactory.createOntologyModel(defaultSpec, load(uri.toString()))));
     }
 
     @Override
-    public Ont loadOntology(WebResource ont) {
+    public Ont parseOntology(WebResource ont) {
         try (WebResource ontology = ont) {
             return new Ont(resolveImports(ModelFactory.createOntologyModel(defaultSpec, parse(ontology))));
         } catch (final Exception e) {
@@ -117,6 +85,7 @@ public class JenaOntologyService implements OntologyService {
         }
     }
 
+    /** Resolve the closure of all owl:imports statements into a union model */
     private OntModel resolveImports(OntModel model) {
 
         // if no imports, nothing to resolve
@@ -139,6 +108,7 @@ public class JenaOntologyService implements OntologyService {
             unresolvedImports = imports(model, resolvedImports);
         }
 
+        // Since we manually resolved all imports, remove all owl:imports statements
         out.removeAll(null, model.getProperty(OWL_IMPORTS), null);
 
         return out;
@@ -153,18 +123,9 @@ public class JenaOntologyService implements OntologyService {
         return load(URI.create(uri));
     }
 
-    private Set<URI> ontologyURIs(Model ontology) {
-        System.out.println("Getting ontologies from ");
-        ontology.write(System.out);
-        return ontology.listSubjectsWithProperty(ontology.getProperty(RDF_TYPE), OWL_ONTOLOGY)
-                .mapWith(Resource::getURI)
-                .mapWith(URI::create).toSet();
-    }
-
     private Model load(URI uri) {
         try (WebResource wr = registry.get(uri)) {
 
-            System.out.println("LOADING FROM URI " + uri + "; " + wr);
             return parse(wr);
 
         } catch (final Exception e) {
@@ -172,7 +133,7 @@ public class JenaOntologyService implements OntologyService {
         }
     }
 
-    // Make sure Jena doesn't resolve imported ontologies, we're doing that;
+    /** Make sure Jena doesn't resolve imported ontologies, we're doing that; */
     private class NullGetter implements ModelGetter {
 
         @Override
@@ -205,6 +166,7 @@ public class JenaOntologyService implements OntologyService {
 
         return model.getIndividual(individual.toString())
                 .listRDFTypes(false)
+                .filterKeep(Resource::isURIResource)
                 .mapWith(Resource::getURI)
                 .mapWith(URI::create)
                 .toSet();
@@ -224,34 +186,4 @@ public class JenaOntologyService implements OntologyService {
         }
     }
 
-    @Override
-    public WebResource get(URI id) {
-        return registry.get(id);
-    }
-
-    @Override
-    public URI put(WebResource ontologyResource) {
-        System.out.println("putting " + ontologyResource.uri());
-        final URI uri = registry.put(ontologyResource);
-        System.out.println("OK, put " + uri);
-
-        index(uri);
-
-        return uri;
-    }
-
-    @Override
-    public boolean canWrite() {
-        return registry.canWrite();
-    }
-
-    @Override
-    public Collection<URI> list() {
-        return registry.list();
-    }
-
-    @Override
-    public void delete(URI uri) {
-        registry.delete(uri);
-    }
 }

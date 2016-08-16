@@ -1,29 +1,48 @@
+/*
+ * Licensed to DuraSpace under one or more contributor license agreements.
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * DuraSpace licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package org.fcrepo.apix.integration;
 
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
-import org.fcrepo.apix.model.ExtensionBinding;
-import org.fcrepo.apix.model.ExtensionRegistry;
-import org.fcrepo.apix.model.OntologyService;
+import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.WebResource;
-import org.fcrepo.client.FcrepoClient;
+import org.fcrepo.apix.model.components.ExtensionBinding;
+import org.fcrepo.apix.model.components.ExtensionRegistry;
+import org.fcrepo.apix.model.components.OntologyRegistry;
+import org.fcrepo.apix.model.components.OntologyService;
+import org.fcrepo.client.FcrepoOperationFailedException;
 import org.fcrepo.client.FcrepoResponse;
 
-import org.apache.commons.io.FilenameUtils;
-import org.apache.http.HttpHeaders;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -36,6 +55,14 @@ import org.osgi.framework.BundleContext;
 
 @RunWith(PaxExam.class)
 public class RepositoryExtensionBindingIT implements KarafIT {
+
+    private static final URI ORE_ONTOLOGY_IRI = URI.create("http://www.openarchives.org/ore/terms/");
+
+    private static final URI PCDM_ONTOLOGY_IRI = URI.create("http://pcdm.org/models");
+
+    private static final URI TEST_ONTOLOGY_IRI = URI.create("http://example.org/test#Ontology");
+
+    private static final URI TEST_ONTOLOGY_NO_IMPORT = URI.create("http://example.org/test#OntologyNoImport");
 
     @Rule
     public TestName name = new TestName();
@@ -50,81 +77,79 @@ public class RepositoryExtensionBindingIT implements KarafIT {
     OntologyService ontologyServivce;
 
     @Inject
+    OntologyRegistry ontologyRegistry;
+
+    @Inject
     ExtensionBinding extensionBinding;
 
-    FcrepoClient client = FcrepoClient.client().throwExceptionOnFailure().build();
-
-    URI pcdmOntology;
-
-    URI oreOntology;
-
-    URI testContainer;
-
-    URI remWithOrderedAggregationOntology;
-
-    URI remWithOrderedAggregationExtension;
+    static final URI testContainer = URI.create(fcrepoBaseURI.toString() + RepositoryExtensionBindingIT.class
+            .getSimpleName());
 
     @Override
     public List<Option> additionalKarafConfig() {
 
+        // This dependency is not in any features files, so we have to add it manually.
         final MavenArtifactUrlReference fcrepoClient = maven().groupId("org.fcrepo.client")
                 .artifactId("fcrepo-java-client")
                 .versionAsInProject();
 
         return Arrays.asList(
+                // Fcrepo client is not a dependency of anything else, but tests need it.
+                // As this test runs as a maven bundle in Karaf, the test's reactor dependencies are not
+                // available a priori.
                 mavenBundle(fcrepoClient),
+
+                // Pax exam runs in a separate VM, so we need to tell Karaf to set any system properties we need.
                 editConfigurationFilePut("etc/system.properties", "fcrepo.dynamic.test.port", System.getProperty(
                         "fcrepo.dynamic.test.port")),
                 editConfigurationFilePut("etc/system.properties", "project.basedir", System.getProperty(
                         "project.basedir")),
                 editConfigurationFilePut("/etc/system.properties", "fcrepo.cxtPath", System.getProperty(
                         "fcrepo.cxtPath")),
+
                 deployFile("cfg/org.fcrepo.apix.jena.cfg"),
                 deployFile("cfg/org.fcrepo.apix.registry.http.cfg"));
     }
 
     @Before
-    public void loadOntologies() throws Exception {
+    public void load() throws Exception {
 
-        System.err.println("LOADING ONTOLOGIES");
-        if (pcdmOntology == null) {
-            pcdmOntology = ontologyServivce.put(testResource("ontologies/pcdm.ttl"));
+        if (!ontologyRegistry.contains(PCDM_ONTOLOGY_IRI)) {
+            ontologyRegistry.put(testResource("ontologies/pcdm.ttl"), PCDM_ONTOLOGY_IRI);
         }
 
-        if (oreOntology == null) {
-            oreOntology = ontologyServivce.put(testResource("ontologies/ore.ttl"));
+        if (!ontologyRegistry.contains(ORE_ONTOLOGY_IRI)) {
+            ontologyRegistry.put(testResource("ontologies/ore.ttl"), ORE_ONTOLOGY_IRI);
         }
 
-        //
-        if (remWithOrderedAggregationOntology == null) {
-            remWithOrderedAggregationOntology = ontologyServivce.put(testResource(
+        if (!ontologyRegistry.contains(TEST_ONTOLOGY_IRI)) {
+            ontologyRegistry.put(testResource(
                     "ontologies/RemWithOrderedAggregation.ttl"));
         }
 
-        if (remWithOrderedAggregationExtension == null) {
-
-            remWithOrderedAggregationExtension = extensionRegistry.put(testResource(
+        if (extensionRegistry.list().isEmpty()) {
+            extensionRegistry.put(testResource(
                     "objects/extension_rem_ordered_collection.ttl"));
         }
 
-        if (testContainer == null) {
-            try (FcrepoResponse response = client.post(URI.create(fcrepoBaseURI)).slug(this.getClass()
-                    .getSimpleName())
-                    .perform()) {
-                testContainer = response.getLocation();
+        // Add the container for all repository objects created in this test suite, if it doesn't exist.
+        try (FcrepoResponse head = client.head(testContainer).perform()) {
+            System.out.println("test container " + testContainer + " exists");
+        } catch (final FcrepoOperationFailedException e) {
+            if (e.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                System.out.println("Test container does not exist yet " + testContainer);
+                try (FcrepoResponse response = client.put(testContainer)
+                        .perform()) {
+                    if (response.getStatusCode() != HttpStatus.SC_CREATED && response
+                            .getStatusCode() != HttpStatus.SC_NO_CONTENT) {
+                        throw new RuntimeException("Could not create base test container " + testContainer);
+                    }
+                    System.out.println("Created test container " + response.getLocation());
+                }
+            } else {
+                throw (e);
             }
         }
-
-    }
-
-    // If no ontology is declared in the extension, and the rdf:type of an object does not match
-    // the binding class of an extension, then the extension should not be bound
-    @Test
-    public void noOntologyTest() throws Exception {
-
-        final URI objectURI = putObjectFromResource("objects/object_with_ordered_collection.ttl");
-        assertTrue(extensionBinding.getExtensionsFor(get(objectURI)).isEmpty());
-
     }
 
     // Extension should be bound to an object if it can be inferred that the object is a member of
@@ -132,64 +157,62 @@ public class RepositoryExtensionBindingIT implements KarafIT {
     // Our ontology defines a class for ORE aggregation ordered with proxies, and our extension binds
     // to objects of that class. So we should see that our object has our extensiion bound to it.
     @Test
-    public void inferredBindingTest() {
+    public void inferredBindingTest() throws Exception {
+        final URI objectURI = putObjectFromResource("objects/object_with_ordered_collection.ttl");
+        System.out.println("Created new resource " + objectURI);
+
+        try {
+            final Collection<Extension> extensions = extensionBinding.getExtensionsFor(get(objectURI));
+            assertFalse(extensions.isEmpty());
+        } catch (final Exception e) {
+            e.printStackTrace(System.err);
+            throw (e);
+        }
+    }
+
+    // here, we never import ORE or PCDM, so can't do the inferences needed in order to bind to the extension.
+    // Modifying the object with an explicitly matching rdf:type should allow binding to occur.
+    @Test
+    public void noInferredBindingTest() throws Exception {
+
+        // Put in an ontology that doesn't import ORE or PCDM
+        ontologyRegistry.put(testResource(
+                "ontologies/RemWithOrderedAggregation_noImport.ttl"));
+
+        // Now put in an extension that binds to a class from that ontology
+        extensionRegistry.put(testResource("objects/extension_rem_ordered_collection_noimport.ttl"));
+
+        // Now put in our object
+        final URI objectURI = putObjectFromResource("objects/object_with_ordered_collection.ttl");
+
+        // We shouldn't bind to the no-import extension
+        try {
+            assertFalse(extensionBinding.getExtensionsFor(get(objectURI)).stream().map(Extension::bindingClass)
+                    .collect(
+                            Collectors.toSet()).contains(TEST_ONTOLOGY_NO_IMPORT));
+        } catch (final Exception e) {
+            e.printStackTrace(System.err);
+            throw (e);
+        }
+
+        // let's modify the object so it directly asserts a matching rdf:type
+        client.patch(objectURI).body(IOUtils.toInputStream(String.format("INSERT {<> a <%s>.}\n, ",
+                TEST_ONTOLOGY_NO_IMPORT), "UTF-8"));
+
+        // Our (modified) resource should bind now
+        assertTrue(extensionBinding.getExtensionsFor(get(objectURI)).stream().map(Extension::bindingClass).collect(
+                Collectors.toSet()).contains(TEST_ONTOLOGY_NO_IMPORT));
 
     }
 
     private URI putObjectFromResource(String filePath) throws Exception {
+        System.out.println("POSTing to " + testContainer);
         try (final WebResource object = testResource(filePath);
                 final FcrepoResponse response = client.post(testContainer)
                         .body(object.representation(), object.contentType())
                         .slug(name.getMethodName())
                         .perform()) {
             return response.getLocation();
-        }
-    }
-
-    private WebResource get(URI uri) {
-        try {
-            return new WebResource() {
-
-                FcrepoResponse response = client.get(uri).perform();
-
-                @Override
-                public void close() throws Exception {
-                    response.close();
-                }
-
-                @Override
-                public URI uri() {
-                    return uri;
-                }
-
-                @Override
-                public InputStream representation() {
-                    return response.getBody();
-                }
-
-                @Override
-                public long length() {
-                    return Long.valueOf(response.getHeaderValue(HttpHeaders.CONTENT_LENGTH));
-                }
-
-                @Override
-                public String contentType() {
-                    return response.getContentType();
-                }
-            };
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private WebResource testResource(String path) {
-
-        final File file = new File(testResources, path);
-        try {
-            return WebResource.of(new FileInputStream(file), "text/turtle", URI.create(FilenameUtils.getBaseName(
-                    path)), null);
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
         }
     }
 

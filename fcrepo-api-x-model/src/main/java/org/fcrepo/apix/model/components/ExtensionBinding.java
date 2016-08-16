@@ -16,24 +16,30 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.jena.impl;
+package org.fcrepo.apix.model.components;
 
+import java.util.Collection;
+
+import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.WebResource;
 
-import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.riot.Lang;
-import org.apache.jena.riot.RDFDataMgr;
-import org.apache.jena.riot.RDFLanguages;
+/**
+ * Binds extensions to resources.
+ * <p>
+ * An extension describes the class of resources that it may be bound to. Implementations of this service determine
+ * (eg via OWL reasoning) whether a given resource meets the binding criteria of a given extension.
+ * </p>
+ */
+public interface ExtensionBinding {
 
-class Util {
-
-    static Model parse(WebResource r) {
-        final Model model =
-                ModelFactory.createDefaultModel();
-
-        final Lang lang = RDFLanguages.contentTypeToLang(r.contentType());
-        RDFDataMgr.read(model, r.representation(), r.uri() != null ? r.uri().toString() : null, lang);
-        return model;
-    }
+    /**
+     * Determne all known extensions that bind to the given resource.
+     * <p>
+     * Implementations will consult an underlying registry of extensions
+     * </p>
+     *
+     * @param resource Candidate resource.
+     * @return All extensions that bind to the given resource, or an empty collection if none.
+     */
+    public Collection<Extension> getExtensionsFor(WebResource resource);
 }

@@ -9,8 +9,8 @@
        http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0  http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
        http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
 
-  <reference id="ontologyService" interface="org.fcrepo.apix.model.OntologyService" />
-  <reference id="extensionRegistry" interface="org.fcrepo.apix.model.ExtensionRegistry" />
+  <reference id="ontologyService" interface="org.fcrepo.apix.model.components.OntologyService" />
+  <reference id="extensionRegistry" interface="org.fcrepo.apix.model.components.ExtensionRegistry" />
 
   <bean id="runtimeExtensionBindingImpl" class="org.fcrepo.apix.binding.impl.RuntimeExtensionBinding">
     <property name="extensionRegistry" ref="extensionRegistry" />
@@ -18,5 +18,5 @@
   </bean>
 
   <service id="runtimeExtensionBinding" ref="runtimeExtensionBindingImpl"
-    interface="org.fcrepo.apix.model.ExtensionBinding" />
+    interface="org.fcrepo.apix.model.components.ExtensionBinding" />
 </blueprint>

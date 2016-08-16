@@ -16,15 +16,15 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.model;
+package org.fcrepo.apix.model.components;
 
 import java.net.URI;
 import java.util.Collection;
 
+import org.fcrepo.apix.model.WebResource;
+
 /**
- * Registry for retrieving some sort of resource.
- *
- * @author apb@jhu.edu
+ * Registry for retrieving and persisting some sort of resource.
  */
 public interface Registry {
 
@@ -32,7 +32,7 @@ public interface Registry {
      * Get a resource
      *
      * @param id URI of the resource
-     * @return A serialized resource.
+     * @return A serialized resource, or an exception if none found.
      */
     public WebResource get(URI id);
 
@@ -45,6 +45,11 @@ public interface Registry {
      */
     public URI put(WebResource resource);
 
+    /**
+     * Delete a resource from the registry.
+     *
+     * @param uri URI of the resource to delete.
+     */
     public void delete(URI uri);
 
     /**
@@ -61,4 +66,11 @@ public interface Registry {
      */
     public Collection<URI> list();
 
+    /**
+     * Determine if the registry contains the given resource.
+     *
+     * @param id URI of the resource to check.
+     * @return
+     */
+    public boolean contains(URI id);
 }

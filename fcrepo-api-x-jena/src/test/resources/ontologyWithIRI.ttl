@@ -1,0 +1,7 @@
+@prefix owl:<http://www.w3.org/2002/07/owl#> .
+@prefix test:<http://example.org/test#> .
+@prefix iana:<http://www.iana.org/assignments/relation/> .
+@prefix ore:<http://www.openarchives.org/ore/terms/> .
+
+test:Ontology a owl:Ontology .
+test:Class a owl:Class .

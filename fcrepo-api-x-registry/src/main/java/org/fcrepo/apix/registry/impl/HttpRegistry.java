@@ -29,12 +29,15 @@ import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.Collection;
 
-import org.fcrepo.apix.model.Registry;
 import org.fcrepo.apix.model.WebResource;
+import org.fcrepo.apix.model.components.Registry;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.osgi.service.component.annotations.Component;
@@ -42,6 +45,9 @@ import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * Simple HTTP-based registry that performs GET for lookups on a given URI.
+ */
 @Component(configurationPolicy = REQUIRE)
 public class HttpRegistry implements Registry {
 
@@ -86,7 +92,7 @@ public class HttpRegistry implements Registry {
             }
 
             @Override
-            public long length() {
+            public Long length() {
                 return response.getEntity().getContentLength();
             }
 
@@ -119,10 +125,32 @@ public class HttpRegistry implements Registry {
                 }
 
             }
-            throw new RuntimeException(response.getStatusLine().toString());
+            throw new RuntimeException(String.format("Error performing %s on %s: %s; %s", request.getMethod(), request
+                    .getURI(), response.getStatusLine(), body(response)));
         }
 
         return response;
+    }
+
+    private String body(HttpResponse response) {
+        if (response.getEntity() != null) {
+            try {
+                return IOUtils.toString(response.getEntity().getContent(), "UTF-8");
+            } catch (final Exception e) {
+                return "";
+            }
+        }
+
+        return "";
+    }
+
+    @Override
+    public boolean contains(URI uri) {
+        try (CloseableHttpResponse response = client.execute(new HttpHead(uri))) {
+            return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

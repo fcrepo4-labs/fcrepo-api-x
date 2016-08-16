@@ -3,20 +3,19 @@
 @prefix iana:<http://www.iana.org/assignments/relation/> .
 @prefix ore:<http://www.openarchives.org/ore/terms/> .
 
-test:Ontology a owl:Ontology ;
-  owl:imports <http://pcdm.org/models> ;
-  owl:imports <http://www.openarchives.org/ore/terms/> .
+test:OntologyNoImport a owl:Ontology .
+# oops, we don't import PCDM or ORE!
 
-test:RemWithOrderedAggregation a owl:Class;
+test:RemWithOrderedAggregationNoImport a owl:Class;
     owl:intersectionOf (
         ore:ResourceMap
         [ a owl:Restriction;
             owl:onProperty ore:describes;
-            owl:someValuesFrom test:OrderedAggregation;
+            owl:someValuesFrom <#OrderedAggregation>;
         ]
     ) .
 
-test:OrderedAggregation a owl:Class;
+test:OrderedAggregationNoImport a owl:Class;
     owl:intersectionOf (
         ore:Aggregation
         [ a owl:Restriction;

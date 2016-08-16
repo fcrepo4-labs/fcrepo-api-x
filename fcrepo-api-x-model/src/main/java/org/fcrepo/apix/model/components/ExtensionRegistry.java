@@ -16,14 +16,34 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.model;
+package org.fcrepo.apix.model.components;
 
 import java.net.URI;
 import java.util.Collection;
 
+import org.fcrepo.apix.model.Extension;
+
+/**
+ * Registry containing extensions.
+ */
 public interface ExtensionRegistry extends Registry {
 
+    /**
+     * Retrieve the abstract representation of a specific extension by URI.
+     * <p>
+     * Transforms the resource retrievable by {@link #get(URI)} into an abstract notion of an extension.
+     * </p>
+     *
+     * @param uri URI of the desired extension.
+     * @return Abstract representation of an extension.
+     */
     public Extension getExtension(URI uri);
 
+    /**
+     * Retrieve all known extension. Contains a transformation of all resources accessible via
+     * {@link ExtensionRegistry#list()}.
+     *
+     * @return A collection of all known extensions, or null if none.
+     */
     public Collection<Extension> getExtensions();
 }

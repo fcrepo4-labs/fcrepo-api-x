@@ -1,8 +1,23 @@
+/*
+ * Licensed to DuraSpace under one or more contributor license agreements.
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * DuraSpace licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package org.fcrepo.apix.jena.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
@@ -13,8 +28,8 @@ import java.net.URI;
 import java.nio.charset.Charset;
 
 import org.fcrepo.apix.model.Ontology;
-import org.fcrepo.apix.model.Registry;
 import org.fcrepo.apix.model.WebResource;
+import org.fcrepo.apix.model.components.OntologyRegistry;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.ontology.OntModel;
@@ -56,7 +71,7 @@ public class JenaOntologyServiceTest {
 
     static final String OWL_ONTOLOGY = "http://www.w3.org/2002/07/owl#Ontology";
 
-    static Registry ONTOLOGY_REGISTRY = mock(Registry.class);
+    static OntologyRegistry ONTOLOGY_REGISTRY = mock(OntologyRegistry.class);
 
     @BeforeClass
     public static void populateRegistry() {
@@ -166,7 +181,7 @@ public class JenaOntologyServiceTest {
     public void loadOntologyTest() {
         final WebResource resource = ONTOLOGY_REGISTRY.get(URI.create(ONT5));
 
-        final OntModel transitive = toTest.loadOntology(resource).model;
+        final OntModel transitive = toTest.parseOntology(resource).model;
 
         // 5 includes 4, 4 includes 1
         final Model expectedTriples = ModelFactory.createDefaultModel();
@@ -216,42 +231,6 @@ public class JenaOntologyServiceTest {
                 CLASS_A)));
     }
 
-    @Test
-    public void indexedOntologyTest() {
-        final URI resolvableURI = URI.create("http://example.org/resolvable/indexedOntologyTest");
-        final URI ontologyURI = URI.create("http://example.org/indexedOntologyTest");
-
-        final String testClass = "http://example.org/indexedOntologyTest#class";
-
-        final String rdf =
-                triple(ontologyURI.toString(), RDF_TYPE, OWL_ONTOLOGY) +
-                        triple(ontologyURI.toString(), OWL_IMPORTS, ONT4) +
-                        triple(testClass, SUBCLASS_OF, CLASS_D);
-
-        final WebResource resource =
-                ontResource(resolvableURI.toString(),
-                        rdf);
-
-        System.err.println("TO TEST XXXXXXXXXXXXX\nXXX\nXXX\nXXX\nXXX" + toTest);
-
-        System.out.println("PUTTING ONTOLOGY");
-
-        when(ONTOLOGY_REGISTRY.put(resource)).thenReturn(resolvableURI);
-        when(ONTOLOGY_REGISTRY.get(eq(resolvableURI))).thenReturn(resource);
-        toTest.put(resource);
-
-        try {
-
-            System.out.println("OK, should have indexed by now");
-            final Ontology myOntology = toTest.getOntology(ontologyURI);
-            assertNotNull(myOntology);
-            assertEquals(resolvableURI, toTest.get(ontologyURI).uri());
-        } catch (final Exception e) {
-            e.printStackTrace(System.err);
-            throw (e);
-        }
-    }
-
     private static String triple(String s, String p, String o) {
         return String.format("<%s> <%s> <%s> .\n", s, p, o);
     }
@@ -276,8 +255,8 @@ public class JenaOntologyServiceTest {
             }
 
             @Override
-            public long length() {
-                return 0;
+            public Long length() {
+                return 0l;
             }
 
             @Override

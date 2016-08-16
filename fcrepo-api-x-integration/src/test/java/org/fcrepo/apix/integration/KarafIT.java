@@ -9,10 +9,19 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.logLevel;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceConfigurationFile;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.fcrepo.apix.model.WebResource;
+import org.fcrepo.client.FcrepoClient;
+import org.fcrepo.client.FcrepoResponse;
+
+import org.apache.commons.io.FilenameUtils;
+import org.apache.http.HttpHeaders;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.ConfigurationManager;
 import org.ops4j.pax.exam.Option;
@@ -23,9 +32,11 @@ import org.ops4j.pax.exam.options.MavenUrlReference;
 public interface KarafIT {
 
     static final String fcrepoBaseURI = String.format("http://localhost:%s/%s/rest/", System.getProperty(
-            "fcrepo.dynamic.test.port"), System.getProperty("fcrepo.cxtPath", "fcrepo"));
+            "fcrepo.dynamic.test.port", "8080"), System.getProperty("fcrepo.cxtPath", "fcrepo"));
 
     static final File testResources = new File(System.getProperty("project.basedir"), "src/test/resources");
+
+    static final FcrepoClient client = FcrepoClient.client().throwExceptionOnFailure().build();
 
     @Configuration
     public default Option[] config() {
@@ -93,6 +104,54 @@ public interface KarafIT {
                     new File("target/test-classes", path));
         } catch (final Exception e) {
             e.printStackTrace(System.err);
+            throw new RuntimeException(e);
+        }
+    }
+
+    public default WebResource get(URI uri) {
+        try {
+            return new WebResource() {
+
+                FcrepoResponse response = client.get(uri).perform();
+
+                @Override
+                public void close() throws Exception {
+                    response.close();
+                }
+
+                @Override
+                public URI uri() {
+                    return uri;
+                }
+
+                @Override
+                public InputStream representation() {
+                    return response.getBody();
+                }
+
+                @Override
+                public Long length() {
+                    return Long.valueOf(response.getHeaderValue(HttpHeaders.CONTENT_LENGTH));
+                }
+
+                @Override
+                public String contentType() {
+                    return response.getContentType();
+                }
+            };
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /** Get a test resource from test-classes */
+    public default WebResource testResource(String path) {
+
+        final File file = new File(testResources, path);
+        try {
+            return WebResource.of(new FileInputStream(file), "text/turtle", URI.create(FilenameUtils.getBaseName(
+                    path)), null);
+        } catch (final Exception e) {
             throw new RuntimeException(e);
         }
     }

@@ -18,7 +18,12 @@
 
 package org.fcrepo.apix.model;
 
-/** Marker interface for ontologies */
+/**
+ * Marker interface for ontologies.
+ * <p>
+ * Contains various namespaces and values of significant ontologies.
+ * </p>
+ */
 public interface Ontology {
 
     public static final String APIX_NS = "http://example.org/apix#";

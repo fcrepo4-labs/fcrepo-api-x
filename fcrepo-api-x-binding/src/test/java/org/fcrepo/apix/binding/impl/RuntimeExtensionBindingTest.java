@@ -30,10 +30,10 @@ import java.util.List;
 import java.util.Set;
 
 import org.fcrepo.apix.model.Extension;
-import org.fcrepo.apix.model.ExtensionRegistry;
 import org.fcrepo.apix.model.Ontology;
-import org.fcrepo.apix.model.OntologyService;
 import org.fcrepo.apix.model.WebResource;
+import org.fcrepo.apix.model.components.ExtensionRegistry;
+import org.fcrepo.apix.model.components.OntologyService;
 
 import org.junit.Test;
 
@@ -83,7 +83,7 @@ public class RuntimeExtensionBindingTest {
             }
 
             @Override
-            public Ontology loadOntology(WebResource ont) {
+            public Ontology parseOntology(WebResource ont) {
                 return new Ont(ont.toString());
             }
 
@@ -106,30 +106,6 @@ public class RuntimeExtensionBindingTest {
             @Override
             public Ontology getOntology(URI uri) {
                 return null;
-            }
-
-            @Override
-            public WebResource get(URI id) {
-                return null;
-            }
-
-            @Override
-            public URI put(WebResource ontologyResource) {
-                return null;
-            }
-
-            @Override
-            public boolean canWrite() {
-                return false;
-            }
-
-            @Override
-            public Collection<URI> list() {
-                return null;
-            }
-
-            @Override
-            public void delete(URI uri) {
             }
         };
 

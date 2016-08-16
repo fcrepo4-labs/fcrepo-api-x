@@ -26,9 +26,9 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import org.fcrepo.apix.model.Extension;
-import org.fcrepo.apix.model.ExtensionRegistry;
-import org.fcrepo.apix.model.Registry;
 import org.fcrepo.apix.model.WebResource;
+import org.fcrepo.apix.model.components.ExtensionRegistry;
+import org.fcrepo.apix.model.components.Registry;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.RDFNode;
@@ -39,6 +39,9 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * Wraps a delegate registry and parses extensions using Jena.
+ * <p>
+ * Right now, this is mostly a stub; it does nothing more than identify the class an extension is bound to.
+ * </p>
  */
 @Component(service = ExtensionRegistry.class, configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class JenaExtensionRegistry implements ExtensionRegistry {
@@ -108,7 +111,7 @@ public class JenaExtensionRegistry implements ExtensionRegistry {
         private Model getModel() {
             if (model == null) {
                 try (WebResource wr = getResource()) {
-                    return parse(wr);
+                    model = parse(wr);
                 } catch (final Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -121,5 +124,10 @@ public class JenaExtensionRegistry implements ExtensionRegistry {
     @Override
     public void delete(URI uri) {
         delegate.delete(uri);
+    }
+
+    @Override
+    public boolean contains(URI id) {
+        return delegate.contains(id);
     }
 }

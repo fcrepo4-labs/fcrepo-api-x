@@ -39,7 +39,7 @@
   </bean>
 
   <service id="httpRegistry" ref="httpRegistryImpl"
-    interface="org.fcrepo.apix.model.Registry">
+    interface="org.fcrepo.apix.model.components.Registry">
     <service-properties>
       <entry key="org.fcrepo.apix.registry.role" value="default" />
     </service-properties>

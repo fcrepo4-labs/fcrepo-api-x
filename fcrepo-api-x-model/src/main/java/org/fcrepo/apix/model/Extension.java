@@ -20,6 +20,12 @@ package org.fcrepo.apix.model;
 
 import java.net.URI;
 
+/**
+ * Abstract notion of an API-X extension.
+ * <p>
+ * TODO: This is mostly a stub
+ * </p>
+ */
 public interface Extension {
 
     /**
@@ -29,5 +35,10 @@ public interface Extension {
      */
     public URI bindingClass();
 
+    /**
+     * Underlying RDF representation of an extension.
+     *
+     * @return A serialization of the extension resource.
+     */
     public WebResource getResource();
 }

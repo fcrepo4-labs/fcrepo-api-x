@@ -20,11 +20,10 @@
   </cm:property-placeholder>
 
   <reference id="underlyingRegistryDelegate" filter="(org.fcrepo.apix.registry.role=default)"
-    interface="org.fcrepo.apix.model.Registry" />
+    interface="org.fcrepo.apix.model.components.Registry" />
 
   <reference id="httpClient" ext:proxy-method="classes"
     interface="org.apache.http.impl.client.CloseableHttpClient" />
-
 
   <bean id="ldpExtensionRegistryDelegate" class="org.fcrepo.apix.jena.impl.LdpContainerRegistry"
     init-method="init">
@@ -45,15 +44,22 @@
     <property name="registryDelegate" ref="ldpExtensionRegistryDelegate"></property>
   </bean>
 
-  <bean id="jenaOntologyServiceImpl" class="org.fcrepo.apix.jena.impl.JenaOntologyService" init-method="init">
+  <bean id="jenaOntologyServiceImpl" class="org.fcrepo.apix.jena.impl.JenaOntologyService">
+    <property name="registryDelegate" ref="jenaOntologyRegistryImpl" />
+  </bean>
+
+  <bean id="jenaOntologyRegistryImpl" class="org.fcrepo.apix.jena.impl.LookupOntologyRegistry"
+    init-method="init">
     <property name="registryDelegate" ref="ldpOntologyServiceRegistryDelegate" />
   </bean>
 
+  <service id="jenaOntologyRegistry" interface="org.fcrepo.apix.model.components.OntologyRegistry"
+    ref="jenaOntologyRegistryImpl" />
 
-  <service id="jenaOntologyService" interface="org.fcrepo.apix.model.OntologyService"
+  <service id="jenaOntologyService" interface="org.fcrepo.apix.model.components.OntologyService"
     ref="jenaOntologyServiceImpl" />
 
-  <service id="jenaExtensionRegistry" interface="org.fcrepo.apix.model.ExtensionRegistry"
+  <service id="jenaExtensionRegistry" interface="org.fcrepo.apix.model.components.ExtensionRegistry"
     ref="jenaExtensionRegistryImpl" />
 
 </blueprint>

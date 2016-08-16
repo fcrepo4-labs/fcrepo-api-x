@@ -28,16 +28,57 @@ public interface WebResource extends AutoCloseable {
 
     public String contentType();
 
+    /**
+     * URI of the resource.
+     * <p>
+     * May be a relative URI.
+     * </p>
+     *
+     * @return the URI of the resoirce, or null if it does not have any.
+     */
     public URI uri();
 
-    public long length();
+    /**
+     * Size of the resource representation in bytes.
+     *
+     * @return length in bytes, may be null if unknown.
+     */
+    public Long length();
 
+    /**
+     * Retrieve a byte stream of the resource.
+     * <p>
+     * Not guaranteed to be re-usable (i.e. does not return a new InputStream each time). Consumers MUST close this
+     * when finished in order to prevent resource leaks.
+     * </p>
+     *
+     * @return the resource's btyes.
+     */
     public InputStream representation();
 
+    /**
+     * Create a new WebResource instance from bytes.
+     * <p>
+     * URI and length will be null if used this way.
+     * </p>
+     *
+     * @param stream Resource bytes.
+     * @param contentType MIME type of the underlying stream.
+     * @return populated web resourceF.
+     */
     public static WebResource of(final InputStream stream, final String contentType) {
         return of(stream, contentType, null, null);
     }
 
+    /**
+     * Create a new WebResource instance.
+     *
+     * @param stream Resource bytes.
+     * @param contentType MIME type of the underlying stream.
+     * @param uri URI if the resource
+     * @param length size in byyes, or null if not known.
+     * @return
+     */
     public static WebResource of(final InputStream stream, final String contentType, final URI uri,
             final Long length) {
         return new WebResource() {
@@ -58,7 +99,7 @@ public interface WebResource extends AutoCloseable {
             }
 
             @Override
-            public long length() {
+            public Long length() {
                 return length;
             }
 
