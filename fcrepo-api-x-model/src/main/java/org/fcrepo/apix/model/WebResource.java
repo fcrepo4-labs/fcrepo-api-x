@@ -24,9 +24,16 @@ import java.net.URI;
 
 /**
  * Contains a representation of a web resource.
+ *
+ * @author apb@jhu.edu
  */
 public interface WebResource extends AutoCloseable {
 
+    /**
+     * Return the MIME type of the representation of this resource.
+     *
+     * @return MIME type string
+     */
     public String contentType();
 
     /**

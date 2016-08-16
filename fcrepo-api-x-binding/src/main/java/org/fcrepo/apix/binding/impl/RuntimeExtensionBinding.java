@@ -42,6 +42,8 @@ import org.slf4j.LoggerFactory;
  * Polls the extension registry for all known extensions at time of transaction, and performs reasoning at runtime in
  * order to bind a repository resource to the extensions that match it.
  * </p>
+ *
+ * @author apb@jhu.edu
  */
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RuntimeExtensionBinding implements ExtensionBinding {
@@ -54,30 +56,53 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
 
     private Registry registry;
 
+    /**
+     * Set the underlying registry containing extensions that may be bound.
+     *
+     * @param exr Extension registry instance.
+     */
     @Reference
-    public void setExtensionRegistry(ExtensionRegistry exr) {
+    public void setExtensionRegistry(final ExtensionRegistry exr) {
         extensionRegistry = exr;
     }
 
+    /**
+     * Set the underlying ontology service for performing reasoning for binding.
+     *
+     * @param os Ontology service instance.
+     */
     @Reference
-    public void setOntologyService(OntologyService os) {
+    public void setOntologyService(final OntologyService os) {
         ontologySvc = os;
     }
 
+    /**
+     * Set the underlying delegate registry for retrieving arbitrary web resources from the repository.
+     * <p>
+     * This registry is consulted in support of {@link #getExtensionsFor(URI)}
+     * <p/>
+     *
+     * @param registry Registry impl.
+     */
     @Reference(target = "(org.fcrepo.apix.registry.role=default)")
-    public void setDelegateRegistry(Registry registry) {
+    public void setDelegateRegistry(final Registry registry) {
         this.registry = registry;
     }
 
-    // Simple/naive binding algorithm, there may be opportunities for optimization when the time is right
-    //
-    // Determine the set of known extensions
-    // for each extension, get its ontology closure
-    // for each ontology closure, infer classes of the instance
-    // For each extension, see if its binding class is in that list of inferred classes.
-    // Return all extensions that match
+    /**
+     * Simple/naive binding algorithm, there may be opportunities for optimization when the time is right
+     * <p>
+     * <ol>
+     * <li>Determine the set of known extensions</li>
+     * <li>for each extension, get its ontology closure</li>
+     * <li>for each ontology closure, infer classes of the instance</li>
+     * <li>For each extension, see if its binding class is in that list of inferred classes.</li>
+     * <li>Return all extensions that match</li>
+     * </ol>
+     * <p>
+     */
     @Override
-    public Collection<Extension> getExtensionsFor(WebResource resource) {
+    public Collection<Extension> getExtensionsFor(final WebResource resource) {
 
         final Collection<Extension> extensions = extensionRegistry.getExtensions();
 
@@ -99,7 +124,7 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
 
     /** Just does a dumb dereference and lookup */
     @Override
-    public Collection<Extension> getExtensionsFor(URI resourceURI) {
+    public Collection<Extension> getExtensionsFor(final URI resourceURI) {
         try (WebResource resource = registry.get(resourceURI)) {
             return getExtensionsFor(resource);
         } catch (final Exception e) {

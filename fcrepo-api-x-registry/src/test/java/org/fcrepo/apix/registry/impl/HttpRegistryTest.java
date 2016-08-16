@@ -45,6 +45,11 @@ import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.junit.Test;
 
+/**
+ * Tests for HttpRegistry implementation
+ *
+ * @author apb@jhu.edu
+ */
 public class HttpRegistryTest {
 
     HttpEntity entity;
@@ -123,7 +128,8 @@ public class HttpRegistryTest {
 
     }
 
-    private CloseableHttpClient mockClient(URI uri, InputStream content, String contentType, int statusCode)
+    private CloseableHttpClient mockClient(final URI uri, final InputStream content, final String contentType,
+            final int statusCode)
             throws Exception {
         entity = mock(HttpEntity.class);
         when(entity.getContent()).thenReturn(content);
@@ -145,16 +151,16 @@ public class HttpRegistryTest {
         return client;
     }
 
-    Matcher<HttpUriRequest> isGetRequestTo(URI uri) {
+    Matcher<HttpUriRequest> isGetRequestTo(final URI uri) {
         return new BaseMatcher<HttpUriRequest>() {
 
             @Override
-            public boolean matches(Object item) {
+            public boolean matches(final Object item) {
                 return item instanceof HttpGet && ((HttpGet) item).getURI().equals(uri);
             }
 
             @Override
-            public void describeTo(Description description) {
+            public void describeTo(final Description description) {
                 /* nothing */
             }
         };

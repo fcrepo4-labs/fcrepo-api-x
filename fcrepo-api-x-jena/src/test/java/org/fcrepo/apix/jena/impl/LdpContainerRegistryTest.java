@@ -55,6 +55,11 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
+/**
+ * Tests the LDP registry impl
+ *
+ * @author apb@jhu.edu
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class LdpContainerRegistryTest {
 

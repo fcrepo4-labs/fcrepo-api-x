@@ -55,6 +55,8 @@ import org.slf4j.LoggerFactory;
  * message consumer to update the ontology registry in response to ontologies added/removed manually by clients via
  * LDP interactions with the repository. TOOO: Create such a consumer.
  * </p>
+ *
+ * @author apb@jhu.edu
  */
 public class LookupOntologyRegistry implements OntologyRegistry {
 
@@ -68,23 +70,28 @@ public class LookupOntologyRegistry implements OntologyRegistry {
 
     private final Logger LOG = LoggerFactory.getLogger(LookupOntologyRegistry.class);
 
+    /**
+     * Set underlying registry containing ontology resources.
+     *
+     * @param delegate Registry containing ontology resources.
+     */
     @Reference
-    public void setRegistryDelegate(Registry delegate) {
+    public void setRegistryDelegate(final Registry delegate) {
         this.registry = delegate;
     }
 
     @Override
-    public WebResource get(URI id) {
+    public WebResource get(final URI id) {
         return registry.get(ontologyIRIsToLocation.getOrDefault(id, id));
     }
 
     @Override
-    public URI put(WebResource ontologyResource) {
+    public URI put(final WebResource ontologyResource) {
         return index(registry.put(ontologyResource));
     }
 
     @Override
-    public URI put(WebResource ontologyResource, URI ontologyIRI) {
+    public URI put(final WebResource ontologyResource, final URI ontologyIRI) {
         final Model model = parse(ontologyResource);
         model.add(model.getResource(ontologyIRI.toString()), model.getProperty(RDF_TYPE), model.getResource(
                 OWL_ONTOLOGY));
@@ -106,7 +113,7 @@ public class LookupOntologyRegistry implements OntologyRegistry {
     }
 
     @Override
-    public void delete(URI uri) {
+    public void delete(final URI uri) {
         registry.delete(uri);
     }
 
@@ -131,7 +138,7 @@ public class LookupOntologyRegistry implements OntologyRegistry {
         }
     }
 
-    private URI index(URI ontologyLocation) {
+    private URI index(final URI ontologyLocation) {
         LOG.debug("Indexing ontology at {}", ontologyLocation);
 
         for (final URI ontologyIRI : ontologyURIs(load(ontologyLocation))) {
@@ -151,7 +158,7 @@ public class LookupOntologyRegistry implements OntologyRegistry {
         return ontologyLocation;
     }
 
-    Set<URI> ontologyURIs(Model ontology) {
+    Set<URI> ontologyURIs(final Model ontology) {
 
         final Set<URI> ontologyIRIs = ontology
                 .listSubjectsWithProperty(ontology.getProperty(RDF_TYPE), ontology.getResource(OWL_ONTOLOGY))
@@ -161,7 +168,7 @@ public class LookupOntologyRegistry implements OntologyRegistry {
         return ontologyIRIs;
     }
 
-    private Model load(URI uri) {
+    private Model load(final URI uri) {
         try (WebResource wr = registry.get(uri)) {
             return parse(wr);
         } catch (final Exception e) {
@@ -170,7 +177,7 @@ public class LookupOntologyRegistry implements OntologyRegistry {
     }
 
     @Override
-    public boolean contains(URI id) {
+    public boolean contains(final URI id) {
         return ontologyIRIsToLocation.containsKey(id) || registry.contains(id);
     }
 }

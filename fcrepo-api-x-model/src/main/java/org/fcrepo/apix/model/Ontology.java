@@ -23,6 +23,8 @@ package org.fcrepo.apix.model;
  * <p>
  * Contains various namespaces and values of significant ontologies.
  * </p>
+ *
+ * @author apb@jhu.edu
  */
 public interface Ontology {
 

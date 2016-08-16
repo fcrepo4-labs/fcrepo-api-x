@@ -29,6 +29,8 @@ import org.fcrepo.apix.model.WebResource;
  * <p>
  * Instances of {@link Ontology} should only be used with the same {@link OntologyService}.
  * </p>
+ *
+ * @author apb@jhu.edu
  */
 public interface OntologyService {
 

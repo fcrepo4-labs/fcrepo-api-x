@@ -43,6 +43,14 @@ import org.ops4j.pax.exam.karaf.options.LogLevelOption.LogLevel;
 import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 import org.ops4j.pax.exam.options.MavenUrlReference;
 
+/**
+ * Base Karaf + Pax Exam boilerplace.
+ * <p>
+ * This is an interface, in case the test needs to inherit some base test class.
+ * </p>
+ *
+ * @author apb@jhu.edu
+ */
 public interface KarafIT {
 
     static final String fcrepoBaseURI = String.format("http://localhost:%s/%s/rest/", System.getProperty(

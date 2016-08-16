@@ -120,6 +120,13 @@
         </executions>
       </plugin>
 
+      <!-- TODO: place this in parent, after figuring out what to do with 
+        POCs + checkstyle -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+
     </plugins>
 
     <testResources>

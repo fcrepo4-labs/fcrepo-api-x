@@ -43,6 +43,8 @@ import org.osgi.service.component.annotations.Reference;
 
 /**
  * Uses Jena to parse and provide reasoning over ontologies.
+ *
+ * @author apb@jhu.edu
  */
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class JenaOntologyService implements OntologyService {
@@ -57,17 +59,28 @@ public class JenaOntologyService implements OntologyService {
 
     static final String OWL_IMPORTS = "http://www.w3.org/2002/07/owl#imports";
 
-    public void setOntModelSpec(OntModelSpec spec) {
+    /**
+     * Jena ontology model/reasoning specification.
+     *
+     * @param spec THe specification
+     */
+    public void setOntModelSpec(final OntModelSpec spec) {
         defaultSpec = new OntModelSpec(spec);
         defaultSpec.setImportModelGetter(new NullGetter());
     }
 
+    /** Default constructor */
     public JenaOntologyService() {
         defaultSpec.setImportModelGetter(new NullGetter());
     }
 
+    /**
+     * Underlying ontology registry.
+     *
+     * @param registry The underlying ontology registry.
+     */
     @Reference
-    public void setRegistryDelegate(OntologyRegistry registry) {
+    public void setRegistryDelegate(final OntologyRegistry registry) {
         this.registry = registry;
     }
 
@@ -77,7 +90,7 @@ public class JenaOntologyService implements OntologyService {
     }
 
     @Override
-    public Ont parseOntology(WebResource ont) {
+    public Ont parseOntology(final WebResource ont) {
         try (WebResource ontology = ont) {
             return new Ont(resolveImports(ModelFactory.createOntologyModel(defaultSpec, parse(ontology))));
         } catch (final Exception e) {
@@ -86,7 +99,7 @@ public class JenaOntologyService implements OntologyService {
     }
 
     /** Resolve the closure of all owl:imports statements into a union model */
-    private OntModel resolveImports(OntModel model) {
+    private OntModel resolveImports(final OntModel model) {
 
         // if no imports, nothing to resolve
         if (model.listObjectsOfProperty(model.getProperty(OWL_IMPORTS)).toSet().isEmpty()) {
@@ -114,16 +127,16 @@ public class JenaOntologyService implements OntologyService {
         return out;
     }
 
-    private Set<String> imports(Model model, Set<String> resolved) {
+    private Set<String> imports(final Model model, final Set<String> resolved) {
         return model.listObjectsOfProperty(model.getProperty(OWL_IMPORTS)).mapWith(RDFNode::asResource).mapWith(
                 Resource::getURI).filterDrop(uri -> resolved.contains(uri)).toSet();
     }
 
-    private Model load(String uri) {
+    private Model load(final String uri) {
         return load(URI.create(uri));
     }
 
-    private Model load(URI uri) {
+    private Model load(final URI uri) {
         try (WebResource wr = registry.get(uri)) {
 
             return parse(wr);
@@ -137,19 +150,19 @@ public class JenaOntologyService implements OntologyService {
     private class NullGetter implements ModelGetter {
 
         @Override
-        public Model getModel(String uri) {
+        public Model getModel(final String uri) {
             return null;
         }
 
         @Override
-        public Model getModel(String uri, ModelReader reader) {
+        public Model getModel(final String uri, final ModelReader reader) {
             return ModelFactory.createDefaultModel();
         }
 
     }
 
     @Override
-    public Ont merge(Ontology ontology1, Ontology ontology2) {
+    public Ont merge(final Ontology ontology1, final Ontology ontology2) {
         final OntModel model = ModelFactory.createOntologyModel(defaultSpec);
 
         model.add(ont(ontology1).getBaseModel());
@@ -159,7 +172,7 @@ public class JenaOntologyService implements OntologyService {
     }
 
     @Override
-    public Set<URI> inferClasses(URI individual, WebResource resource, Ontology ontology) {
+    public Set<URI> inferClasses(final URI individual, final WebResource resource, final Ontology ontology) {
 
         final OntModel model = resolveImports(ont(ontology));
         model.add(parse(resource));
@@ -173,7 +186,7 @@ public class JenaOntologyService implements OntologyService {
 
     }
 
-    OntModel ont(Ontology o) {
+    OntModel ont(final Ontology o) {
         return ((Ont) o).model;
     }
 
@@ -181,7 +194,7 @@ public class JenaOntologyService implements OntologyService {
 
         final OntModel model;
 
-        private Ont(OntModel model) {
+        private Ont(final OntModel model) {
             this.model = model;
         }
     }

@@ -39,6 +39,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+/**
+ * Tests Jena ontology service.
+ *
+ * @author apb@jhu.edu
+ */
 public class JenaOntologyServiceTest {
 
     JenaOntologyService toTest;
@@ -231,11 +236,11 @@ public class JenaOntologyServiceTest {
                 CLASS_A)));
     }
 
-    private static String triple(String s, String p, String o) {
+    private static String triple(final String s, final String p, final String o) {
         return String.format("<%s> <%s> <%s> .\n", s, p, o);
     }
 
-    private static WebResource ontResource(String uri, String rdf) {
+    private static WebResource ontResource(final String uri, final String rdf) {
 
         return new WebResource() {
 

@@ -49,6 +49,8 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Simple HTTP-based registry that performs GET for lookups on a given URI.
+ *
+ * @author apb@jhu.edu
  */
 @Component(configurationPolicy = REQUIRE)
 public class HttpRegistry implements Registry {
@@ -59,13 +61,18 @@ public class HttpRegistry implements Registry {
 
     static final String RDF_MEDIA_TYPES = "application/rdf+xml, text/turtle";
 
+    /**
+     * Set the underlying httpClient impl
+     *
+     * @param client
+     */
     @Reference
-    public void setHttpClient(CloseableHttpClient client) {
+    public void setHttpClient(final CloseableHttpClient client) {
         this.client = client;
     }
 
     @Override
-    public WebResource get(URI id) {
+    public WebResource get(final URI id) {
 
         final HttpGet get = new HttpGet(id);
         get.setHeader(ACCEPT, RDF_MEDIA_TYPES);
@@ -101,7 +108,7 @@ public class HttpRegistry implements Registry {
         };
     }
 
-    private CloseableHttpResponse execute(HttpUriRequest request) {
+    private CloseableHttpResponse execute(final HttpUriRequest request) {
         CloseableHttpResponse response = null;
 
         try {
@@ -130,7 +137,7 @@ public class HttpRegistry implements Registry {
         return response;
     }
 
-    private String body(HttpResponse response) {
+    private String body(final HttpResponse response) {
         try {
             return EntityUtils.toString(response.getEntity());
         } catch (final Exception e) {
@@ -147,7 +154,7 @@ public class HttpRegistry implements Registry {
 
         boolean isClosed = true;
 
-        ResponseMgr(HttpGet get) {
+        ResponseMgr(final HttpGet get) {
             this.get = get;
             getResponse();
         }
@@ -195,7 +202,7 @@ public class HttpRegistry implements Registry {
     }
 
     @Override
-    public boolean contains(URI uri) {
+    public boolean contains(final URI uri) {
         try (CloseableHttpResponse response = client.execute(new HttpHead(uri))) {
             return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
         } catch (final Exception e) {
@@ -204,7 +211,7 @@ public class HttpRegistry implements Registry {
     }
 
     @Override
-    public URI put(WebResource resource) {
+    public URI put(final WebResource resource) {
         throw new UnsupportedOperationException();
     }
 
@@ -219,7 +226,7 @@ public class HttpRegistry implements Registry {
     }
 
     @Override
-    public void delete(URI uri) {
+    public void delete(final URI uri) {
         throw new UnsupportedOperationException();
     }
 }

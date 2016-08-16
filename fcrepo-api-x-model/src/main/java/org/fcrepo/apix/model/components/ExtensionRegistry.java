@@ -25,6 +25,8 @@ import org.fcrepo.apix.model.Extension;
 
 /**
  * Registry containing extensions.
+ *
+ * @author apb@jhu.edu
  */
 public interface ExtensionRegistry extends Registry {
 

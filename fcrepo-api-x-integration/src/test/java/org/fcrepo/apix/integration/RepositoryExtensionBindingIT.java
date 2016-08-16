@@ -55,6 +55,11 @@ import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.BundleContext;
 
+/**
+ * Performs Loads ontologies, extensions, and instance objects in repo to verify extension binding.
+ *
+ * @author apb@jhu.edu
+ */
 @RunWith(PaxExam.class)
 public class RepositoryExtensionBindingIT implements KarafIT {
 
@@ -205,7 +210,7 @@ public class RepositoryExtensionBindingIT implements KarafIT {
                 .contains(extensionURI));
     }
 
-    private URI putObjectFromTestResource(String filePath) throws Exception {
+    private URI putObjectFromTestResource(final String filePath) throws Exception {
         try (final WebResource object = testResource(filePath);
                 final FcrepoResponse response = client.post(testContainer)
                         .body(object.representation(), object.contentType())

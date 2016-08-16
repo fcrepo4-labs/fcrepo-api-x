@@ -24,6 +24,8 @@ import org.fcrepo.apix.model.WebResource;
 
 /**
  * Registry which enables lookup of OWL ontologies by location or Ontology IRI.
+ *
+ * @author apb@jhu.edu
  */
 public interface OntologyRegistry extends Registry {
 

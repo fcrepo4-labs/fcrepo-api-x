@@ -30,6 +30,8 @@ import org.fcrepo.apix.model.WebResource;
  * An extension describes the class of resources that it may be bound to. Implementations of this service determine
  * (eg via OWL reasoning) whether a given resource meets the binding criteria of a given extension.
  * </p>
+ *
+ * @author apb@jhu.edu
  */
 public interface ExtensionBinding {
 
@@ -59,7 +61,7 @@ public interface ExtensionBinding {
      * Implementations will consult an underlying registry of extensions
      * </p>
      *
-     * @param resource Candidate resource.
+     * @param resourceURI URI of the candidate resource.
      * @return All extensions that bind to the given resource, or an empty collection if none.
      */
     public Collection<Extension> getExtensionsFor(URI resourceURI);

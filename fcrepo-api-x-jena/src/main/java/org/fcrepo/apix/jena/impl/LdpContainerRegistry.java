@@ -52,6 +52,8 @@ import org.osgi.service.component.annotations.Reference;
  * individual resources. {@link #put(WebResource)} will issue a PUT or GET to a given container as appropriate to
  * create or update a resource.
  * </p>
+ *
+ * @author apb@jhu.edu
  */
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class LdpContainerRegistry implements Registry {
@@ -68,17 +70,33 @@ public class LdpContainerRegistry implements Registry {
 
     static final String LDP_CONTAINS = Ontology.LDP_NS + "contains";
 
+    /**
+     * Underlying registry delegate for GETs.
+     *
+     * @param registry the registry.
+     */
     @Reference
-    public void setRegistryDelegate(Registry registry) {
+    public void setRegistryDelegate(final Registry registry) {
         this.delegate = registry;
     }
 
+    /**
+     * HttpClient for performing LDP requests.
+     *
+     * @param client the client.
+     */
     @Reference
-    public void setHttpClient(CloseableHttpClient client) {
+    public void setHttpClient(final CloseableHttpClient client) {
 
         this.client = client;
     }
 
+    /**
+     * Create the container if it doesn't exist.
+     * <p>
+     * TODO: make this more robust. What if the repository is not accessible at initialization time?
+     * </p>
+     */
     public void init() {
         if (create && !exists(containerId)) {
             put(WebResource.of(null, "text/turtle",
@@ -86,31 +104,36 @@ public class LdpContainerRegistry implements Registry {
         }
     }
 
-    public void setContainer(URI containerId) {
+    /**
+     * Set the URI of the LDP container containing objects relevant to this registry.
+     *
+     * @param containerId
+     */
+    public void setContainer(final URI containerId) {
         this.containerId = containerId;
     }
 
     /** Indicate whether to treat resources in this registry as binaries */
-    public void setBinary(boolean binary) {
+    public void setBinary(final boolean binary) {
         this.binary = binary;
     }
 
     /** Indicate whether to attempt to create the container if not present */
-    public void setCreateContainer(boolean create) {
+    public void setCreateContainer(final boolean create) {
         this.create = create;
     }
 
     @Override
-    public WebResource get(URI id) {
+    public WebResource get(final URI id) {
         return delegate.get(id);
     }
 
     @Override
-    public URI put(WebResource resource) {
+    public URI put(final WebResource resource) {
         return put(resource, binary);
     }
 
-    private URI put(WebResource resource, boolean asBinary) {
+    private URI put(final WebResource resource, final boolean asBinary) {
         HttpEntityEnclosingRequestBase request = null;
 
         if (resource.uri() == null || !resource.uri().isAbsolute()) {
@@ -168,7 +191,7 @@ public class LdpContainerRegistry implements Registry {
     }
 
     @Override
-    public void delete(URI uri) {
+    public void delete(final URI uri) {
         try (CloseableHttpResponse response = client.execute(new HttpDelete(uri))) {
             final StatusLine status = response.getStatusLine();
             if (status.getStatusCode() != HttpStatus.SC_NO_CONTENT && status.getStatusCode() != HttpStatus.SC_OK) {
@@ -179,7 +202,7 @@ public class LdpContainerRegistry implements Registry {
         }
     }
 
-    private boolean exists(URI uri) {
+    private boolean exists(final URI uri) {
         try (CloseableHttpResponse response = client.execute(new HttpHead(uri))) {
             return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
         } catch (final Exception e) {
@@ -188,7 +211,7 @@ public class LdpContainerRegistry implements Registry {
     }
 
     @Override
-    public boolean contains(URI id) {
+    public boolean contains(final URI id) {
         return list().contains(id);
     }
 }

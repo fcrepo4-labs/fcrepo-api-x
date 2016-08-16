@@ -43,6 +43,11 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 import org.mockito.stubbing.Answer;
 
+/**
+ * Ontology registry tests.
+ *
+ * @author apb@jhu.edu
+ */
 @RunWith(MockitoJUnitRunner.class)
 public class LookupOntologyRegistryTest {
 
@@ -88,7 +93,7 @@ public class LookupOntologyRegistryTest {
         when(delegate.put(any(WebResource.class))).then(new Answer<URI>() {
 
             @Override
-            public URI answer(InvocationOnMock invocation) throws Throwable {
+            public URI answer(final InvocationOnMock invocation) throws Throwable {
                 final WebResource submitted = ((WebResource) invocation.getArguments()[0]);
                 when(delegate.get(ontologyLocationURI)).thenReturn(submitted);
                 return ontologyLocationURI;
@@ -160,7 +165,8 @@ public class LookupOntologyRegistryTest {
 
         private final Long length;
 
-        public ReadableResource(InputStream stream, String contentType, URI uri, Long length) {
+        public ReadableResource(final InputStream stream, final String contentType, final URI uri,
+                final Long length) {
             try {
                 content = IOUtils.toByteArray(stream);
             } catch (final Exception e) {

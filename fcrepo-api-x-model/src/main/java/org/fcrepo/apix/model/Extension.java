@@ -25,6 +25,8 @@ import java.net.URI;
  * <p>
  * TODO: This is mostly a stub
  * </p>
+ * 
+ * @author apb@jhu.edu
  */
 public interface Extension {
 

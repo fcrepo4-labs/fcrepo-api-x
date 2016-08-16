@@ -31,6 +31,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
  * <p>
  * TODO; Expose more useful params.
  * </p>
+ *
+ * @author apb@jhu.edu
  */
 public class HttpClientFactory {
 
@@ -38,14 +40,29 @@ public class HttpClientFactory {
 
     private int socketTimeout = 1000;
 
-    public void setConnectTimeout(int timeout) {
+    /**
+     * Timeout in miliseconds.
+     *
+     * @param timeout milliseconds.
+     */
+    public void setConnectTimeout(final int timeout) {
         this.connectTimeout = timeout;
     }
 
-    public void setSocketTimeout(int timeout) {
+    /**
+     * Socket timeout in milliseconds.
+     *
+     * @param timeout milliseconds.
+     */
+    public void setSocketTimeout(final int timeout) {
         this.socketTimeout = timeout;
     }
 
+    /**
+     * Construct a new HttpClient.
+     *
+     * @return HttpClient impl.
+     */
     public CloseableHttpClient getClient() {
         final RequestConfig config = RequestConfig.custom()
                 .setConnectTimeout(connectTimeout)

@@ -25,6 +25,8 @@ import org.fcrepo.apix.model.WebResource;
 
 /**
  * Registry for retrieving and persisting some sort of resource.
+ *
+ * @author apb@jhu.edu
  */
 public interface Registry {
 
@@ -39,7 +41,6 @@ public interface Registry {
     /**
      * Persist a resource in the registry.
      *
-     * @param id URI of the resource
      * @param resource serialized resource;
      * @return URI of the resource, as persisted in the registry;
      */

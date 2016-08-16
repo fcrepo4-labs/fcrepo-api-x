@@ -31,11 +31,19 @@ import org.apache.jena.riot.RDFLanguages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * RDF utility functions.
+ *
+ * @author apb@jhu.edu
+ */
 class Util {
+
+    private Util() {
+    };
 
     static final Logger LOG = LoggerFactory.getLogger(Util.class);
 
-    static Model parse(WebResource r) {
+    static Model parse(final WebResource r) {
         final Model model =
                 ModelFactory.createDefaultModel();
 

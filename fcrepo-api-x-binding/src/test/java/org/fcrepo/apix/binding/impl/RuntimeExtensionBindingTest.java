@@ -38,6 +38,11 @@ import org.fcrepo.apix.model.components.OntologyService;
 import org.junit.Ignore;
 import org.junit.Test;
 
+/**
+ * Tests runtime binding impl.
+ *
+ * @author apb@jhu.edu
+ */
 public class RuntimeExtensionBindingTest {
 
     // Basic verification that binding works as expected. ITs will exercise this more thoroughly.
@@ -80,18 +85,18 @@ public class RuntimeExtensionBindingTest {
         final OntologyService ontologyService = new OntologyService() {
 
             @Override
-            public Ontology merge(Ontology ontology1, Ontology ontology2) {
+            public Ontology merge(final Ontology ontology1, final Ontology ontology2) {
                 return new Ont(String.join(";", ont(ontology1), ont(ontology2)));
             }
 
             @Override
-            public Ontology parseOntology(WebResource ont) {
+            public Ontology parseOntology(final WebResource ont) {
                 return new Ont(ont.toString());
             }
 
             // Look for all equalities in our "ontology" that assert a class for our individual
             @Override
-            public Set<URI> inferClasses(URI individual, WebResource resource, Ontology ontology) {
+            public Set<URI> inferClasses(final URI individual, final WebResource resource, final Ontology ontology) {
                 final Set<URI> classes = new HashSet<>();
 
                 for (final String spec : ont(ontology).split(";")) {
@@ -106,7 +111,7 @@ public class RuntimeExtensionBindingTest {
             }
 
             @Override
-            public Ontology getOntology(URI uri) {
+            public Ontology getOntology(final URI uri) {
                 return null;
             }
         };
@@ -132,12 +137,12 @@ public class RuntimeExtensionBindingTest {
 
         public String content;
 
-        public Ont(String content) {
+        public Ont(final String content) {
             this.content = content;
         }
     }
 
-    public String ont(Ontology o) {
+    public String ont(final Ontology o) {
         return ((Ont) o).content;
     }
 }

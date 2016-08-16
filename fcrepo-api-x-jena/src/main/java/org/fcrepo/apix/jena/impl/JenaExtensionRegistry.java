@@ -42,24 +42,31 @@ import org.osgi.service.component.annotations.Reference;
  * <p>
  * Right now, this is mostly a stub; it does nothing more than identify the class an extension is bound to.
  * </p>
+ *
+ * @author apb@jhu.edu
  */
 @Component(service = ExtensionRegistry.class, configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class JenaExtensionRegistry implements ExtensionRegistry {
 
     Registry delegate;
 
-    @Reference
-    public void setRegistryDelegate(Registry reg) {
+    /**
+     * Underlying registry containing extension resources.
+     *
+     * @param reg A registry containing extensions.
+     */
+    @Reference // (target = "org.fcrepo.apix.registry.contains=org.fcrepo.apix.model.Extension")
+    public void setRegistryDelegate(final Registry reg) {
         delegate = reg;
     }
 
     @Override
-    public WebResource get(URI id) {
+    public WebResource get(final URI id) {
         return delegate.get(id);
     }
 
     @Override
-    public URI put(WebResource ontologyResource) {
+    public URI put(final WebResource ontologyResource) {
         return delegate.put(ontologyResource);
     }
 
@@ -74,7 +81,7 @@ public class JenaExtensionRegistry implements ExtensionRegistry {
     }
 
     @Override
-    public Extension getExtension(URI uri) {
+    public Extension getExtension(final URI uri) {
         return new JenaExtension(uri);
     }
 
@@ -89,7 +96,7 @@ public class JenaExtensionRegistry implements ExtensionRegistry {
 
         private Model model;
 
-        public JenaExtension(URI uri) {
+        public JenaExtension(final URI uri) {
             this.uri = uri;
         }
 
@@ -127,12 +134,12 @@ public class JenaExtensionRegistry implements ExtensionRegistry {
     }
 
     @Override
-    public void delete(URI uri) {
+    public void delete(final URI uri) {
         delegate.delete(uri);
     }
 
     @Override
-    public boolean contains(URI id) {
+    public boolean contains(final URI id) {
         return delegate.contains(id);
     }
 }
