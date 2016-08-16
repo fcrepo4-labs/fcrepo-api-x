@@ -36,6 +36,16 @@ public interface Extension {
     public URI bindingClass();
 
     /**
+     * The URI (location) of the extension.
+     * <p>
+     * This is a potentially more lightweight operation than <code>getResource().uri()</code>
+     * </p>
+     *
+     * @return its resolvable URI.
+     */
+    public URI uri();
+
+    /**
      * Underlying RDF representation of an extension.
      *
      * @return A serialization of the extension resource.

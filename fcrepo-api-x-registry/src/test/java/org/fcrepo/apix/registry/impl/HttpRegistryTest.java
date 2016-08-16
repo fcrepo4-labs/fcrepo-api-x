@@ -30,8 +30,7 @@ import static org.mockito.Mockito.when;
 import java.io.InputStream;
 import java.net.URI;
 
-import org.fcrepo.apix.registry.impl.HttpRegistry;
-
+import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
@@ -60,11 +59,12 @@ public class HttpRegistryTest {
         final HttpRegistry toTest = new HttpRegistry();
 
         final URI uri = URI.create("http://test");
-        final InputStream stream = mock(InputStream.class);
+        final String content = "CONTENT";
+        final InputStream stream = IOUtils.toInputStream(content, "UTF-8");
 
         toTest.setHttpClient(mockClient(uri, stream, "text/turte", SC_OK));
 
-        assertEquals(stream, toTest.get(uri).representation());
+        assertEquals(content, IOUtils.toString(toTest.get(uri).representation(), "UTF-8"));
     }
 
     // Verify that Content-Type is conveyed

@@ -9,12 +9,17 @@
        http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0  http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
        http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
 
-  <reference id="ontologyService" interface="org.fcrepo.apix.model.components.OntologyService" />
-  <reference id="extensionRegistry" interface="org.fcrepo.apix.model.components.ExtensionRegistry" />
+  <reference id="ontologyService"
+    interface="org.fcrepo.apix.model.components.OntologyService" />
+  <reference id="extensionRegistry"
+    interface="org.fcrepo.apix.model.components.ExtensionRegistry" />
+  <reference id="delegateRegistry" interface="org.fcrepo.apix.model.components.Registry"
+    filter="(org.fcrepo.apix.registry.role=default)" />
 
   <bean id="runtimeExtensionBindingImpl" class="org.fcrepo.apix.binding.impl.RuntimeExtensionBinding">
     <property name="extensionRegistry" ref="extensionRegistry" />
     <property name="ontologyService" ref="ontologyService" />
+    <property name="delegateRegistry" ref="delegateRegistry" />
   </bean>
 
   <service id="runtimeExtensionBinding" ref="runtimeExtensionBindingImpl"

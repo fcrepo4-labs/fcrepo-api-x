@@ -23,6 +23,7 @@ import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.osgi.service.component.annotations.ConfigurationPolicy.REQUIRE;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -40,6 +41,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
@@ -68,14 +70,9 @@ public class HttpRegistry implements Registry {
         final HttpGet get = new HttpGet(id);
         get.setHeader(ACCEPT, RDF_MEDIA_TYPES);
 
-        final CloseableHttpResponse response = execute(get);
-
         return new WebResource() {
 
-            @Override
-            public void close() throws Exception {
-                response.close();
-            }
+            final ResponseMgr mgr = new ResponseMgr(get);
 
             @Override
             public URI uri() {
@@ -84,21 +81,22 @@ public class HttpRegistry implements Registry {
 
             @Override
             public InputStream representation() {
-                try {
-                    return response.getEntity().getContent();
-                } catch (final IOException e) {
-                    throw new RuntimeException(e);
-                }
+                return mgr.getStream();
             }
 
             @Override
             public Long length() {
-                return response.getEntity().getContentLength();
+                return mgr.getResponse().getEntity().getContentLength();
             }
 
             @Override
             public String contentType() {
-                return response.getFirstHeader(CONTENT_TYPE).getValue();
+                return mgr.getResponse().getFirstHeader(CONTENT_TYPE).getValue();
+            }
+
+            @Override
+            public void close() throws Exception {
+                mgr.close();
             }
         };
     }
@@ -133,15 +131,67 @@ public class HttpRegistry implements Registry {
     }
 
     private String body(HttpResponse response) {
-        if (response.getEntity() != null) {
+        try {
+            return EntityUtils.toString(response.getEntity());
+        } catch (final Exception e) {
+            return "";
+        }
+    }
+
+    // Some last-minute refactoring, there might be a better way to do this
+    private class ResponseMgr {
+
+        final HttpGet get;
+
+        CloseableHttpResponse response;
+
+        boolean isClosed = true;
+
+        ResponseMgr(HttpGet get) {
+            this.get = get;
+            getResponse();
+        }
+
+        HttpResponse getResponse() {
+            if (isClosed) {
+                try {
+                    if (response != null) {
+                        response.close();
+                    }
+                    response = execute(get);
+                    isClosed = false;
+                } catch (final Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            return response;
+        }
+
+        InputStream getStream() {
             try {
-                return IOUtils.toString(response.getEntity().getContent(), "UTF-8");
+                if (!isClosed && response.getEntity().isRepeatable()) {
+                    return response.getEntity().getContent();
+                } else {
+                    getResponse();
+                    return new FilterInputStream(response.getEntity().getContent()) {
+
+                        @Override
+                        public void close() throws IOException {
+                            isClosed = true;
+                            super.close();
+                        }
+                    };
+                }
             } catch (final Exception e) {
-                return "";
+                throw new RuntimeException(e);
             }
         }
 
-        return "";
+        public void close() throws IOException {
+            if (response != null) {
+                response.close();
+            }
+        }
     }
 
     @Override

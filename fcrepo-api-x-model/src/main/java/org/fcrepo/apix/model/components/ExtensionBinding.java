@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.model.components;
 
+import java.net.URI;
 import java.util.Collection;
 
 import org.fcrepo.apix.model.Extension;
@@ -33,7 +34,11 @@ import org.fcrepo.apix.model.WebResource;
 public interface ExtensionBinding {
 
     /**
-     * Determne all known extensions that bind to the given resource.
+     * Determine all known extensions that bind to the given resource.
+     * <p>
+     * This is intended for calculating the set of extensions that bind to given, physical resource. There is no
+     * presumption that this resource exists on the repository or the web (i.e. it can be from a request).
+     * </p>
      * <p>
      * Implementations will consult an underlying registry of extensions
      * </p>
@@ -42,4 +47,21 @@ public interface ExtensionBinding {
      * @return All extensions that bind to the given resource, or an empty collection if none.
      */
     public Collection<Extension> getExtensionsFor(WebResource resource);
+
+    /**
+     * Determine all known extensions that bind to the given resource, given its URI.
+     * <p>
+     * The given URI may be a resource in the repository, on the web, or otherwise within a registry specified by the
+     * implementation of this component. Depending on implementation, results may be based on lookup of pre-computed
+     * bindings.
+     * </p>
+     * <p>
+     * Implementations will consult an underlying registry of extensions
+     * </p>
+     *
+     * @param resource Candidate resource.
+     * @return All extensions that bind to the given resource, or an empty collection if none.
+     */
+    public Collection<Extension> getExtensionsFor(URI resourceURI);
+
 }

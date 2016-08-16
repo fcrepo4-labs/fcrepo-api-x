@@ -1,3 +1,20 @@
+/*
+ * Licensed to DuraSpace under one or more contributor license agreements.
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * DuraSpace licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package org.fcrepo.apix.integration;
 
@@ -10,7 +27,6 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceCo
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,10 +34,8 @@ import java.util.List;
 
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.client.FcrepoClient;
-import org.fcrepo.client.FcrepoResponse;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.http.HttpHeaders;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.ConfigurationManager;
 import org.ops4j.pax.exam.Option;
@@ -43,24 +57,14 @@ public interface KarafIT {
         final MavenArtifactUrlReference karafUrl = maven().groupId("org.apache.karaf")
                 .artifactId("apache-karaf").version(karafVersion()).type("zip");
 
-        final MavenUrlReference apixJena =
+        final MavenUrlReference apixRepo =
                 maven().groupId("org.fcrepo.apix")
-                        .artifactId("fcrepo-api-x-jena").versionAsInProject()
+                        .artifactId("fcrepo-api-x-karaf").versionAsInProject()
                         .classifier("features").type("xml");
 
-        final MavenUrlReference apixRegistry =
-                maven().groupId("org.fcrepo.apix")
-                        .artifactId("fcrepo-api-x-registry").versionAsInProject()
-                        .classifier("features").type("xml");
-
-        final MavenUrlReference apixBinding =
-                maven().groupId("org.fcrepo.apix")
-                        .artifactId("fcrepo-api-x-binding").versionAsInProject()
-                        .classifier("features").type("xml");
-
-        final MavenUrlReference camelRepo = maven().groupId("org.apache.camel.karaf")
-                .artifactId("apache-camel").type("xml").classifier("features")
-                .versionAsInProject();
+        // final MavenUrlReference camelRepo = maven().groupId("org.apache.camel.karaf")
+        // .artifactId("apache-camel").type("xml").classifier("features")
+        // .versionAsInProject();
 
         final ArrayList<Option> options = new ArrayList<>();
 
@@ -72,10 +76,7 @@ public interface KarafIT {
 
             keepRuntimeFolder(),
 
-            features(apixJena, "fcrepo-api-x-jena"),
-            features(camelRepo, "camel-http4"),
-            features(apixRegistry, "fcrepo-api-x-registry"),
-            features(apixBinding, "fcrepo-api-x-binding"),
+            features(apixRepo, "fcrepo-api-x")
         };
 
         options.addAll(Arrays.asList(defaultOptions));
@@ -102,43 +103,6 @@ public interface KarafIT {
         try {
             return replaceConfigurationFile("deploy/" + new File(path).getName(),
                     new File("target/test-classes", path));
-        } catch (final Exception e) {
-            e.printStackTrace(System.err);
-            throw new RuntimeException(e);
-        }
-    }
-
-    public default WebResource get(URI uri) {
-        try {
-            return new WebResource() {
-
-                FcrepoResponse response = client.get(uri).perform();
-
-                @Override
-                public void close() throws Exception {
-                    response.close();
-                }
-
-                @Override
-                public URI uri() {
-                    return uri;
-                }
-
-                @Override
-                public InputStream representation() {
-                    return response.getBody();
-                }
-
-                @Override
-                public Long length() {
-                    return Long.valueOf(response.getHeaderValue(HttpHeaders.CONTENT_LENGTH));
-                }
-
-                @Override
-                public String contentType() {
-                    return response.getContentType();
-                }
-            };
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }

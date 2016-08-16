@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.model;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 
@@ -34,7 +35,7 @@ public interface WebResource extends AutoCloseable {
      * May be a relative URI.
      * </p>
      *
-     * @return the URI of the resoirce, or null if it does not have any.
+     * @return the URI of the resource, or null if it does not have any.
      */
     public URI uri();
 
@@ -48,8 +49,8 @@ public interface WebResource extends AutoCloseable {
     /**
      * Retrieve a byte stream of the resource.
      * <p>
-     * Not guaranteed to be re-usable (i.e. does not return a new InputStream each time). Consumers MUST close this
-     * when finished in order to prevent resource leaks.
+     * This can be called multiple times sequentially after closing the previous stream, but is not thread safe.
+     * Consumers MUST close this when finished in order to prevent resource leaks.
      * </p>
      *
      * @return the resource's btyes.
@@ -84,7 +85,7 @@ public interface WebResource extends AutoCloseable {
         return new WebResource() {
 
             @Override
-            public void close() throws Exception {
+            public void close() throws IOException {
                 stream.close();
             }
 

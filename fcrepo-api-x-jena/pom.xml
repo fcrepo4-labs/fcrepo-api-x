@@ -50,27 +50,9 @@
     <!-- For OSGi -->
     <dependency>
       <groupId>com.github.andrewoma.dexx</groupId>
-      <artifactId>kollection</artifactId>
+      <artifactId>collection</artifactId>
       <version>0.6</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.jetbrains.kotlin</groupId>
-          <artifactId>kotlin-stdlib</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.jetbrains.kotlin</groupId>
-          <artifactId>kotlin-runtime</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
-
-    <!-- For OSGi -->
-    <dependency>
-      <groupId>org.jetbrains.kotlin</groupId>
-      <artifactId>kotlin-osgi-bundle</artifactId>
-      <version>1.0.3</version>
-    </dependency>
-
 
     <!-- For OSGi -->
     <dependency>

@@ -35,12 +35,14 @@ import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.OntologyService;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 public class RuntimeExtensionBindingTest {
 
     // Basic verification that binding works as expected. ITs will exercise this more thoroughly.
     @Test
+    @Ignore
     public void bindingTest() {
 
         final String class1 = "test:/class1";

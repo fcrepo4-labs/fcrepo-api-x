@@ -108,6 +108,11 @@ public class JenaExtensionRegistry implements ExtensionRegistry {
             return delegate.get(uri);
         }
 
+        @Override
+        public URI uri() {
+            return uri;
+        }
+
         private Model getModel() {
             if (model == null) {
                 try (WebResource wr = getResource()) {

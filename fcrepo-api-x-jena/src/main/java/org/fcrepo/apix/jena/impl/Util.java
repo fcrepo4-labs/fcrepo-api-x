@@ -18,6 +18,9 @@
 
 package org.fcrepo.apix.jena.impl;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import org.fcrepo.apix.model.WebResource;
 
 import org.apache.jena.rdf.model.Model;
@@ -25,15 +28,25 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class Util {
+
+    static final Logger LOG = LoggerFactory.getLogger(Util.class);
 
     static Model parse(WebResource r) {
         final Model model =
                 ModelFactory.createDefaultModel();
 
         final Lang lang = RDFLanguages.contentTypeToLang(r.contentType());
-        RDFDataMgr.read(model, r.representation(), r.uri() != null ? r.uri().toString() : null, lang);
+
+        LOG.debug("Parsing rdf from {}", r.uri());
+        try (InputStream representation = r.representation()) {
+            RDFDataMgr.read(model, representation, r.uri() != null ? r.uri().toString() : null, lang);
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
         return model;
     }
 }

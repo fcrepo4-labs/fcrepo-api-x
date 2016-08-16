@@ -38,6 +38,7 @@ import org.fcrepo.apix.model.components.ExtensionBinding;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.OntologyRegistry;
 import org.fcrepo.apix.model.components.OntologyService;
+import org.fcrepo.apix.model.components.Registry;
 import org.fcrepo.client.FcrepoOperationFailedException;
 import org.fcrepo.client.FcrepoResponse;
 
@@ -51,6 +52,7 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
+import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.BundleContext;
 
 @RunWith(PaxExam.class)
@@ -62,13 +64,15 @@ public class RepositoryExtensionBindingIT implements KarafIT {
 
     private static final URI TEST_ONTOLOGY_IRI = URI.create("http://example.org/test#Ontology");
 
-    private static final URI TEST_ONTOLOGY_NO_IMPORT = URI.create("http://example.org/test#OntologyNoImport");
-
     @Rule
     public TestName name = new TestName();
 
     @Inject
     BundleContext cxt;
+
+    @Inject
+    @Filter("(org.fcrepo.apix.registry.role=default)")
+    Registry repository;
 
     @Inject
     ExtensionRegistry extensionRegistry;
@@ -134,17 +138,15 @@ public class RepositoryExtensionBindingIT implements KarafIT {
 
         // Add the container for all repository objects created in this test suite, if it doesn't exist.
         try (FcrepoResponse head = client.head(testContainer).perform()) {
-            System.out.println("test container " + testContainer + " exists");
+            /* Do nothing */
         } catch (final FcrepoOperationFailedException e) {
             if (e.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
-                System.out.println("Test container does not exist yet " + testContainer);
                 try (FcrepoResponse response = client.put(testContainer)
                         .perform()) {
                     if (response.getStatusCode() != HttpStatus.SC_CREATED && response
                             .getStatusCode() != HttpStatus.SC_NO_CONTENT) {
                         throw new RuntimeException("Could not create base test container " + testContainer);
                     }
-                    System.out.println("Created test container " + response.getLocation());
                 }
             } else {
                 throw (e);
@@ -158,20 +160,18 @@ public class RepositoryExtensionBindingIT implements KarafIT {
     // to objects of that class. So we should see that our object has our extensiion bound to it.
     @Test
     public void inferredBindingTest() throws Exception {
-        final URI objectURI = putObjectFromResource("objects/object_with_ordered_collection.ttl");
-        System.out.println("Created new resource " + objectURI);
+        final URI objectURI = putObjectFromTestResource("objects/object_with_ordered_collection.ttl");
 
         try {
-            final Collection<Extension> extensions = extensionBinding.getExtensionsFor(get(objectURI));
+            final Collection<Extension> extensions = extensionBinding.getExtensionsFor(repository.get(objectURI));
             assertFalse(extensions.isEmpty());
         } catch (final Exception e) {
-            e.printStackTrace(System.err);
             throw (e);
         }
     }
 
-    // here, we never import ORE or PCDM, so can't do the inferences needed in order to bind to the extension.
-    // Modifying the object with an explicitly matching rdf:type should allow binding to occur.
+    // here, we never import ORE or PCDM in the extension, so API-X do the inferences needed in order to bind to the
+    // extension. Modifying the object with an explicitly matching rdf:type should allow binding to occur.
     @Test
     public void noInferredBindingTest() throws Exception {
 
@@ -180,33 +180,32 @@ public class RepositoryExtensionBindingIT implements KarafIT {
                 "ontologies/RemWithOrderedAggregation_noImport.ttl"));
 
         // Now put in an extension that binds to a class from that ontology
-        extensionRegistry.put(testResource("objects/extension_rem_ordered_collection_noimport.ttl"));
+        final URI extensionURI = extensionRegistry.put(testResource(
+                "objects/extension_rem_ordered_collection_noimport.ttl"));
+        final URI BINDING_CLASS = extensionRegistry.getExtension(extensionURI).bindingClass();
 
         // Now put in our object
-        final URI objectURI = putObjectFromResource("objects/object_with_ordered_collection.ttl");
+        final URI objectURI = putObjectFromTestResource("objects/object_with_ordered_collection.ttl");
 
-        // We shouldn't bind to the no-import extension
-        try {
-            assertFalse(extensionBinding.getExtensionsFor(get(objectURI)).stream().map(Extension::bindingClass)
-                    .collect(
-                            Collectors.toSet()).contains(TEST_ONTOLOGY_NO_IMPORT));
-        } catch (final Exception e) {
-            e.printStackTrace(System.err);
-            throw (e);
-        }
+        // We shouldn't bind to the no-import extension, because that would require inferences
+        // based on PCDM and ORE (which the ontology neglects to import)
+        assertFalse(extensionBinding.getExtensionsFor(objectURI).stream()
+                .map(Extension::uri)
+                .collect(Collectors.toSet())
+                .contains(extensionURI));
 
         // let's modify the object so it directly asserts a matching rdf:type
-        client.patch(objectURI).body(IOUtils.toInputStream(String.format("INSERT {<> a <%s>.}\n, ",
-                TEST_ONTOLOGY_NO_IMPORT), "UTF-8"));
+        client.patch(objectURI).body(IOUtils.toInputStream(String.format("INSERT {<> a <%s>} WHERE {}",
+                BINDING_CLASS), "UTF-8")).perform().close();
 
-        // Our (modified) resource should bind now
-        assertTrue(extensionBinding.getExtensionsFor(get(objectURI)).stream().map(Extension::bindingClass).collect(
-                Collectors.toSet()).contains(TEST_ONTOLOGY_NO_IMPORT));
-
+        // Our (modified) object should bind now
+        assertTrue(extensionBinding.getExtensionsFor(objectURI).stream()
+                .map(Extension::uri)
+                .collect(Collectors.toSet())
+                .contains(extensionURI));
     }
 
-    private URI putObjectFromResource(String filePath) throws Exception {
-        System.out.println("POSTing to " + testContainer);
+    private URI putObjectFromTestResource(String filePath) throws Exception {
         try (final WebResource object = testResource(filePath);
                 final FcrepoResponse response = client.post(testContainer)
                         .body(object.representation(), object.contentType())
