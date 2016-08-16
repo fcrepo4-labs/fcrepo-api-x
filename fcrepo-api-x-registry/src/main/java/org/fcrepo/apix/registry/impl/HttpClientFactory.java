@@ -1,10 +1,3 @@
-
-package org.fcrepo.apix.registry.impl;
-
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-
 /*
  * Licensed to DuraSpace under one or more contributor license agreements.
  * See the NOTICE file distributed with this work for additional information
@@ -22,6 +15,12 @@ import org.apache.http.impl.client.HttpClientBuilder;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package org.fcrepo.apix.registry.impl;
+
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 
 /**
  * Creates configured instances of HttpClients.

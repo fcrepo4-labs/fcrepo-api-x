@@ -10,6 +10,7 @@ target/
 .DS_Store
 *.xpr
 release.properties
+.checkstyle
 .classpath
 .project
 .settings

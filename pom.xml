@@ -21,6 +21,7 @@
     <jena.version>3.1.0</jena.version>
     <junit.version>4.12</junit.version>
     <karaf.version>4.0.5</karaf.version>
+    <license.plugin.version>2.11</license.plugin.version>
     <maven-antrun-plugin.version>1.8</maven-antrun-plugin.version>
     <maven-bundle-plugin.version>3.2.0</maven-bundle-plugin.version>
     <maven-exec-plugin.version>1.4.0</maven-exec-plugin.version>
@@ -54,6 +55,7 @@
           <version>${cargo.version}</version>
         </plugin>
 
+        <!-- TODO: This is duplicated from the fcrepo parent pom. -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-checkstyle-plugin</artifactId>
@@ -85,6 +87,51 @@
             </execution>
           </executions>
         </plugin>
+
+        <!-- TODO: This is duplicated from the fcrepo parent pom -->
+        <plugin>
+          <groupId>com.mycila</groupId>
+          <artifactId>license-maven-plugin</artifactId>
+          <version>${license.plugin.version}</version>
+          <configuration>
+            <header>fcrepo-license/LICENSE_HEADER.txt</header>
+            <mapping>
+              <java>SLASHSTAR_STYLE</java>
+            </mapping>
+            <includes>
+              <include>**/src/main/java/**</include>
+              <include>**/src/test/java/**</include>
+            </includes>
+            <excludes>
+              <exclude>target/**</exclude>
+              <exclude>**/src/test/resources/**</exclude>
+              <exclude>**/src/main/resources/**</exclude>
+              <exclude>**/*.properties</exclude>
+            </excludes>
+            <properties>
+              <name>${project.artifactId}</name>
+              <year>${project.copyrightYear}</year>
+              <holder>${project.organization.name}</holder>
+            </properties>
+            <encoding>UTF-8</encoding>
+            <strictCheck>true</strictCheck>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.fcrepo</groupId>
+              <artifactId>fcrepo-build-tools</artifactId>
+              <version>${fcrepo-build-tools.version}</version>
+            </dependency>
+          </dependencies>
+          <executions>
+            <execution>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
 
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -164,6 +211,7 @@
         </configuration>
       </plugin>
 
+      <!-- TODO: Add checkstyle and license plugins once POCs are dealt with -->
     </plugins>
 
 
@@ -292,6 +340,13 @@
     <module>fcrepo-api-x-karaf</module>
   </modules>
 
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+      <comments>Copyright (c) 2016 DuraSpace</comments>
+    </license>
+  </licenses>
 
   <repositories>
     <repository>

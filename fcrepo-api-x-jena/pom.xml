@@ -18,6 +18,12 @@
         <artifactId>maven-checkstyle-plugin</artifactId>
       </plugin>
 
+      <!-- TODO: Place in parent once POCs are dealth with -->
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+      </plugin>
+
     </plugins>
   </build>
 
