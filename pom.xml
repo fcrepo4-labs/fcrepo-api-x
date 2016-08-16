@@ -14,6 +14,7 @@
     <cargo.version>1.5.0</cargo.version>
     <checkstyle.plugin.version>2.17</checkstyle.plugin.version>
     <commons-io.version>2.5</commons-io.version>
+    <docker>false</docker>
     <fcrepo.version>4.7.0-SNAPSHOT</fcrepo.version>
     <fcrepo-build-tools.version>4.4.2</fcrepo-build-tools.version>
     <httpclient.version>4.5.2</httpclient.version>
@@ -53,6 +54,44 @@
           <groupId>org.codehaus.cargo</groupId>
           <artifactId>cargo-maven2-plugin</artifactId>
           <version>${cargo.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>${maven-antrun-plugin.version}</version>
+          <executions>
+            <execution>
+              <phase>initialize</phase>
+              <configuration>
+                <target>
+                  <property environment="env" />
+                  <path id="combined-PATH">
+                    <pathelement path="${env.PATH}" />
+                    <pathelement path="${env.Path}" />
+                  </path>
+                  <property name="PATH" refid="combined-PATH" />
+                  <condition property="docker">
+                    <or>
+                      <available file="docker.exe" filepath="${PATH}" />
+                      <available file="docker" filepath="${PATH}" />
+                    </or>
+                  </condition>
+                  <path id="default-basedir">
+                    <pathelement path="${basedir}" />
+                  </path>
+                  <pathconvert targetos="unix" property="basedir.docker"
+                    refid="default-basedir">
+                    <map from="c:" to="/c" />
+                  </pathconvert>
+                  <echo>Docker: ${docker}</echo>
+                </target>
+              </configuration>
+              <goals>
+                <goal>run</goal>
+              </goals>
+            </execution>
+          </executions>
         </plugin>
 
         <plugin>
