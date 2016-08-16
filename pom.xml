@@ -55,6 +55,26 @@
           <version>${cargo.version}</version>
         </plugin>
 
+        <plugin>
+          <groupId>org.apache.karaf.tooling</groupId>
+          <artifactId>karaf-maven-plugin</artifactId>
+          <version>${karaf.version}</version>
+          <extensions>true</extensions>
+          <executions>
+            <execution>
+              <id>generate-features-descriptor</id>
+              <phase>generate-resources</phase>
+              <goals>
+                <goal>features-generate-descriptor</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <includeProjectArtifact>true</includeProjectArtifact>
+            <includeTransitiveDependency>true</includeTransitiveDependency>
+          </configuration>
+        </plugin>
+
         <!-- TODO: This is duplicated from the fcrepo parent pom. -->
         <plugin>
           <groupId>org.apache.maven.plugins</groupId>
@@ -132,37 +152,6 @@
           </executions>
         </plugin>
 
-
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-antrun-plugin</artifactId>
-          <version>${maven-antrun-plugin.version}</version>
-          <executions>
-            <execution>
-              <phase>initialize</phase>
-              <configuration>
-                <target>
-                  <property environment="env" />
-                  <path id="combined-PATH">
-                    <pathelement path="${env.PATH}" />
-                    <pathelement path="${env.Path}" />
-                  </path>
-                  <property name="PATH" refid="combined-PATH" />
-                  <condition property="docker">
-                    <or>
-                      <available file="docker.exe" filepath="${PATH}" />
-                      <available file="docker" filepath="${PATH}" />
-                    </or>
-                  </condition>
-                </target>
-              </configuration>
-              <goals>
-                <goal>run</goal>
-              </goals>
-            </execution>
-          </executions>
-        </plugin>
-
       </plugins>
     </pluginManagement>
 
@@ -192,26 +181,14 @@
       </plugin>
 
       <plugin>
-        <groupId>org.apache.karaf.tooling</groupId>
-        <artifactId>karaf-maven-plugin</artifactId>
-        <version>${karaf.version}</version>
-        <extensions>true</extensions>
-        <executions>
-          <execution>
-            <id>generate-features-descriptor</id>
-            <phase>generate-resources</phase>
-            <goals>
-              <goal>features-generate-descriptor</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <includeProjectArtifact>true</includeProjectArtifact>
-          <includeTransitiveDependency>true</includeTransitiveDependency>
-        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
       </plugin>
 
-      <!-- TODO: Add checkstyle and license plugins once POCs are dealt with -->
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
+      </plugin>
     </plugins>
 
 
@@ -329,7 +306,6 @@
     <module>proof-of-concept/go-proxy</module>
     <module>proof-of-concept/amherst-apix</module>
     <module>proof-of-concept/indexing-triplestore</module>
-    <module>proof-of-concept/service-binding</module>
     <module>fcrepo-api-x-registry</module>
     <module>fcrepo-api-x-model</module>
     <module>fcrepo-api-x-routing</module>

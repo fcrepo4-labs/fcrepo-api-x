@@ -11,17 +11,15 @@
 
   <build>
     <plugins>
-      <!-- TODO: place this in parent, after figuring out what to do with 
-        POCs + checkstyle -->
+
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-checkstyle-plugin</artifactId>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
       </plugin>
 
-      <!-- TODO: Place in parent once POCs are dealth with -->
       <plugin>
-        <groupId>com.mycila</groupId>
-        <artifactId>license-maven-plugin</artifactId>
+        <groupId>org.apache.karaf.tooling</groupId>
+        <artifactId>karaf-maven-plugin</artifactId>
       </plugin>
 
     </plugins>
