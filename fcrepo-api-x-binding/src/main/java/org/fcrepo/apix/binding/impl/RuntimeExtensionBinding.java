@@ -19,13 +19,11 @@
 package org.fcrepo.apix.binding.impl;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.fcrepo.apix.model.Extension;
-import org.fcrepo.apix.model.Ontology;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionBinding;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
@@ -71,52 +69,32 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
         this.registry = registry;
     }
 
-    // (a) Determine the set of known extensions
-    // (b) for each extension, get its union ontology
-    // (c) for each union ontology, infer classes of the instance
-    // (d) Collect the list of classes
-    // (e) For each extension, see if its binding class is in that list. If so, collect it
-    // (f) return collected list of extensions.
+    // Simple/naive binding algorithm, there may be opportunities for optimization when the time is right
+    //
+    // Determine the set of known extensions
+    // for each extension, get its ontology closure
+    // for each ontology closure, infer classes of the instance
+    // For each extension, see if its binding class is in that list of inferred classes.
+    // Return all extensions that match
     @Override
     public Collection<Extension> getExtensionsFor(WebResource resource) {
 
         final Collection<Extension> extensions = extensionRegistry.getExtensions();
-        LOG.debug("(A) Got list of known extensions: {}", extensions);
 
-        final List<Extension> boundExtensions = new ArrayList<>();
+        final Set<URI> rdfTypes = extensions.stream()
+                .map(Extension::getResource)
+                .peek(extURI -> LOG.debug("Examinining the ontology closure of extension {}", extURI))
+                .map(ontologySvc::parseOntology)
+                .flatMap(o -> ontologySvc.inferClasses(resource.uri(), resource, o).stream())
+                .peek(rdfType -> LOG.debug("Instance {} is of class {}", resource.uri(), rdfType))
+                .collect(Collectors.toSet());
 
-        for (final Extension e : extensions) {
-            LOG.debug("(B) Getting the ontology closure of extension {}", e.uri());
-            final Ontology o = ontologySvc.parseOntology(e.getResource());
-
-            LOG.debug("(C) Inferring classes over resource {} using ontologies from extension {}", resource.uri(), e
-                    .uri());
-            final Set<URI> inferredClasses = ontologySvc.inferClasses(resource.uri(), resource, o);
-
-            for (final URI inferredClass : inferredClasses) {
-                LOG.debug("(D) Found class {}", inferredClass);
-
-                for (final Extension candidate : extensions) {
-                    if (candidate.bindingClass().equals(inferredClass)) {
-                        boundExtensions.add(candidate);
-                        LOG.debug("(E) Class {} matches extension {}", candidate.uri(), candidate.bindingClass());
-                    }
-                }
-            }
-        }
-
-        return boundExtensions;
-
-        // This is perhaps a more concise way of performing the above^^, but the logging statements
-        // from the above are very useful.
-        //
-        // final Set<URI> rdfTypes = extensions.stream()
-        // .map(Extension::getResource)
-        // .map(ontologySvc::parseOntology)
-        // .flatMap(o -> ontologySvc.inferClasses(resource.uri(), resource, o).stream())
-        // .collect(Collectors.toSet());
-        //
-        // return extensions.stream().filter(e -> rdfTypes.contains(e.bindingClass())).collect(Collectors.toList());
+        return extensions.stream()
+                .peek(e -> LOG.debug("Extension {} binds to instances of {}", e.uri(), e.bindingClass()))
+                .filter(e -> rdfTypes.contains(e.bindingClass()))
+                .peek(e -> LOG.debug("Extension {} bound to instance {} via {}", e.uri(), resource.uri(), e
+                        .bindingClass()))
+                .collect(Collectors.toList());
     }
 
     /** Just does a dumb dereference and lookup */
