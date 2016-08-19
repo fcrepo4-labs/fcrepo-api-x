@@ -61,14 +61,14 @@ public interface OntologyService {
      *
      * @param ontology1 Ontology to merge.
      * @param ontology2 Ontology to merge.
-     * @return The uninion of both ontologies.
+     * @return The union of both ontologies.
      */
     public Ontology merge(Ontology ontology1, Ontology ontology2);
 
     /**
      * Infer the classes of a given individual.
      * <p>
-     * Performs A-box reasoning of an infividual with respect to a given ontology.
+     * Performs A-box reasoning of an individual with respect to a given ontology.
      * </p>
      *
      * @param individual URI of the individual, as mat be found in the provided resource.
