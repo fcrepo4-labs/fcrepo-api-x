@@ -68,7 +68,7 @@ public class LookupOntologyRegistry implements OntologyRegistry {
 
     private Registry registry;
 
-    private final Logger LOG = LoggerFactory.getLogger(LookupOntologyRegistry.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LookupOntologyRegistry.class);
 
     /**
      * Set underlying registry containing ontology resources.

@@ -51,7 +51,7 @@ browser).  This pattern works on all platforms (Linux, Mac OS, and Windows).  Li
 Vagrant to launch Docker on their own machine, rather than launching a separate VM.  This is discussed in a separate
 section.
 
-* `mvn install`
+* `mvn clean install`-PPOC
     This is necessary because none of the apix-poc images or artifacts are published to
     a repository for download; everything needs to be build from scratch locally.
 * `vagrant up`
@@ -70,7 +70,7 @@ the local machine.  Otherwise, docker may be run inside of a virtual machine.
     * _Make sure that the api-x code (the fcrepo-api-x) directory is accessible to the docker machine VM_.  For
     mac users, if the code is in your home sirectory somewhere under /Users, then you're good.  Linux users
     have some work to do, see [setting up docker machine](docker/README.md)
-* run `mvn clean install` to build the api-x code
+* run `mvn clean install -PPOC` to build the api-x code
 * run `docker-compose up -d` to build & run docker images of API-X services.
 
 For more information see [docker/README.md](docker/README.md)

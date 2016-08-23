@@ -2,13 +2,13 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
-    <groupId>org.fcrepo.apix.poc</groupId>
-    <artifactId>fcrepo-api-x-docker</artifactId>
+    <groupId>org.fcrepo.apix</groupId>
+    <artifactId>fcrepo-api-x</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
 
   <groupId>org.fcrepo.apix.poc</groupId>
-  <artifactId>fcrepo-api-x-docker-tools</artifactId>
+  <artifactId>fcrepo-api-x-docker</artifactId>
   <packaging>pom</packaging>
 
   <properties>
@@ -17,8 +17,6 @@
   </properties>
 
   <modules>
-    <!-- <module>builder-java</module> -->
-    <module>builder-native</module>
-    <module>wrk</module>
+    <module>tools</module>
   </modules>
 </project>

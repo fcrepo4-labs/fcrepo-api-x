@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.fcrepo.apix</groupId>
-    <artifactId>apix</artifactId>
+    <artifactId>fcrepo-api-x</artifactId>
     <version>0.0.1-SNAPSHOT</version>
   </parent>
   <artifactId>fcrepo-api-x-execution</artifactId>
@@ -14,6 +14,12 @@
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
+      </plugin>
+
+      <!-- TODO: Move to parent once POCs are dealt with -->
+      <plugin>
+        <groupId>com.mycila</groupId>
+        <artifactId>license-maven-plugin</artifactId>
       </plugin>
     </plugins>
   </build>

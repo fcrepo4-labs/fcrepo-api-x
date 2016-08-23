@@ -2,7 +2,7 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.fcrepo.apix</groupId>
-  <artifactId>apix</artifactId>
+  <artifactId>fcrepo-api-x</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -224,10 +224,6 @@
         <artifactId>maven-checkstyle-plugin</artifactId>
       </plugin>
 
-      <plugin>
-        <groupId>com.mycila</groupId>
-        <artifactId>license-maven-plugin</artifactId>
-      </plugin>
     </plugins>
 
 
@@ -341,10 +337,6 @@
     </dependencies>
   </dependencyManagement>
   <modules>
-    <module>docker/tools</module>
-    <module>proof-of-concept/go-proxy</module>
-    <module>proof-of-concept/amherst-apix</module>
-    <module>proof-of-concept/indexing-triplestore</module>
     <module>fcrepo-api-x-registry</module>
     <module>fcrepo-api-x-model</module>
     <module>fcrepo-api-x-routing</module>
@@ -375,4 +367,16 @@
       </snapshots>
     </repository>
   </repositories>
+
+  <profiles>
+    <profile>
+      <id>POC</id>
+      <modules>
+        <module>docker</module>
+        <module>proof-of-concept/go-proxy</module>
+        <module>proof-of-concept/amherst-apix</module>
+        <module>proof-of-concept/indexing-triplestore</module>
+      </modules>
+    </profile>
+  </profiles>
 </project>
