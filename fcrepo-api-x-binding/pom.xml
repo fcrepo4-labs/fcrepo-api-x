@@ -22,12 +22,6 @@
         <artifactId>karaf-maven-plugin</artifactId>
       </plugin>
 
-      <!-- TODO: Move to parent once POCs are dealt with -->
-      <plugin>
-        <groupId>com.mycila</groupId>
-        <artifactId>license-maven-plugin</artifactId>
-      </plugin>
-
     </plugins>
   </build>
 
