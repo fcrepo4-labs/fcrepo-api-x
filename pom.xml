@@ -1,14 +1,45 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.fcrepo</groupId>
+    <artifactId>fcrepo-parent</artifactId>
+    <version>4.7.0-SNAPSHOT</version>
+  </parent>
+
   <groupId>org.fcrepo.apix</groupId>
-  <artifactId>apix</artifactId>
+  <artifactId>fcrepo-api-x</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <camel.version>2.17.3</camel.version>
+    <cargo.version>1.5.0</cargo.version>
+    <checkstyle.plugin.version>2.17</checkstyle.plugin.version>
+    <commons-io.version>2.5</commons-io.version>
+    <docker>false</docker>
+    <fcrepo.version>4.7.0-SNAPSHOT</fcrepo.version>
+    <fcrepo-build-tools.version>4.4.2</fcrepo-build-tools.version>
+    <httpclient.version>4.5.2</httpclient.version>
+    <httpcore.version>4.4.5</httpcore.version>
+    <jena.version>3.1.0</jena.version>
+    <junit.version>4.12</junit.version>
+    <karaf.version>4.0.5</karaf.version>
+    <license.plugin.version>2.11</license.plugin.version>
+    <maven-antrun-plugin.version>1.8</maven-antrun-plugin.version>
+    <maven-bundle-plugin.version>3.2.0</maven-bundle-plugin.version>
+    <maven-exec-plugin.version>1.4.0</maven-exec-plugin.version>
+    <maven-failsafe-plugin.version>2.19.1</maven-failsafe-plugin.version>
+    <mockito.version>1.10.19</mockito.version>
+    <osgi.scr.version>1.3.0</osgi.scr.version>
+    <osgi.version>5.0.0</osgi.version>
+    <pax-exam.version>4.9.1</pax-exam.version>
+    <pax-url-aether.version>2.4.3</pax-url-aether.version>
+    <slf4j.version>1.7.13</slf4j.version>
   </properties>
 
   <build>
@@ -17,48 +48,265 @@
         <plugin>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>exec-maven-plugin</artifactId>
-          <version>1.4.0</version>
+          <version>${maven-exec-plugin.version}</version>
         </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-failsafe-plugin</artifactId>
+          <version>${maven-failsafe-plugin.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.cargo</groupId>
+          <artifactId>cargo-maven2-plugin</artifactId>
+          <version>${cargo.version}</version>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-antrun-plugin</artifactId>
+          <version>${maven-antrun-plugin.version}</version>
+          <executions>
+            <execution>
+              <phase>initialize</phase>
+              <configuration>
+                <target>
+                  <property environment="env" />
+                  <path id="combined-PATH">
+                    <pathelement path="${env.PATH}" />
+                    <pathelement path="${env.Path}" />
+                  </path>
+                  <property name="PATH" refid="combined-PATH" />
+                  <condition property="docker">
+                    <or>
+                      <available file="docker.exe" filepath="${PATH}" />
+                      <available file="docker" filepath="${PATH}" />
+                    </or>
+                  </condition>
+                  <path id="default-basedir">
+                    <pathelement path="${basedir}" />
+                  </path>
+                  <pathconvert targetos="unix" property="basedir.docker"
+                    refid="default-basedir">
+                    <map from="c:" to="/c" />
+                  </pathconvert>
+                  <echo>Docker: ${docker}</echo>
+                </target>
+              </configuration>
+              <goals>
+                <goal>run</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.karaf.tooling</groupId>
+          <artifactId>karaf-maven-plugin</artifactId>
+          <version>${karaf.version}</version>
+          <extensions>true</extensions>
+          <executions>
+            <execution>
+              <id>generate-features-descriptor</id>
+              <phase>generate-resources</phase>
+              <goals>
+                <goal>features-generate-descriptor</goal>
+              </goals>
+            </execution>
+          </executions>
+          <configuration>
+            <includeProjectArtifact>true</includeProjectArtifact>
+            <includeTransitiveDependency>true</includeTransitiveDependency>
+          </configuration>
+        </plugin>
+
       </plugins>
     </pluginManagement>
 
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.8</version>
-        <executions>
-          <execution>
-            <phase>initialize</phase>
-            <configuration>
-              <target>
-                <property environment="env"/>
-                  <path id="combined-PATH">
-                    <pathelement path="${env.PATH}"/>
-                    <pathelement path="${env.Path}"/>
-                  </path>
-                <property name="PATH" refid="combined-PATH"/>
-                <condition property="docker">
-                  <or>
-                    <available file="docker.exe" filepath="${PATH}"/>
-                    <available file="docker" filepath="${PATH}"/>
-                  </or>
-                </condition>
-              </target>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.5.1</version>
+        <configuration>
+          <source>1.8</source>
+          <target>1.8</target>
+        </configuration>
       </plugin>
+
+      <plugin>
+        <groupId>org.apache.felix</groupId>
+        <artifactId>maven-bundle-plugin</artifactId>
+        <version>${maven-bundle-plugin.version}</version>
+        <extensions>true</extensions>
+        <configuration combine.self="override">
+          <niceManifest>true</niceManifest>
+          <instructions>
+            <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
+            <Import-Package>*</Import-Package>
+            <_dsannotations>*</_dsannotations>
+          </instructions>
+        </configuration>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+      </plugin>
+
     </plugins>
+
+
   </build>
+
+  <dependencyManagement>
+    <dependencies>
+
+      <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>${commons-io.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-osgi</artifactId>
+        <version>${jena.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+      <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>${junit.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore-osgi</artifactId>
+        <version>${httpcore.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore-nio</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient-osgi</artifactId>
+        <version>${httpclient.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient-cache</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpmime</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>fluent-hc</artifactId>
+          </exclusion>
+          <exclusion>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
+        <groupId>org.osgi</groupId>
+        <artifactId>org.osgi.service.component.annotations</artifactId>
+        <version>${osgi.scr.version}</version>
+        <scope>provided</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>jcl-over-slf4j</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-simple</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-all</artifactId>
+        <version>${mockito.version}</version>
+        <scope>test</scope>
+      </dependency>
+
+    </dependencies>
+  </dependencyManagement>
   <modules>
-    <module>docker/builder</module>
-    <module>docker/tools/wrk</module>
-    <module>proof-of-concept/go-proxy</module>
-    <module>proof-of-concept/amherst-apix</module>
-    <module>proof-of-concept/indexing-triplestore</module>
+    <module>fcrepo-api-x-registry</module>
+    <module>fcrepo-api-x-model</module>
+    <module>fcrepo-api-x-routing</module>
+    <module>fcrepo-api-x-binding</module>
+    <module>fcrepo-api-x-execution</module>
+    <module>fcrepo-api-x-jena</module>
+    <module>fcrepo-api-x-integration</module>
+    <module>fcrepo-api-x-karaf</module>
   </modules>
+
+  <licenses>
+    <license>
+      <name>Apache License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0</url>
+      <comments>Copyright (c) 2016 DuraSpace</comments>
+    </license>
+  </licenses>
+
+  <repositories>
+    <repository>
+      <id>snapshots-repo</id>
+      <url>http://oss.sonatype.org/content/repositories/snapshots</url>
+      <releases>
+        <enabled>false</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <profiles>
+    <profile>
+      <id>POC</id>
+      <modules>
+        <module>docker</module>
+        <module>proof-of-concept/go-proxy</module>
+        <module>proof-of-concept/amherst-apix</module>
+        <module>proof-of-concept/indexing-triplestore</module>
+      </modules>
+    </profile>
+  </profiles>
 </project>

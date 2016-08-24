@@ -1,0 +1,16 @@
+@prefix ore:<http://www.openarchives.org/ore/terms/> .
+@prefix pcdm:<http://pcdm.org/models#> .
+@prefix iana:<http://www.iana.org/assignments/relation/> .
+
+# In this example, our resource is an ORE Resource Map (ReM).  
+# The aggregation it describes is a pcdm collection, identified by
+# a hash URI (see http://www.openarchives.org/ore/1.0/http#Simple).
+# Ordering is achieved with proxies within the ReM, also identified by
+# hash URIs.  
+<> a ore:ResourceMap;
+    ore:describes <#collection> .
+
+<#collection> a pcdm:Collection;
+    pcdm:hasMember <#A>;
+    pcdm:hasMember <#B>;
+    pcdm:hasMember <#C>.

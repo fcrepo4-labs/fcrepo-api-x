@@ -1,0 +1,29 @@
+@prefix owl:<http://www.w3.org/2002/07/owl#> .
+@prefix test:<http://example.org/test#> .
+@prefix iana:<http://www.iana.org/assignments/relation/> .
+@prefix ore:<http://www.openarchives.org/ore/terms/> .
+
+test:OntologyNoImport a owl:Ontology .
+# oops, we don't import PCDM or ORE!
+
+test:RemWithOrderedAggregationNoImport a owl:Class;
+    owl:intersectionOf (
+        ore:ResourceMap
+        [ a owl:Restriction;
+            owl:onProperty ore:describes;
+            owl:someValuesFrom <#OrderedAggregation>;
+        ]
+    ) .
+
+test:OrderedAggregationNoImport a owl:Class;
+    owl:intersectionOf (
+        ore:Aggregation
+        [ a owl:Restriction;
+            owl:onProperty iana:last;
+            owl:someValuesFrom ore:Proxy
+        ]
+        [ a owl:Restriction;
+            owl:onProperty iana:first;
+            owl:someValuesFrom ore:Proxy
+        ]
+    ) .

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+  xmlns:ext="http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0"
+  xsi:schemaLocation="
+       http://www.osgi.org/xmlns/blueprint/v1.0.0 https://osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+       http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0 http://aries.apache.org/schemas/blueprint-ext/blueprint-ext.xsd
+       http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0  http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
+       http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+
+  <cm:property-placeholder persistent-id="org.fcrepo.apix.jena"
+    update-strategy="reload">
+    <cm:default-properties>
+      <cm:property name="registry.extension.ldp.container"
+        value="http://localhost:8080/fcrepo/apix/extensions" />
+      <cm:property name="registry.ontology.ldp.container"
+        value="http://localhost:8080/fcrepo/apix/ontologies" />
+    </cm:default-properties>
+  </cm:property-placeholder>
+
+  <reference id="underlyingRegistryDelegate" filter="(org.fcrepo.apix.registry.role=default)"
+    interface="org.fcrepo.apix.model.components.Registry" />
+
+  <reference id="httpClient" ext:proxy-method="classes"
+    interface="org.apache.http.impl.client.CloseableHttpClient" />
+
+  <bean id="ldpExtensionRegistryDelegate" class="org.fcrepo.apix.jena.impl.LdpContainerRegistry"
+    init-method="init">
+    <property name="registryDelegate" ref="underlyingRegistryDelegate" />
+    <property name="httpClient" ref="httpClient" />
+    <property name="container" value="${registry.extension.ldp.container}" />
+  </bean>
+
+  <bean id="ldpOntologyServiceRegistryDelegate" class="org.fcrepo.apix.jena.impl.LdpContainerRegistry"
+    init-method="init">
+    <property name="registryDelegate" ref="underlyingRegistryDelegate" />
+    <property name="httpClient" ref="httpClient" />
+    <property name="container" value="${registry.ontology.ldp.container}" />
+    <property name="binary" value="true" />
+  </bean>
+
+  <bean id="jenaExtensionRegistryImpl" class="org.fcrepo.apix.jena.impl.JenaExtensionRegistry">
+    <property name="registryDelegate" ref="ldpExtensionRegistryDelegate"></property>
+  </bean>
+
+  <bean id="jenaOntologyServiceImpl" class="org.fcrepo.apix.jena.impl.JenaOntologyService">
+    <property name="registryDelegate" ref="jenaOntologyRegistryImpl" />
+  </bean>
+
+  <bean id="jenaOntologyRegistryImpl" class="org.fcrepo.apix.jena.impl.LookupOntologyRegistry"
+    init-method="init">
+    <property name="registryDelegate" ref="ldpOntologyServiceRegistryDelegate" />
+  </bean>
+
+  <service id="jenaOntologyRegistry" interface="org.fcrepo.apix.model.components.OntologyRegistry"
+    ref="jenaOntologyRegistryImpl" />
+
+  <service id="jenaOntologyService" interface="org.fcrepo.apix.model.components.OntologyService"
+    ref="jenaOntologyServiceImpl" />
+
+  <service id="jenaExtensionRegistry" interface="org.fcrepo.apix.model.components.ExtensionRegistry"
+    ref="jenaExtensionRegistryImpl" />
+
+</blueprint>

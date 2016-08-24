@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+  xmlns:ext="http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0"
+  xsi:schemaLocation="
+       http://www.osgi.org/xmlns/blueprint/v1.0.0 https://osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+       http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0 http://aries.apache.org/schemas/blueprint-ext/blueprint-ext.xsd
+       http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0  http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
+       http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+
+  <cm:property-placeholder persistent-id="org.fcrepo.apix.registry.http"
+    update-strategy="reload">
+    <cm:default-properties>
+      <cm:property name="timeout.connect.ms" value="1000" />
+      <cm:property name="timeout.socket.ms" value="1000" />
+    </cm:default-properties>
+  </cm:property-placeholder>
+
+  <!--HttpClient -->
+  <bean id="httpClientFactory" class="org.fcrepo.apix.registry.impl.HttpClientFactory">
+    <property name="connectTimeout" value="${timeout.connect.ms}" />
+    <property name="socketTimeout" value="${timeout.socket.ms}" />
+  </bean>
+
+  <bean id="httpClient-default" factory-ref="httpClientFactory"
+    factory-method="getClient" />
+
+
+  <service id="httpClient-default-service" ref="httpClient-default"
+    auto-export="all-classes">
+    <service-properties>
+      <entry key="role" value="registry-default" />
+    </service-properties>
+  </service>
+
+  <bean id="httpRegistryImpl" class="org.fcrepo.apix.registry.impl.HttpRegistry">
+    <property name="httpClient" ref="httpClient-default" />
+  </bean>
+
+  <service id="httpRegistry" ref="httpRegistryImpl"
+    interface="org.fcrepo.apix.model.components.Registry">
+    <service-properties>
+      <entry key="org.fcrepo.apix.registry.role" value="default" />
+    </service-properties>
+  </service>
+
+</blueprint>

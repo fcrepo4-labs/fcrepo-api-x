@@ -10,7 +10,7 @@ ENV FUSEKI_VERSION=2.3.1 \
 
 RUN export FUSEKI_DIST=apache-jena-fuseki-${FUSEKI_VERSION}.tar.gz && \
     mkdir -p ${APPS} && \
-    curl -L http://mirror.symnds.com/software/Apache/jena/binaries/${FUSEKI_DIST} \
+    curl -L http://archive.apache.org/dist/jena/binaries/${FUSEKI_DIST} \
         > /tmp/${FUSEKI_DIST}  && \
     echo "ba7aea73f27a735489fb84ec0c7894a53bdc34f9 */tmp/${FUSEKI_DIST}" \
         | sha1sum -c - && \

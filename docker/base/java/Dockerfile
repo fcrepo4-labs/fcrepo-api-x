@@ -1,4 +1,4 @@
-FROM alpine:3.3
+FROM alpine:3.4
 
 ENV SHARED=/shared \
     APPS=/opt \
@@ -8,6 +8,7 @@ ENV SHARED=/shared \
 #Basic setup: Install java, curl
 RUN apk add --update openjdk8-jre && \
     apk add --update curl && \
+    apk add --update bash && \
     rm -rf /var/cache/apk/* && \
     mkdir ${SHARED} && \
     mkdir ${APPS}  && \ 

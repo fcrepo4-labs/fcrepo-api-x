@@ -1,0 +1,7 @@
+@prefix apix:<http://example.org/apix#> .
+@prefix test:<http://example.org/test#> .
+@prefix owl:<http://www.w3.org/2002/07/owl#> .
+
+<> a apix:Extension ;
+  owl:imports test:Ontology ;
+  apix:bindsTo test:RemWithOrderedAggregation .
