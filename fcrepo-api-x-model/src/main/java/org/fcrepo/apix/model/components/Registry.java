@@ -56,7 +56,7 @@ public interface Registry {
     /**
      * Determines if resources can be written to this registry.
      *
-     * @return true if writable via {@link #put(URI, WebResource)}
+     * @return true if writable via {@link #put(WebResource)}
      */
     public boolean canWrite();
 
@@ -71,7 +71,7 @@ public interface Registry {
      * Determine if the registry contains the given resource.
      *
      * @param id URI of the resource to check.
-     * @return
+     * @return true if the registry contains the given resource
      */
     public boolean contains(URI id);
 }

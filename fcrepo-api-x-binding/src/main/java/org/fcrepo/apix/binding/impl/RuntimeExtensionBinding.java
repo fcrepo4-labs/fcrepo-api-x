@@ -80,7 +80,7 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
      * Set the underlying delegate registry for retrieving arbitrary web resources from the repository.
      * <p>
      * This registry is consulted in support of {@link #getExtensionsFor(URI)}
-     * <p/>
+     * </p>
      *
      * @param registry Registry impl.
      */
@@ -91,7 +91,6 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
 
     /**
      * Simple/naive binding algorithm, there may be opportunities for optimization when the time is right
-     * <p>
      * <ol>
      * <li>Determine the set of known extensions</li>
      * <li>for each extension, get its ontology closure</li>
@@ -99,7 +98,6 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
      * <li>For each extension, see if its binding class is in that list of inferred classes.</li>
      * <li>Return all extensions that match</li>
      * </ol>
-     * <p>
      */
     @Override
     public Collection<Extension> getExtensionsFor(final WebResource resource) {

@@ -107,18 +107,26 @@ public class LdpContainerRegistry implements Registry {
     /**
      * Set the URI of the LDP container containing objects relevant to this registry.
      *
-     * @param containerId
+     * @param containerId the LDP container URI
      */
     public void setContainer(final URI containerId) {
         this.containerId = containerId;
     }
 
-    /** Indicate whether to treat resources in this registry as binaries */
+    /**
+     * Indicate whether to treat resources in this registry as binaries
+     *
+     * @param binary true if the resources are to be treated as binaries
+     */
     public void setBinary(final boolean binary) {
         this.binary = binary;
     }
 
-    /** Indicate whether to attempt to create the container if not present */
+    /**
+     * Indicate whether to attempt to create the container if not present
+     *
+     * @param create true if the container is to be created if it is missing
+     */
     public void setCreateContainer(final boolean create) {
         this.create = create;
     }
