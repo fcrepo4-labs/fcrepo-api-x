@@ -81,29 +81,6 @@ Vagrant.configure("2") do |config|
     end
   end
 
-  config.vm.define "amherst-apix" do |m|
-    m.vm.provider :docker do |d|
-      d.name = 'amherst-apix'
-      d.build_dir = "proof-of-concept/amherst-apix"
-      d.build_args = ["-t", "apix-poc/amherst-apix"]
-      d.volumes = ["/shared:/shared"]
-      d.expose = [8081]
-      d.ports = ["8081:8081"]
-      d.remains_running = true
-      d.env = {
-        APIX_REST_PORT: "8081",
-        FCREPO_BASEURL: "fcrepo:8080/rest",
-        APIX_REST_HOST: "0.0.0.0"
-      }
-
-      d.create_args = [ "--user=#{DOCKER_HOST_USER}", "--net=apix"]
-
-      d.force_host_vm = DOCKER_HOST_FORCE_VM
-      d.vagrant_machine = DOCKER_HOST_NAME
-      d.vagrant_vagrantfile = DOCKER_HOST_VAGRANTFILE
-    end
-  end
-
   config.vm.define "go-proxy" do |m|
     m.vm.provider :docker do |d|
       d.name = 'go-proxy'

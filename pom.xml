@@ -314,7 +314,6 @@
       <modules>
         <module>docker</module>
         <module>proof-of-concept/go-proxy</module>
-        <module>proof-of-concept/amherst-apix</module>
         <module>proof-of-concept/indexing-triplestore</module>
       </modules>
     </profile>
