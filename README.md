@@ -8,10 +8,6 @@ API-X extensions, etc) inside [Docker](https://www.docker.com/what-docker) conta
 Docker-compose offers a high degree of control which more suited towards testing and development,
 while Vagrant is extremely easy to use and perhaps best suited for quickly running a demonstration.
 
-
-## API-X POC/demo services
-A description of proof of concept API-X services can be found in [proof-of-concept/README.md](proof-of-concept/README.md)
-
 ## Prerequisites 
 
 Building the code requires Maven 3.x, and Java 8.
@@ -85,14 +81,14 @@ First, determine the address `${ADDR}` of the machine running Docker
 	* For Docker Machine users, you can find this by running `docker-machine ip apix`
 
 Next, verify that some services are running
-* Verify Fedora is running. Point your browser to `http://${ADDR}:8080/rest`
+* Verify Fedora is running. Point your browser to `http://${ADDR}:8080/fcrepo/rest`
 	* You should see Fedora, with an empty root container
 	* Create an object through Fedora's UI
 * point your browser to Fuseki at `http://${ADDR}:3030/fcrepo-triple-index`
 	* You should see some triples!
 	* Note, ths indexing process is asynchronous, so there may be a delay before these are visible
 * Look at the Fedora as seen through the Amherst API-X proof of concept `http://${ADDR}:8081/fcrepo/rest`
-* Look at Fedora as seen through a simple reverse proxy service `http://${ADDR}:8082/rest`
+* Look at Fedora as seen through a simple reverse proxy service `http://${ADDR}:8082/fcrepo/rest`
 
 ## Contributing
 Contributors to DuraSpace projects should complete a [Contributor License Agreement](https://wiki.duraspace.org/x/ILsQAg)
