@@ -4,7 +4,7 @@ RUN mkdir /wrk
 
 WORKDIR /wrk
 
-COPY wrk wrk.lua scripts/ /wrk/
+COPY ./wrk ./wrk.lua ./scripts/ /wrk/
 
 ENV PATH=${PATH}:/wrk
 CMD /wrk/wrk
