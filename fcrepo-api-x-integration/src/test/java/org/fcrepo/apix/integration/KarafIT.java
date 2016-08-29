@@ -116,7 +116,12 @@ public interface KarafIT {
         }
     }
 
-    /** Get a test resource from test-classes */
+    /**
+     * Get a test resource from test-classes
+     *
+     * @param path the resource path relative to {@link #testResources}
+     * @return the resulting WebResource
+     */
     public default WebResource testResource(String path) {
 
         final File file = new File(testResources, path);

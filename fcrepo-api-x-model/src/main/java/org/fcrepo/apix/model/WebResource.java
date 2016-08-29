@@ -85,7 +85,7 @@ public interface WebResource extends AutoCloseable {
      * @param contentType MIME type of the underlying stream.
      * @param uri URI if the resource
      * @param length size in byyes, or null if not known.
-     * @return
+     * @return the newly created WebResource
      */
     public static WebResource of(final InputStream stream, final String contentType, final URI uri,
             final Long length) {

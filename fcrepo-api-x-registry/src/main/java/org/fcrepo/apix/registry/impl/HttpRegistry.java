@@ -64,7 +64,7 @@ public class HttpRegistry implements Registry {
     /**
      * Set the underlying httpClient impl
      *
-     * @param client
+     * @param client the HttpClient implementation
      */
     @Reference
     public void setHttpClient(final CloseableHttpClient client) {
