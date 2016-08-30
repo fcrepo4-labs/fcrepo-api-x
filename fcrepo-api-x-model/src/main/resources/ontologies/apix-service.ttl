@@ -1,0 +1,61 @@
+@prefix svc:<http://fedora.info/definitions/v4/service#> .
+@prefix fcr:<http://fedora.info/definitions/v4/repository#> .
+@prefix owl:<http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#> .
+
+svc: a owl:Ontology .
+
+svc:Service a owl:Class;
+    rdfs:label "Service"@en;
+    rdfs:comment "The abstract notion of a web resource accessed through HTTP or using HTTP message semantics"@en .
+
+svc:ServiceInstance a owl:Class .
+
+svc:ServiceInstanceRegistry a owl:Class .
+
+svc:LdpServiceInstanceRegistry a owl:Class;
+    rdfs:subClassOf svc:hasServiceInstanceRegistry .
+
+svc:ServiceDocument a owl:Class .
+
+svc:ServiceRegistry a owl:Class .
+
+svc:isFunctionOf a owl:ObjectProperty;
+    rdfs:domain svc:ServiceInstance;
+    rdfs:range fcr:Resource .
+
+svc:hasServiceInstance a owl:ObjectProperty;
+    rdfs:domain svc:Service;
+    rdfs:range svc:ServiceInstance .
+
+svc:isServiceInstanceOf a owl:ObjectProperty;
+    owl:inverseOf svc:hasServiceInstance .
+
+svc:exposesServiceInstance a owl:ObjectProperty;
+    rdfs:domain fcr:Resource;
+    rdfs:range svc:ServiceInstance .
+
+svc:serviceInstanceExposedBy a owl:ObjectProperty;
+    owl:inverseOf svc:exposesServiceInstance .
+
+svc:hasServiceDocument a owl:ObjectProperty;
+    rdfs:domain fcr:Resource;
+    rdfs:range svc:ServiceDocument .
+
+svc:isServiceDocumentFor a owl:ObjectProperty;
+    owl:inverseOf svc:hasServiceDocument .
+
+svc:hasEndpoint a owl:ObjectProperty;
+    rdfs:domain svc:ServiceInstance;
+    rdfs:subPropertyOf owl:sameAs .
+
+svc:canonical a owl:ObjectProperty;
+    rdfs:domain svc:Service;
+    rdfs:subPropertyOf owl:sameAs .
+
+svc:isServiceInstanceRegistryFor a owl:ObjectProperty;
+    rdfs:domain svc:ServiceInstanceRegistry;
+    rdfs:range svc:Service .
+
+svc:hasServiceInstanceRegistry a owl:ObjectProperty;
+    owl:inverseOf svc:isServiceInstanceRegistryFor .
