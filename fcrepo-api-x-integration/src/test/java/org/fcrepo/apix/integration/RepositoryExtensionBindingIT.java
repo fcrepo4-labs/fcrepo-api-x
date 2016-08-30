@@ -133,7 +133,7 @@ public class RepositoryExtensionBindingIT implements KarafIT {
 
         if (!ontologyRegistry.contains(TEST_ONTOLOGY_IRI)) {
             ontologyRegistry.put(testResource(
-                    "ontologies/RemWithOrderedAggregation.ttl"));
+                    "ontologies/ReMWithOrderedAggregation.ttl"));
         }
 
         if (extensionRegistry.list().isEmpty()) {
@@ -182,7 +182,7 @@ public class RepositoryExtensionBindingIT implements KarafIT {
 
         // Put in an ontology that doesn't import ORE or PCDM
         ontologyRegistry.put(testResource(
-                "ontologies/RemWithOrderedAggregation_noImport.ttl"));
+                "ontologies/ReMWithOrderedAggregation_noImport.ttl"));
 
         // Now put in an extension that binds to a class from that ontology
         final URI extensionURI = extensionRegistry.put(testResource(

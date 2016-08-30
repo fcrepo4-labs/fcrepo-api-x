@@ -1,0 +1,10 @@
+language: java
+# 'install' necessary to generate artifacts used by pax exam 
+# - this is the default value assigned by Travis, but included for clarity
+install: mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+script: mvn verify
+jdk:
+- oraclejdk8
+after_failure:
+- cat fcrepo-api-x-integration/target/test-classes/cfg/*
+- cat fcrepo-api-x-integration/target/failsafe-reports/*.txt
