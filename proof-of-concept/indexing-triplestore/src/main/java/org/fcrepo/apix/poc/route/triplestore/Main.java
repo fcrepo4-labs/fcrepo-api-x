@@ -36,9 +36,6 @@ import org.springframework.context.annotation.ImportResource;
 @ImportResource({ "classpath*:applicationContext.xml" })
 public class Main {
 
-    private Main() {
-    };
-
     /**
      * Standaline app main method.
      *

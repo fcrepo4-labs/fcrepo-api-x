@@ -76,23 +76,6 @@ services:
       - TRIPLESTORE_BASEURL=fuseki.docker.local:3030/fcrepo-triple-index/update
       - ERROR_MAMXREDELIVERIES=100000
 
-  amherst-apix:
-    build: proof-of-concept/amherst-apix/
-    image: apix-poc/amherst-apix
-    depends_on:
-      - base-karaf
-    networks:
-      apix:
-        aliases:
-          - amherst-apix.docker.local
-    ports:
-      - "8081:80"
-    environment:
-      - APIX_REST_PORT=80
-      - APIX_REST_HOST=0.0.0.0
-      - APIX_REST_PROXY=/fcrepo
-      - FCREPO_BASEURL=fcrepo.docker.local/fcrepo
-
   go-proxy:
     build: proof-of-concept/go-proxy/target
     image: apix-poc/go-proxy

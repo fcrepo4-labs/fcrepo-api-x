@@ -11,6 +11,12 @@
 
   <properties>
     <spring-boot-version>1.3.3.RELEASE</spring-boot-version>
+    <!--
+      Enabling these jars messes with the execution of the Docker CMD.  If these
+      jars are desired, the Dockerfile will need to be updated accordingly.
+    -->
+    <maven.javadoc.skip>true</maven.javadoc.skip>
+    <source.skip>true</source.skip>
   </properties>
 
   <!-- import Spring-Boot and Camel BOM -->
@@ -78,6 +84,13 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-checkstyle-plugin</artifactId>
+        <configuration>
+          <excludes>**/Main.java</excludes>
+        </configuration>
       </plugin>
     </plugins>
   </build>
