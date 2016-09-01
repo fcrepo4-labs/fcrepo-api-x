@@ -18,15 +18,19 @@
 
 package org.fcrepo.apix.model;
 
+import java.net.URI;
+
 /**
- * Marker interface for ontologies.
- * <p>
- * An ontology is opaque representation of an ontology scoped to a particular implementation of an
- * {@link org.fcrepo.apix.model.components.OntologyService}.
- * </p>
+ * Abstract notion of an API-X service.
  *
  * @author apb@jhu.edu
  */
-public interface Ontology {
+public interface Service extends WebResource {
 
+    /**
+     * The canonical URI for a service.
+     *
+     * @return Canonical URI. If none defined, then this is implicitly the URI of the service resource itself.
+     */
+    URI canonicalURI();
 }

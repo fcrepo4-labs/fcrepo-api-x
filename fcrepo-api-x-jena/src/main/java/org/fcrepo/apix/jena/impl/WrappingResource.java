@@ -16,17 +16,49 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.model;
+package org.fcrepo.apix.jena.impl;
+
+import java.io.InputStream;
+import java.net.URI;
+
+import org.fcrepo.apix.model.WebResource;
 
 /**
- * Marker interface for ontologies.
- * <p>
- * An ontology is opaque representation of an ontology scoped to a particular implementation of an
- * {@link org.fcrepo.apix.model.components.OntologyService}.
- * </p>
+ * Internal wrapper around a WebResource.
  *
  * @author apb@jhu.edu
  */
-public interface Ontology {
+abstract class WrappingResource implements WebResource {
+
+    final WebResource delegate;
+
+    WrappingResource(final WebResource delegate) {
+        this.delegate = delegate;
+    }
+
+    @Override
+    public void close() throws Exception {
+        delegate.close();
+    }
+
+    @Override
+    public String contentType() {
+        return delegate.contentType();
+    }
+
+    @Override
+    public URI uri() {
+        return delegate.uri();
+    }
+
+    @Override
+    public Long length() {
+        return delegate.length();
+    }
+
+    @Override
+    public InputStream representation() {
+        return delegate.representation();
+    }
 
 }

@@ -16,17 +16,34 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.model;
+package org.fcrepo.apix.model.components;
+
+import java.net.URI;
+
+import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
 
 /**
- * Marker interface for ontologies.
- * <p>
- * An ontology is opaque representation of an ontology scoped to a particular implementation of an
- * {@link org.fcrepo.apix.model.components.OntologyService}.
- * </p>
+ * Routing component.
  *
  * @author apb@jhu.edu
  */
-public interface Ontology {
+public interface Routing {
+
+    /**
+     * Get the endpoint for the service exposed by the given extension on the given resource.
+     *
+     * @param spec specification for exposing a service
+     * @param onResource the resource on which the service is exposed.
+     * @return URI of exposed service, null if not applicable.
+     */
+    public URI endpointFor(ServiceExposureSpec spec, URI onResource);
+
+    /**
+     * Get the endpoint for the service doc of a given resource.
+     *
+     * @param resource the resource
+     * @return URI that resolves to the service document.
+     */
+    public URI serviceDocFor(URI resource);
 
 }

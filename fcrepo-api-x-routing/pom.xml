@@ -22,4 +22,12 @@
       </plugin>
     </plugins>
   </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.fcrepo.apix</groupId>
+      <artifactId>fcrepo-api-x-model</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+  </dependencies>
 </project>

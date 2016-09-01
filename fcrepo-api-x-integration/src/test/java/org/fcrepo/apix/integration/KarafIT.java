@@ -19,6 +19,8 @@
 package org.fcrepo.apix.integration;
 
 import static org.ops4j.pax.exam.CoreOptions.maven;
+import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.karafDistributionConfiguration;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.keepRuntimeFolder;
@@ -34,8 +36,11 @@ import java.util.List;
 
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.client.FcrepoClient;
+import org.fcrepo.client.FcrepoOperationFailedException;
+import org.fcrepo.client.FcrepoResponse;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.http.HttpStatus;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.ConfigurationManager;
 import org.ops4j.pax.exam.Option;
@@ -53,13 +58,28 @@ import org.ops4j.pax.exam.options.MavenUrlReference;
  */
 public interface KarafIT {
 
-    static final String fcrepoBaseURI = String.format("http://localhost:%s/%s/rest/", System.getProperty(
+    String fcrepoBaseURI = String.format("http://localhost:%s/%s/rest/", System.getProperty(
             "fcrepo.dynamic.test.port", "8080"), System.getProperty("fcrepo.cxtPath", "fcrepo"));
 
-    static final File testResources = new File(System.getProperty("project.basedir"), "src/test/resources");
+    File testResources = new File(System.getProperty("project.basedir"), "src/test/resources");
 
-    static final FcrepoClient client = FcrepoClient.client().throwExceptionOnFailure().build();
+    FcrepoClient client = FcrepoClient.client().throwExceptionOnFailure().build();
 
+    URI testContainer = URI.create(System.getProperty("test.container", ""));
+
+    URI objectContainer = URI.create(testContainer + "/objects");
+
+    URI extensionContainer = URI.create(System.getProperty("registry.extension.container", ""));
+
+    URI serviceContainer = URI.create(System.getProperty("registry.service.container", ""));
+
+    URI ontologyContainer = URI.create(System.getProperty("registry.ontology.container", ""));
+
+    // What really sucks about pax exam is that this is called *ONLY ONCE, EVER*,
+    // yet Karaf is entirely re-deployed from scratch *EVERY TEST*. There is no straightforward
+    // way to configure separate service, ontology, or extension registry containers on a per-test basis.
+    // Instead, the containers persist (and are shared) between tests. Had this been invoked every time
+    // Karaf is configured and deployed, life would be much, much easier.
     @Configuration
     public default Option[] config() {
         final MavenArtifactUrlReference karafUrl = maven().groupId("org.apache.karaf")
@@ -70,6 +90,13 @@ public interface KarafIT {
                         .artifactId("fcrepo-api-x-karaf").versionAsInProject()
                         .classifier("features").type("xml");
 
+        // This dependency is not in any features files, so we have to add it manually.
+        final MavenArtifactUrlReference fcrepoClient = maven().groupId("org.fcrepo.client")
+                .artifactId("fcrepo-java-client")
+                .versionAsInProject();
+
+        final String container = String.format("%s%s", fcrepoBaseURI, testClassName());
+
         // final MavenUrlReference camelRepo = maven().groupId("org.apache.camel.karaf")
         // .artifactId("apache-camel").type("xml").classifier("features")
         // .versionAsInProject();
@@ -77,6 +104,12 @@ public interface KarafIT {
         final ArrayList<Option> options = new ArrayList<>();
 
         final Option[] defaultOptions = new Option[] {
+
+            // Fcrepo client is not a dependency of anything else, but tests need it.
+            // As this test runs as a maven bundle in Karaf, the test's reactor dependencies are not
+            // available a priori.
+            mavenBundle(fcrepoClient),
+
             karafDistributionConfiguration().frameworkUrl(karafUrl)
                     .unpackDirectory(new File("target", "exam")),
             // configureConsole().ignoreLocalConsole(),
@@ -84,7 +117,27 @@ public interface KarafIT {
 
             keepRuntimeFolder(),
 
-            features(apixRepo, "fcrepo-api-x")
+            features(apixRepo, "fcrepo-api-x"),
+
+            // We need to tell Karaf to set any system properties we need.
+            // This code is run prior to executing Karaf, the tests themselves are run in Karaf, in a separate
+            // VM.
+            editConfigurationFilePut("etc/system.properties", "fcrepo.dynamic.test.port", System.getProperty(
+                    "fcrepo.dynamic.test.port")),
+            editConfigurationFilePut("etc/system.properties", "project.basedir", System.getProperty(
+                    "project.basedir")),
+            editConfigurationFilePut("/etc/system.properties", "fcrepo.cxtPath", System.getProperty(
+                    "fcrepo.cxtPath")),
+            editConfigurationFilePut("/etc/system.properties", "test.container", container),
+            editConfigurationFilePut("/etc/system.properties", "registry.extension.container", container +
+                    "/extensions"),
+            editConfigurationFilePut("/etc/system.properties", "registry.service.container", container +
+                    "/services"),
+            editConfigurationFilePut("/etc/system.properties", "registry.ontology.container", container +
+                    "/ontologies"),
+
+            deployFile("cfg/org.fcrepo.apix.jena.cfg"),
+            deployFile("cfg/org.fcrepo.apix.registry.http.cfg")
         };
 
         options.addAll(Arrays.asList(defaultOptions));
@@ -100,6 +153,10 @@ public interface KarafIT {
     public default List<Option> additionalKarafConfig() {
         return new ArrayList<>();
     }
+
+    public String testClassName();
+
+    public String testMethodName();
 
     public static String karafVersion() {
         final ConfigurationManager cm = new ConfigurationManager();
@@ -130,6 +187,45 @@ public interface KarafIT {
                     path)), null);
         } catch (final Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public default URI postFromTestResource(final String filePath, final URI intoContainer) throws Exception {
+
+        try (final WebResource object = testResource(filePath);
+                final FcrepoResponse response = client.post(intoContainer)
+                        .body(object.representation(), object.contentType())
+                        .slug(testMethodName())
+                        .perform()) {
+            return response.getLocation();
+        }
+    }
+
+    /**
+     * Create container for objects.
+     * <p>
+     * Tests may whish to do this <code>@BeforeClass</code>
+     * </p>
+     *
+     * @throws Exception
+     */
+    public static void createObjectContainer() throws Exception {
+
+        // Add the container for all repository objects created in this test suite, if it doesn't exist.
+        try (FcrepoResponse head = client.head(objectContainer).perform()) {
+            /* Do nothing */
+        } catch (final FcrepoOperationFailedException e) {
+            if (e.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                try (FcrepoResponse response = client.put(objectContainer)
+                        .perform()) {
+                    if (response.getStatusCode() != HttpStatus.SC_CREATED && response
+                            .getStatusCode() != HttpStatus.SC_NO_CONTENT) {
+                        throw new RuntimeException("Could not create base test container " + objectContainer);
+                    }
+                }
+            } else {
+                throw (e);
+            }
         }
     }
 

@@ -16,17 +16,21 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.model;
+package org.fcrepo.apix.jena.impl;
+
+import org.apache.jena.rdf.model.Model;
 
 /**
- * Marker interface for ontologies.
- * <p>
- * An ontology is opaque representation of an ontology scoped to a particular implementation of an
- * {@link org.fcrepo.apix.model.components.OntologyService}.
- * </p>
+ * Any resource that has an accessible Jena model.
  *
  * @author apb@jhu.edu
  */
-public interface Ontology {
+interface JenaResource {
 
+    /**
+     * The model for this resource.
+     *
+     * @return Jena model.
+     */
+    Model model();
 }

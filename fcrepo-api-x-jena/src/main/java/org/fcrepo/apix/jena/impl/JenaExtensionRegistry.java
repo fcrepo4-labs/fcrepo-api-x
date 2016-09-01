@@ -18,21 +18,28 @@
 
 package org.fcrepo.apix.jena.impl;
 
+import static org.fcrepo.apix.jena.impl.Util.objectLiteralOf;
+import static org.fcrepo.apix.jena.impl.Util.objectResourceOf;
+import static org.fcrepo.apix.jena.impl.Util.objectResourcesOf;
 import static org.fcrepo.apix.jena.impl.Util.parse;
-import static org.fcrepo.apix.model.Ontology.EXTENSION_BINDING_CLASS;
+import static org.fcrepo.apix.model.Ontologies.Apix.PROP_BINDS_TO;
+import static org.fcrepo.apix.model.Ontologies.Apix.PROP_CONSUMES_SERVICE;
+import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE;
+import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE_AT;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.fcrepo.apix.model.Extension;
+import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.Registry;
+import org.fcrepo.apix.model.components.ServiceRegistry;
 
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.RDFNode;
-import org.apache.jena.rdf.model.Resource;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
@@ -46,38 +53,29 @@ import org.osgi.service.component.annotations.Reference;
  * @author apb@jhu.edu
  */
 @Component(service = ExtensionRegistry.class, configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class JenaExtensionRegistry implements ExtensionRegistry {
+public class JenaExtensionRegistry extends WrappingRegistry implements ExtensionRegistry {
 
-    Registry delegate;
+    private ServiceRegistry serviceRegistry;
+
+    /**
+     * Set service registry impl.
+     *
+     * @param registry Service registry
+     */
+    @Reference
+    public void setServiceRegistry(final ServiceRegistry registry) {
+        this.serviceRegistry = registry;
+    }
 
     /**
      * Underlying registry containing extension resources.
      *
      * @param reg A registry containing extensions.
      */
+    @Override
     @Reference // (target = "org.fcrepo.apix.registry.contains=org.fcrepo.apix.model.Extension")
     public void setRegistryDelegate(final Registry reg) {
-        delegate = reg;
-    }
-
-    @Override
-    public WebResource get(final URI id) {
-        return delegate.get(id);
-    }
-
-    @Override
-    public URI put(final WebResource ontologyResource) {
-        return delegate.put(ontologyResource);
-    }
-
-    @Override
-    public boolean canWrite() {
-        return delegate.canWrite();
-    }
-
-    @Override
-    public Collection<URI> list() {
-        return delegate.list();
+        super.setRegistryDelegate(reg);
     }
 
     @Override
@@ -98,16 +96,12 @@ public class JenaExtensionRegistry implements ExtensionRegistry {
 
         public JenaExtension(final URI uri) {
             this.uri = uri;
+            this.model = getModel();
         }
 
         @Override
         public URI bindingClass() {
-            return getModel()
-                    .listObjectsOfProperty(getModel().getProperty(EXTENSION_BINDING_CLASS))
-                    .mapWith(RDFNode::asResource)
-                    .mapWith(Resource::getURI)
-                    .mapWith(URI::create)
-                    .next();
+            return objectResourceOf(uri.toString(), PROP_BINDS_TO, model);
         }
 
         @Override
@@ -131,15 +125,64 @@ public class JenaExtensionRegistry implements ExtensionRegistry {
 
             return model;
         }
-    }
 
-    @Override
-    public void delete(final URI uri) {
-        delegate.delete(uri);
-    }
+        @Override
+        public boolean isExposing() {
+            return model.contains(null, model.getProperty(PROP_EXPOSES_SERVICE));
+        }
 
-    @Override
-    public boolean contains(final URI id) {
-        return delegate.contains(id);
+        @Override
+        public boolean isIntercepting() {
+            return !isExposing();
+        }
+
+        @Override
+        public ServiceExposureSpec exposed() {
+            return new ServiceExposureSpec() {
+
+                @Override
+                public Set<Service> consumed() {
+                    return objectResourcesOf(uri.toString(), PROP_CONSUMES_SERVICE, model).stream().map(
+                            serviceRegistry::getService).collect(Collectors.toSet());
+                }
+
+                @Override
+                public Scope scope() {
+                    final String exposedAt = objectLiteralOf(uri.toString(), PROP_EXPOSES_SERVICE_AT, model);
+
+                    if (exposedAt == null) {
+                        throw new RuntimeException(String.format(
+                                "Can't determine exposure scope; extension <%s> does not expose any services!", uri));
+                    }
+
+                    final URI exposeAtURI = URI.create(exposedAt);
+
+                    if (exposeAtURI.isAbsolute() && exposeAtURI.getScheme().startsWith("http")) {
+                        return Scope.EXTERNAL;
+                    } else if (!exposeAtURI.isAbsolute() && exposeAtURI.getRawPath().startsWith("/")) {
+                        return Scope.REPOSITORY;
+                    } else {
+                        return Scope.RESOURCE;
+                    }
+                }
+
+                @Override
+                public Service exposed() {
+                    return serviceRegistry.getService(objectResourceOf(uri.toString(), PROP_EXPOSES_SERVICE, model));
+                }
+            };
+        }
+
+        @Override
+        public Spec intercepted() {
+            return new Spec() {
+
+                @Override
+                public Set<Service> consumed() {
+                    return objectResourcesOf(uri.toString(), PROP_CONSUMES_SERVICE, model).stream().map(
+                            serviceRegistry::getService).collect(Collectors.toSet());
+                }
+            };
+        }
     }
 }

@@ -19,13 +19,14 @@
 package org.fcrepo.apix.model;
 
 import java.net.URI;
+import java.util.Set;
 
 /**
  * Abstract notion of an API-X extension.
  * <p>
  * TODO: This is mostly a stub
  * </p>
- * 
+ *
  * @author apb@jhu.edu
  */
 public interface Extension {
@@ -36,6 +37,34 @@ public interface Extension {
      * @return URI of the <code>rdf:type</code> this extension binds to.
      */
     public URI bindingClass();
+
+    /**
+     * Determine if this extension exposes services.
+     *
+     * @return true if the extension exposes services
+     */
+    public boolean isExposing();
+
+    /**
+     * Determine if this extension intercepts requests.
+     *
+     * @return true if the extension intercepts requests.
+     */
+    public boolean isIntercepting();
+
+    /**
+     * Get specification for exposed services.
+     *
+     * @return Service exposure specification.
+     */
+    public ServiceExposureSpec exposed();
+
+    /**
+     * Get specification for intercepting modality.
+     *
+     * @return Specification.
+     */
+    public Spec intercepted();
 
     /**
      * The URI (location) of the extension.
@@ -53,4 +82,44 @@ public interface Extension {
      * @return A serialization of the extension resource.
      */
     public WebResource getResource();
+
+    /**
+     * Implementation specification for an extension.
+     */
+    public interface Spec {
+
+        /**
+         * Set of consumed services.
+         *
+         * @return Non-null set.
+         */
+        public Set<Service> consumed();
+
+    }
+
+    /**
+     * Implementation specification for a service-exposing specification.
+     */
+    public interface ServiceExposureSpec extends Spec {
+
+        /**
+         * The exposed service.
+         *
+         * @return the exposed service
+         */
+        public Service exposed();
+
+        /**
+         * The scope of the exposed service.
+         *
+         * @return scope (external, repository, resource)
+         */
+        public Scope scope();
+    }
+
+    public enum Scope {
+        RESOURCE,
+        REPOSITORY,
+        EXTERNAL
+    }
 }

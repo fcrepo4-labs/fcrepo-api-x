@@ -16,17 +16,28 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.model;
+package org.fcrepo.apix.routing.impl;
+
+import java.net.URI;
+
+import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
+import org.fcrepo.apix.model.components.Routing;
 
 /**
- * Marker interface for ontologies.
- * <p>
- * An ontology is opaque representation of an ontology scoped to a particular implementation of an
- * {@link org.fcrepo.apix.model.components.OntologyService}.
- * </p>
+ * Stub/placeholder Routing implementation that does nothing.
  *
  * @author apb@jhu.edu
  */
-public interface Ontology {
+public class RoutingStub implements Routing {
+
+    @Override
+    public URI endpointFor(final ServiceExposureSpec spec, final URI onResource) {
+        return URI.create("test:/endpoint" + onResource.getPath());
+    }
+
+    @Override
+    public URI serviceDocFor(final URI resource) {
+        return URI.create("test:/serviceDoc" + resource.getPath());
+    }
 
 }

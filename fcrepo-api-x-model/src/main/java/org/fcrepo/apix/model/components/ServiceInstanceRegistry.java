@@ -16,17 +16,26 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.model;
+package org.fcrepo.apix.model.components;
+
+import java.util.List;
+
+import org.fcrepo.apix.model.ServiceInstance;
 
 /**
- * Marker interface for ontologies.
+ * Registry of service instances.
  * <p>
- * An ontology is opaque representation of an ontology scoped to a particular implementation of an
- * {@link org.fcrepo.apix.model.components.OntologyService}.
+ * Implementations may use a variety of technologies, ranging from LDP to ZooKeeper.
  * </p>
  *
  * @author apb@jhu.edu
  */
-public interface Ontology {
+public interface ServiceInstanceRegistry {
 
+    /**
+     * List all service instances in this registry
+     *
+     * @return list of all instances.
+     */
+    public List<ServiceInstance> instances();
 }

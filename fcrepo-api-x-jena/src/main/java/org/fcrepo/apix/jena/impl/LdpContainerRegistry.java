@@ -18,10 +18,11 @@
 
 package org.fcrepo.apix.jena.impl;
 
+import static org.fcrepo.apix.model.Ontologies.LDP_CONTAINS;
+
 import java.net.URI;
 import java.util.Collection;
 
-import org.fcrepo.apix.model.Ontology;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.Registry;
 
@@ -67,8 +68,6 @@ public class LdpContainerRegistry implements Registry {
     private boolean binary = false;
 
     private boolean create = true;
-
-    static final String LDP_CONTAINS = Ontology.LDP_NS + "contains";
 
     /**
      * Underlying registry delegate for GETs.

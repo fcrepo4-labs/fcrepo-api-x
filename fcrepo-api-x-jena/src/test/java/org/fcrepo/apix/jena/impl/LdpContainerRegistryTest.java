@@ -18,7 +18,7 @@
 
 package org.fcrepo.apix.jena.impl;
 
-import static org.fcrepo.apix.jena.impl.LdpContainerRegistry.LDP_CONTAINS;
+import static org.fcrepo.apix.model.Ontologies.LDP_CONTAINS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.isA;

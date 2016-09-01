@@ -16,17 +16,24 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.model;
+package org.fcrepo.apix.model.components;
+
+import org.fcrepo.apix.model.WebResource;
 
 /**
- * Marker interface for ontologies.
- * <p>
- * An ontology is opaque representation of an ontology scoped to a particular implementation of an
- * {@link org.fcrepo.apix.model.components.OntologyService}.
- * </p>
+ * Service discovery component
  *
  * @author apb@jhu.edu
  */
-public interface Ontology {
+public interface ServiceDiscovery {
+
+    /**
+     * Produce a service document for the given resource
+     *
+     * @param resource A repository resource
+     * @param contentType Desired media type, or null if any serialization is acceptable.
+     * @return Serialized service document
+     */
+    WebResource getServiceDocumentFor(WebResource resource, String contentType);
 
 }

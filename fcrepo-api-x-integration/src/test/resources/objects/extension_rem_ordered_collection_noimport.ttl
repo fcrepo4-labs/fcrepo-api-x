@@ -1,4 +1,4 @@
-@prefix apix:<http://example.org/apix#> .
+@prefix apix:<http://fedora.info/definitions/v4/api-extension#> .
 @prefix test:<http://example.org/test#> .
 @prefix owl:<http://www.w3.org/2002/07/owl#> .
 

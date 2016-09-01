@@ -18,15 +18,27 @@
 
 package org.fcrepo.apix.model;
 
+import java.net.URI;
+import java.util.List;
+
 /**
- * Marker interface for ontologies.
- * <p>
- * An ontology is opaque representation of an ontology scoped to a particular implementation of an
- * {@link org.fcrepo.apix.model.components.OntologyService}.
- * </p>
+ * Instance of a service
  *
  * @author apb@jhu.edu
  */
-public interface Ontology {
+public interface ServiceInstance {
 
+    /**
+     * Resolvable endpoint URIs of the service instance,
+     *
+     * @return endpoint URIs.
+     */
+    public List<URI> endpoints();
+
+    /**
+     * The Service this instance instantiates.
+     *
+     * @return The service.
+     */
+    public Service instanceOf();
 }

@@ -8,5 +8,6 @@
     <feature version="${project.version}">fcrepo-api-x-jena</feature>
     <feature version="${project.version}">fcrepo-api-x-model</feature>
     <feature version="${project.version}">fcrepo-api-x-registry</feature>
+    <feature version="${project.version}">fcrepo-api-x-routing</feature>
   </feature>
 </features>

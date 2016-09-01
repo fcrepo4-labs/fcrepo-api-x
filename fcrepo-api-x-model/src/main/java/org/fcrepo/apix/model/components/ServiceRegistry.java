@@ -16,17 +16,30 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.model;
+package org.fcrepo.apix.model.components;
+
+import java.net.URI;
+
+import org.fcrepo.apix.model.Service;
 
 /**
- * Marker interface for ontologies.
- * <p>
- * An ontology is opaque representation of an ontology scoped to a particular implementation of an
- * {@link org.fcrepo.apix.model.components.OntologyService}.
- * </p>
- *
  * @author apb@jhu.edu
  */
-public interface Ontology {
+public interface ServiceRegistry extends Registry {
 
+    /**
+     * Get a registry of all instances of a given service.
+     *
+     * @param service the service.
+     * @return registry of service instances.
+     */
+    ServiceInstanceRegistry instancesOf(Service service);
+
+    /**
+     * Retrieve an abstract representation of a service with the
+     *
+     * @param uri URI of the service
+     * @return Service instance, or a runtime exception if not found.
+     */
+    Service getService(URI uri);
 }
