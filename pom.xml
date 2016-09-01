@@ -286,6 +286,7 @@
     <module>fcrepo-api-x-integration</module>
     <module>fcrepo-api-x-karaf</module>
     <module>fcrepo-api-x-discovery</module>
+    <module>fcrepo-api-x-ontology</module>
   </modules>
 
   <licenses>
