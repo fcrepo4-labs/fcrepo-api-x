@@ -7,55 +7,87 @@ svc: a owl:Ontology .
 
 svc:Service a owl:Class;
     rdfs:label "Service"@en;
-    rdfs:comment "The abstract notion of a web resource accessed through HTTP or using HTTP message semantics"@en .
+    rdfs:comment "Abstract notion of a web resource accessed through HTTP or using HTTP message semantics."@en .
 
-svc:ServiceInstance a owl:Class .
+svc:ServiceInstance a owl:Class;
+    rdfs:label "Service instance"@en;
+    rdfs:comment "Concrete instantiation of a service as a web resource."@en .
 
-svc:ServiceInstanceRegistry a owl:Class .
+svc:ServiceInstanceRegistry a owl:Class;
+    rdfs:label "Service instance registry"@en;
+    rdfs:comment "Registry of service instances."@en .
 
 svc:LdpServiceInstanceRegistry a owl:Class;
-    rdfs:subClassOf svc:hasServiceInstanceRegistry .
+    rdfs:subClassOf svc:hasServiceInstanceRegistry;
+    rdfs:label "LDP service instance registry"@en;
+    rdfs:comment "Registry that is implemented as LDP resources."@en .
 
-svc:ServiceDocument a owl:Class .
+svc:ServiceDocument a owl:Class;
+    rdfs:label "Service document"@en;
+    rdfs:comment "Enumerates service instances associated with a repository object."@en .
 
-svc:ServiceRegistry a owl:Class .
+svc:ServiceRegistry a owl:Class;
+    rdfs:label "Service registry"@en;
+    rdfs:comment "Registry for services."@en .
 
 svc:isFunctionOf a owl:ObjectProperty;
     rdfs:domain svc:ServiceInstance;
-    rdfs:range fcr:Resource .
+    rdfs:range fcr:Resource;
+    rdfs:label "is function of"@en;
+    rdfs:comment "Indicates that the contents or identity of the given object influences the behavior or representation of the service instance."@en .
 
 svc:hasServiceInstance a owl:ObjectProperty;
     rdfs:domain svc:Service;
-    rdfs:range svc:ServiceInstance .
+    rdfs:range svc:ServiceInstance;
+    rdfs:label "has service instance"@en;
+    rdfs:comment "Relates a service to a concrete instance of a service."@en .
 
 svc:isServiceInstanceOf a owl:ObjectProperty;
-    owl:inverseOf svc:hasServiceInstance .
+    owl:inverseOf svc:hasServiceInstance;
+    rdfs:label "is service instance of"@en;
+    rdfs:comment "Relates a concrete instance of a service to its abstract notion."@en .
 
 svc:exposesServiceInstance a owl:ObjectProperty;
     rdfs:domain fcr:Resource;
-    rdfs:range svc:ServiceInstance .
+    rdfs:range svc:ServiceInstance;
+    rdfs:label "exposes service instance"@en;
+    rdfs:comment "Relates a repository resource with a service instance that is in some way applicable to it."@en .
 
 svc:serviceInstanceExposedBy a owl:ObjectProperty;
-    owl:inverseOf svc:exposesServiceInstance .
+    owl:inverseOf svc:exposesServiceInstance;
+    rdfs:label "service instance exposed by"@en;
+    rdfs:comment "Relates a service instance to resources it is applicable to."@en .
 
 svc:hasServiceDocument a owl:ObjectProperty;
     rdfs:domain fcr:Resource;
-    rdfs:range svc:ServiceDocument .
+    rdfs:range svc:ServiceDocument;
+    rdfs:label "has service document"@en;
+    rdfs:comment "Relates a resource to a service document that enumerates instances of services applicable to it."@en .
 
 svc:isServiceDocumentFor a owl:ObjectProperty;
-    owl:inverseOf svc:hasServiceDocument .
+    owl:inverseOf svc:hasServiceDocument;
+    rdfs:label "is service document for"@en;
+    rdfs:comment "Relates a service document to the resource its service instances are applicable to."@en .
 
 svc:hasEndpoint a owl:ObjectProperty;
     rdfs:domain svc:ServiceInstance;
-    rdfs:subPropertyOf owl:sameAs .
+    rdfs:subPropertyOf owl:sameAs;
+    rdfs:label "has endpoint"@en;
+    rdfs:comment "Resolvable, preferred endpoint URI for this service instance."@en .
 
 svc:canonical a owl:ObjectProperty;
     rdfs:domain svc:Service;
-    rdfs:subPropertyOf owl:sameAs .
+    rdfs:subPropertyOf owl:sameAs;
+    rdfs:label "canonical"@en;
+    rdfs:comment "Canonical resource that defines the given service."@en .
 
 svc:isServiceInstanceRegistryFor a owl:ObjectProperty;
     rdfs:domain svc:ServiceInstanceRegistry;
-    rdfs:range svc:Service .
+    rdfs:range svc:Service;
+    rdfs:label "service instance registry for"@en;
+    rdfs:comment "Relates a service instance registry to the service its instances represent."@en .
 
 svc:hasServiceInstanceRegistry a owl:ObjectProperty;
-    owl:inverseOf svc:isServiceInstanceRegistryFor .
+    owl:inverseOf svc:isServiceInstanceRegistryFor;
+    rdfs:label "has service instance registry"@en;
+    rdfs:comment "Relates a service to a registry of its instances."@en .
