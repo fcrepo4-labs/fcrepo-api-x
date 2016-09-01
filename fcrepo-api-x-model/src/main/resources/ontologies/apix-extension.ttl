@@ -12,7 +12,7 @@ apix: a owl:Ontology;
 apix:Extension a owl:Class;
     rdfs:label "API-X extension"@en;
     rdfs:comment
-    "Relates Services to Repository objects. May expose a service on repository resources (‘exposing’ modality), or modify request or responses to repository objects (‘intercepting’ modality)."@en .
+    "Relates Services to Repository objects. May expose a service on repository resources (exposing modality), or modify request or responses to repository objects (intercepting modality)."@en .
 
 apix:InterceptingExtension a owl:Class;
     rdfs:subClassOf apix:Extension;
