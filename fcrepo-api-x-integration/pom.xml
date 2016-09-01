@@ -83,7 +83,7 @@
             <type>installed</type>
             <systemProperties>
               <fcrepo.home>${project.build.directory}/fcrepo</fcrepo.home>
-              <fcrepo.modeshape.configuration>classpath:/config/file-simple/repository.json</fcrepo.modeshape.configuration>
+              <fcrepo.modeshape.configuration>classpath:/config/minimal-default/repository.json</fcrepo.modeshape.configuration>
             </systemProperties>
           </container>
           <deployables>
