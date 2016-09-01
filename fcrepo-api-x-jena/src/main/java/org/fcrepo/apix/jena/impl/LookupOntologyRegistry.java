@@ -82,7 +82,11 @@ public class LookupOntologyRegistry implements OntologyRegistry {
 
     @Override
     public WebResource get(final URI id) {
-        return registry.get(ontologyIRIsToLocation.getOrDefault(id, id));
+        init();
+
+        // TODO: Hack. Figure out how best to handle cases where an underlying registry is required, but unavailable.
+        return ontologyIRIsToLocation == null ? registry.get(id) : registry.get(ontologyIRIsToLocation.getOrDefault(
+                id, id));
     }
 
     @Override
@@ -117,24 +121,18 @@ public class LookupOntologyRegistry implements OntologyRegistry {
         registry.delete(uri);
     }
 
-    /** Try infinitely to read contents of registry in order to index ontologyIRIs */
+    /** Load ontologies from underlying registry, if present. */
     public void init() {
+        if (ontologyIRIsToLocation != null) {
+            return;
+        }
+
         ontologyIRIsToLocation = new ConcurrentHashMap<>();
 
-        for (boolean indexed = false; !indexed;) {
-            try {
-                registry.list().stream().forEach(this::index);
-                indexed = true;
-            } catch (final Exception e) {
-                LOG.warn("Indexing existing ontologies failed, retrying: ", e);
-                try {
-                    Thread.sleep(1000);
-                } catch (final InterruptedException i) {
-                    Thread.currentThread().interrupt();
-                    ontologyIRIsToLocation = null;
-                    return;
-                }
-            }
+        try {
+            registry.list().stream().forEach(this::index);
+        } catch (final Exception e) {
+            LOG.warn("Indexing existing ontologies failed", e.getMessage());
         }
     }
 
@@ -178,6 +176,13 @@ public class LookupOntologyRegistry implements OntologyRegistry {
 
     @Override
     public boolean contains(final URI id) {
+
+        init();
+
+        // TODO: Hack. Figure out how best to handle cases where an underlying registry is required, but unavailable.
+        if (ontologyIRIsToLocation == null) {
+            return registry.contains(id);
+        }
         return ontologyIRIsToLocation.containsKey(id) || registry.contains(id);
     }
 }

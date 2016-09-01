@@ -102,7 +102,7 @@ public class RepositoryExtensionBindingIT implements KarafIT {
 
     @BeforeClass
     public static void init() throws Exception {
-        KarafIT.createObjectContainer();
+        KarafIT.createContainers();
     }
 
     @Before

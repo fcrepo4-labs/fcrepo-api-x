@@ -202,30 +202,36 @@ public interface KarafIT {
     }
 
     /**
-     * Create container for objects.
+     * Create all necessary containers for registries, etc.
      * <p>
-     * Tests may whish to do this <code>@BeforeClass</code>
+     * Tests that need functional registries need to do this <code>@BeforeClass</code>, or deploy alternate
+     * configuration files for jena registry impls.
      * </p>
      *
      * @throws Exception
      */
-    public static void createObjectContainer() throws Exception {
+    public static void createContainers() throws Exception {
 
-        // Add the container for all repository objects created in this test suite, if it doesn't exist.
-        try (FcrepoResponse head = client.head(objectContainer).perform()) {
-            /* Do nothing */
-        } catch (final FcrepoOperationFailedException e) {
-            if (e.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
-                try (FcrepoResponse response = client.put(objectContainer)
-                        .perform()) {
-                    if (response.getStatusCode() != HttpStatus.SC_CREATED && response
-                            .getStatusCode() != HttpStatus.SC_NO_CONTENT) {
-                        throw new RuntimeException("Could not create base test container " + objectContainer);
+        for (final URI container : Arrays.asList(testContainer, objectContainer, extensionContainer,
+                serviceContainer,
+                ontologyContainer)) {
+            // Add the container, if it doesn't exist.
+            try (FcrepoResponse head = client.head(container).perform()) {
+                /* Do nothing */
+            } catch (final FcrepoOperationFailedException e) {
+                if (e.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                    try (FcrepoResponse response = client.put(container)
+                            .perform()) {
+                        if (response.getStatusCode() != HttpStatus.SC_CREATED && response
+                                .getStatusCode() != HttpStatus.SC_NO_CONTENT) {
+                            throw new RuntimeException("Could not create container " + container);
+                        }
                     }
+                } else {
+                    throw (e);
                 }
-            } else {
-                throw (e);
             }
+
         }
     }
 
