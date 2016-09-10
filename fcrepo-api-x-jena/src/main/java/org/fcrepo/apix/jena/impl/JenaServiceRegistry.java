@@ -18,10 +18,10 @@
 
 package org.fcrepo.apix.jena.impl;
 
-import static org.fcrepo.apix.jena.impl.Util.isA;
-import static org.fcrepo.apix.jena.impl.Util.objectResourceOf;
-import static org.fcrepo.apix.jena.impl.Util.objectResourcesOf;
-import static org.fcrepo.apix.jena.impl.Util.parse;
+import static org.fcrepo.apix.jena.Util.isA;
+import static org.fcrepo.apix.jena.Util.objectResourceOf;
+import static org.fcrepo.apix.jena.Util.objectResourcesOf;
+import static org.fcrepo.apix.jena.Util.parse;
 import static org.fcrepo.apix.model.Ontologies.Service.CLASS_LDP_SERVICE_INSTANCE_REGISTRY;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_CANONICAL;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_ENDPOINT;
@@ -33,6 +33,7 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.fcrepo.apix.jena.JenaResource;
 import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.ServiceInstance;
 import org.fcrepo.apix.model.components.Registry;

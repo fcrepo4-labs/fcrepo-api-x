@@ -18,10 +18,10 @@
 
 package org.fcrepo.apix.jena.impl;
 
-import static org.fcrepo.apix.jena.impl.Util.objectLiteralOf;
-import static org.fcrepo.apix.jena.impl.Util.objectResourceOf;
-import static org.fcrepo.apix.jena.impl.Util.objectResourcesOf;
-import static org.fcrepo.apix.jena.impl.Util.parse;
+import static org.fcrepo.apix.jena.Util.objectLiteralOf;
+import static org.fcrepo.apix.jena.Util.objectResourceOf;
+import static org.fcrepo.apix.jena.Util.objectResourcesOf;
+import static org.fcrepo.apix.jena.Util.parse;
 import static org.fcrepo.apix.model.Ontologies.Apix.PROP_BINDS_TO;
 import static org.fcrepo.apix.model.Ontologies.Apix.PROP_CONSUMES_SERVICE;
 import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE;
@@ -29,15 +29,14 @@ import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE_AT;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.fcrepo.apix.model.Extension;
-import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.Registry;
-import org.fcrepo.apix.model.components.ServiceRegistry;
 
 import org.apache.jena.rdf.model.Model;
 import org.osgi.service.component.annotations.Component;
@@ -54,18 +53,6 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(service = ExtensionRegistry.class, configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class JenaExtensionRegistry extends WrappingRegistry implements ExtensionRegistry {
-
-    private ServiceRegistry serviceRegistry;
-
-    /**
-     * Set service registry impl.
-     *
-     * @param registry Service registry
-     */
-    @Reference
-    public void setServiceRegistry(final ServiceRegistry registry) {
-        this.serviceRegistry = registry;
-    }
 
     /**
      * Underlying registry containing extension resources.
@@ -141,9 +128,8 @@ public class JenaExtensionRegistry extends WrappingRegistry implements Extension
             return new ServiceExposureSpec() {
 
                 @Override
-                public Set<Service> consumed() {
-                    return objectResourcesOf(uri.toString(), PROP_CONSUMES_SERVICE, model).stream().map(
-                            serviceRegistry::getService).collect(Collectors.toSet());
+                public Set<URI> consumed() {
+                    return new HashSet<>(objectResourcesOf(uri.toString(), PROP_CONSUMES_SERVICE, model));
                 }
 
                 @Override
@@ -167,8 +153,8 @@ public class JenaExtensionRegistry extends WrappingRegistry implements Extension
                 }
 
                 @Override
-                public Service exposed() {
-                    return serviceRegistry.getService(objectResourceOf(uri.toString(), PROP_EXPOSES_SERVICE, model));
+                public URI exposed() {
+                    return objectResourceOf(uri.toString(), PROP_EXPOSES_SERVICE, model);
                 }
             };
         }
@@ -178,9 +164,8 @@ public class JenaExtensionRegistry extends WrappingRegistry implements Extension
             return new Spec() {
 
                 @Override
-                public Set<Service> consumed() {
-                    return objectResourcesOf(uri.toString(), PROP_CONSUMES_SERVICE, model).stream().map(
-                            serviceRegistry::getService).collect(Collectors.toSet());
+                public Set<URI> consumed() {
+                    return new HashSet<>(objectResourcesOf(uri.toString(), PROP_CONSUMES_SERVICE, model));
                 }
             };
         }

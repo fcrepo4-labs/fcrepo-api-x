@@ -23,11 +23,15 @@ import java.net.URI;
 import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
 import org.fcrepo.apix.model.components.Routing;
 
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+
 /**
  * Stub/placeholder Routing implementation that does nothing.
  *
  * @author apb@jhu.edu
  */
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RoutingStub implements Routing {
 
     @Override

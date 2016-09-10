@@ -285,6 +285,7 @@
     <module>fcrepo-api-x-jena</module>
     <module>fcrepo-api-x-integration</module>
     <module>fcrepo-api-x-karaf</module>
+    <module>fcrepo-api-x-discovery</module>
   </modules>
 
   <licenses>

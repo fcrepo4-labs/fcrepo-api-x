@@ -16,31 +16,21 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.model.components;
+package org.fcrepo.apix.jena;
 
-import java.net.URI;
-
-import org.fcrepo.apix.model.Service;
+import org.apache.jena.rdf.model.Model;
 
 /**
+ * Any resource that has an accessible Jena model.
+ *
  * @author apb@jhu.edu
  */
-public interface ServiceRegistry extends Registry {
+public interface JenaResource {
 
     /**
-     * Get a registry of all instances of a given service.
+     * The model for this resource.
      *
-     * @param service the service.
-     * @return registry of service instances.
+     * @return Jena model.
      */
-    ServiceInstanceRegistry instancesOf(Service service);
-
-    /**
-     * Retrieve an abstract representation of a service.
-     *
-     * @param uri URI of the service
-     * @return Service instance
-     * @throws ResourceNotFoundException if the service is not in the registry.
-     */
-    Service getService(URI uri) throws ResourceNotFoundException;
+    Model model();
 }

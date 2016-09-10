@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.jena.impl;
+package org.fcrepo.apix.discovery.impl;
 
 import static org.apache.jena.riot.RDFLanguages.contentTypeToLang;
 import static org.fcrepo.apix.model.Extension.Scope.RESOURCE;
@@ -41,8 +41,10 @@ import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionBinding;
+import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.Routing;
 import org.fcrepo.apix.model.components.ServiceDiscovery;
+import org.fcrepo.apix.model.components.ServiceRegistry;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -52,6 +54,8 @@ import org.apache.jena.riot.Lang;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generates service documents for resources.
@@ -61,11 +65,25 @@ import org.osgi.service.component.annotations.Reference;
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class ServiceDocumentGenerator implements ServiceDiscovery {
 
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceDocumentGenerator.class);
+
     private ExtensionBinding extensionBinding;
+
+    private ServiceRegistry serviceRegistry;
 
     private Routing routing;
 
     private boolean useRelativeURIs = false;
+
+    /**
+     * Set the service registry impl.
+     *
+     * @param registry Service registry;
+     */
+    @Reference
+    public void setServiceRegistry(final ServiceRegistry registry) {
+        this.serviceRegistry = registry;
+    }
 
     /**
      * Set extension binding impl
@@ -147,7 +165,7 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
                     doc.getResource(resourceURI));
 
             serviceInstance.addProperty(doc.getProperty(PROP_IS_SERVICE_INSTANCE_OF),
-                    doc.getResource(spec.exposed().canonicalURI().toString()));
+                    doc.getResource(canonicalURI(spec.exposed()).toString()));
 
             serviceInstance.addProperty(doc.getProperty(PROP_HAS_ENDPOINT),
                     doc.getResource(routing.endpointFor(spec, URI.create(resourceURI)).toString()));
@@ -157,6 +175,15 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
                         doc.getProperty(resourceURI));
             }
 
+        }
+
+        private URI canonicalURI(final URI service) {
+            try {
+                return serviceRegistry.getService(service).canonicalURI();
+            } catch (final ResourceNotFoundException e) {
+                LOG.info("No entry in service registry for {}, using as canonical URI", service);
+                return service;
+            }
         }
 
         @Override

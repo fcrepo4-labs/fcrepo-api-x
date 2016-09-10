@@ -20,6 +20,7 @@ package org.fcrepo.apix.registry.impl;
 
 import static org.apache.http.HttpHeaders.ACCEPT;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.osgi.service.component.annotations.ConfigurationPolicy.REQUIRE;
 
@@ -32,6 +33,7 @@ import java.util.Collection;
 
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.Registry;
+import org.fcrepo.apix.model.components.ResourceNotFoundException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -119,19 +121,26 @@ public class HttpRegistry implements Registry {
 
         if (response.getStatusLine().getStatusCode() != SC_OK) {
             try {
-                LOG.warn(IOUtils.toString(response.getEntity().getContent(), Charset.forName("UTF_8")));
-            } catch (final Exception e) {
-                LOG.warn(Integer.toString(response.getStatusLine().getStatusCode()));
+                if (response.getStatusLine().getStatusCode() == SC_NOT_FOUND) {
+                    throw new ResourceNotFoundException("404 not found: " + request.getURI());
+                }
+
+                try {
+                    LOG.warn(IOUtils.toString(response.getEntity().getContent(), Charset.forName("UTF_8")));
+                } catch (final Exception e) {
+                    LOG.warn(Integer.toString(response.getStatusLine().getStatusCode()));
+                }
+                throw new RuntimeException(String.format("Error performing %s on %s: %s; %s", request.getMethod(),
+                        request
+                                .getURI(), response.getStatusLine(), body(response)));
+
             } finally {
                 try {
                     response.close();
-                } catch (final Exception x) {
-
+                } catch (final IOException e) {
+                    // nothing
                 }
-
             }
-            throw new RuntimeException(String.format("Error performing %s on %s: %s; %s", request.getMethod(), request
-                    .getURI(), response.getStatusLine(), body(response)));
         }
 
         return response;
@@ -167,7 +176,7 @@ public class HttpRegistry implements Registry {
                     }
                     response = execute(get);
                     isClosed = false;
-                } catch (final Exception e) {
+                } catch (final IOException e) {
                     throw new RuntimeException(e);
                 }
             }

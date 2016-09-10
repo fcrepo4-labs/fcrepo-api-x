@@ -16,11 +16,11 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.jena.impl;
+package org.fcrepo.apix.discovery.impl;
 
-import static org.fcrepo.apix.jena.impl.TestUtil.query;
-import static org.fcrepo.apix.jena.impl.TestUtil.subjectsOf;
-import static org.fcrepo.apix.jena.impl.Util.parse;
+import static org.fcrepo.apix.jena.Util.parse;
+import static org.fcrepo.apix.jena.Util.query;
+import static org.fcrepo.apix.jena.Util.subjectsOf;
 import static org.fcrepo.apix.model.Ontologies.RDF_TYPE;
 import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE_INSTANCE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_ENDPOINT;
@@ -44,7 +44,9 @@ import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
 import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionBinding;
+import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.Routing;
+import org.fcrepo.apix.model.components.ServiceRegistry;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -80,10 +82,16 @@ public class ServiceDocumentGeneratorTest {
     Extension EXPOSING_EXTENSION_REPOSITORY_SCOPED;
 
     @Mock
+    Extension EXPOSING_EXTENSION_UNREGISTERED;
+
+    @Mock
     ServiceExposureSpec RESOURCE_SCOPE_SPEC;
 
     @Mock
     ServiceExposureSpec REPOSITORY_SCOPE_SPEC;
+
+    @Mock
+    ServiceExposureSpec UNREGISTERED_SERVICE_SPEC;
 
     @Mock
     Service RESOURCE_SCOPE_SERVICE;
@@ -94,15 +102,22 @@ public class ServiceDocumentGeneratorTest {
     @Mock
     Extension INTERCEPTING_EXTENSION;
 
+    @Mock
+    ServiceRegistry SERVICE_REGISTRY;
+
     final URI RESOURCE_URI = URI.create("http://example.org/resource");
 
     final URI RESOURCE_SCOPE_SERVICE_URI = URI.create("http://example.org/services/resourceScoped");
 
     final URI REPOSITORY_SCOPE_SERVICE_URI = URI.create("http://example.org/services/repositoryScoped");
 
+    final URI UNREGISTERED_SERVICE_URI = URI.create("http://example.org/services/unregistered");
+
     final URI RESOURCE_SCOPE_ENDPOINT_URI = URI.create("http://example.org/endpoint/resourceScoped");
 
     final URI REPOSITORY_SCOPE_ENDPOINT_URI = URI.create("http://example.org/endpoint/repositoryScoped");
+
+    final URI UNREGISTERED_ENDPOINT_URI = URI.create("http://example.org/endpoont/unregistered");
 
     ServiceDocumentGenerator toTest = new ServiceDocumentGenerator();
 
@@ -112,32 +127,42 @@ public class ServiceDocumentGeneratorTest {
 
         when(EXPOSING_EXTENSION_REPOSITORY_SCOPED.isExposing()).thenReturn(true);
         when(EXPOSING_EXTENSION_RESOURCE_SCOPED.isExposing()).thenReturn(true);
+        when(EXPOSING_EXTENSION_UNREGISTERED.isExposing()).thenReturn(true);
         when(INTERCEPTING_EXTENSION.isExposing()).thenReturn(false);
 
         when(EXPOSING_EXTENSION_REPOSITORY_SCOPED.exposed()).thenReturn(REPOSITORY_SCOPE_SPEC);
         when(EXPOSING_EXTENSION_RESOURCE_SCOPED.exposed()).thenReturn(RESOURCE_SCOPE_SPEC);
+        when(EXPOSING_EXTENSION_UNREGISTERED.exposed()).thenReturn(UNREGISTERED_SERVICE_SPEC);
 
-        when(REPOSITORY_SCOPE_SPEC.exposed()).thenReturn(REPOSITORY_SCOPE_SERVICE);
+        when(REPOSITORY_SCOPE_SPEC.exposed()).thenReturn(REPOSITORY_SCOPE_SERVICE_URI);
         when(REPOSITORY_SCOPE_SPEC.scope()).thenReturn(Scope.REPOSITORY);
-        when(RESOURCE_SCOPE_SPEC.exposed()).thenReturn(RESOURCE_SCOPE_SERVICE);
+        when(RESOURCE_SCOPE_SPEC.exposed()).thenReturn(RESOURCE_SCOPE_SERVICE_URI);
         when(RESOURCE_SCOPE_SPEC.scope()).thenReturn(Scope.RESOURCE);
+        when(UNREGISTERED_SERVICE_SPEC.scope()).thenReturn(Scope.RESOURCE);
+        when(UNREGISTERED_SERVICE_SPEC.exposed()).thenReturn(UNREGISTERED_SERVICE_URI);
 
         when(REPOSITORY_SCOPE_SERVICE.canonicalURI()).thenReturn(REPOSITORY_SCOPE_SERVICE_URI);
         when(RESOURCE_SCOPE_SERVICE.canonicalURI()).thenReturn(RESOURCE_SCOPE_SERVICE_URI);
 
+        when(SERVICE_REGISTRY.getService(REPOSITORY_SCOPE_SERVICE_URI)).thenReturn(REPOSITORY_SCOPE_SERVICE);
+        when(SERVICE_REGISTRY.getService(RESOURCE_SCOPE_SERVICE_URI)).thenReturn(RESOURCE_SCOPE_SERVICE);
+        when(SERVICE_REGISTRY.getService(UNREGISTERED_SERVICE_URI)).thenThrow(new ResourceNotFoundException("NO"));
+
         when(routing.endpointFor(REPOSITORY_SCOPE_SPEC, RESOURCE_URI)).thenReturn(REPOSITORY_SCOPE_ENDPOINT_URI);
         when(routing.endpointFor(RESOURCE_SCOPE_SPEC, RESOURCE_URI)).thenReturn(RESOURCE_SCOPE_ENDPOINT_URI);
+        when(routing.endpointFor(UNREGISTERED_SERVICE_SPEC, RESOURCE_URI)).thenReturn(UNREGISTERED_ENDPOINT_URI);
         when(routing.serviceDocFor(RESOURCE_URI)).thenReturn(URI.create(""));
 
         toTest.setRouting(routing);
         toTest.setExtensionBinding(binding);
+        toTest.setServiceRegistry(SERVICE_REGISTRY);
     }
 
     // Verifies that resource-scoped services are a function of the resource, and those that aren't don't have it.
     @Test
     public void functionOfTest() throws Exception {
         when(binding.getExtensionsFor(theResource)).thenReturn(
-                Arrays.asList(EXPOSING_EXTENSION_RESOURCE_SCOPED,
+                Arrays.asList(EXPOSING_EXTENSION_RESOURCE_SCOPED, EXPOSING_EXTENSION_UNREGISTERED,
                         EXPOSING_EXTENSION_REPOSITORY_SCOPED));
 
         final Model doc = parse(toTest.getServiceDocumentFor(theResource, "text/turtle"));
@@ -149,8 +174,8 @@ public class ServiceDocumentGeneratorTest {
 
         final Set<URI> matchingServices = subjectsOf(query(sparql, doc));
 
-        assertEquals(1, matchingServices.size());
-        assertTrue(matchingServices.contains(RESOURCE_SCOPE_SERVICE_URI));
+        assertEquals(2, matchingServices.size());
+        assertTrue(matchingServices.containsAll(Arrays.asList(RESOURCE_SCOPE_SERVICE_URI, UNREGISTERED_SERVICE_URI)));
 
     }
 
@@ -193,7 +218,7 @@ public class ServiceDocumentGeneratorTest {
     @Test
     public void serviceInstanceOfTest() {
         when(binding.getExtensionsFor(theResource)).thenReturn(
-                Arrays.asList(EXPOSING_EXTENSION_RESOURCE_SCOPED,
+                Arrays.asList(EXPOSING_EXTENSION_RESOURCE_SCOPED, EXPOSING_EXTENSION_UNREGISTERED,
                         EXPOSING_EXTENSION_REPOSITORY_SCOPED, INTERCEPTING_EXTENSION));
 
         final Model doc = parse(toTest.getServiceDocumentFor(theResource, "text/turtle"));
@@ -205,10 +230,10 @@ public class ServiceDocumentGeneratorTest {
 
         final Set<URI> servicesFromInstances = subjectsOf(query(sparql, doc));
 
-        assertEquals(2, servicesFromInstances.size());
+        assertEquals(3, servicesFromInstances.size());
 
         assertTrue(servicesFromInstances.containsAll(Arrays.asList(REPOSITORY_SCOPE_SERVICE_URI,
-                RESOURCE_SCOPE_SERVICE_URI)));
+                RESOURCE_SCOPE_SERVICE_URI, UNREGISTERED_SERVICE_URI)));
 
     }
 
@@ -216,7 +241,7 @@ public class ServiceDocumentGeneratorTest {
     @Test
     public void endpointURITest() {
         when(binding.getExtensionsFor(theResource)).thenReturn(
-                Arrays.asList(EXPOSING_EXTENSION_RESOURCE_SCOPED,
+                Arrays.asList(EXPOSING_EXTENSION_RESOURCE_SCOPED, EXPOSING_EXTENSION_UNREGISTERED,
                         EXPOSING_EXTENSION_REPOSITORY_SCOPED, INTERCEPTING_EXTENSION));
 
         final Model doc = parse(toTest.getServiceDocumentFor(theResource, "text/turtle"));
@@ -228,10 +253,10 @@ public class ServiceDocumentGeneratorTest {
 
         final Set<URI> canonicalEndpoints = subjectsOf(query(sparql, doc));
 
-        assertEquals(2, canonicalEndpoints.size());
+        assertEquals(3, canonicalEndpoints.size());
 
         assertTrue(canonicalEndpoints.containsAll(Arrays.asList(REPOSITORY_SCOPE_ENDPOINT_URI,
-                RESOURCE_SCOPE_ENDPOINT_URI)));
+                RESOURCE_SCOPE_ENDPOINT_URI, UNREGISTERED_ENDPOINT_URI)));
     }
 
     // Verify that a specific serialization can be produced by specifying content type

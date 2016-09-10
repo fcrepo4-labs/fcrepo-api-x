@@ -93,7 +93,7 @@ public interface Extension {
          *
          * @return Non-null set.
          */
-        public Set<Service> consumed();
+        public Set<URI> consumed();
 
     }
 
@@ -103,11 +103,15 @@ public interface Extension {
     public interface ServiceExposureSpec extends Spec {
 
         /**
-         * The exposed service.
+         * The URI naming the exposed service.
+         * <p>
+         * This is not an endpoint URI, it is the URI which names the service in the abstract sense. A lookup in a
+         * {@link org.fcrepo.apix.model.components.ServiceRegistry} by URI can be expected to provide more information
+         * </p>
          *
-         * @return the exposed service
+         * @return the exposed service URI.
          */
-        public Service exposed();
+        public URI exposed();
 
         /**
          * The scope of the exposed service.

@@ -18,8 +18,8 @@
 
 package org.fcrepo.apix.jena.impl;
 
-import static org.fcrepo.apix.jena.impl.TestUtil.rdfResource;
-import static org.fcrepo.apix.jena.impl.TestUtil.triple;
+import static org.fcrepo.apix.jena.Util.rdfResource;
+import static org.fcrepo.apix.jena.Util.triple;
 import static org.fcrepo.apix.model.Ontologies.RDF_TYPE;
 import static org.fcrepo.apix.model.Ontologies.Service.CLASS_LDP_SERVICE_INSTANCE_REGISTRY;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_CANONICAL;

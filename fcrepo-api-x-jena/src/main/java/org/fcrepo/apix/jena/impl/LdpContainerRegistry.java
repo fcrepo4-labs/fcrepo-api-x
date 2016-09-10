@@ -20,9 +20,13 @@ package org.fcrepo.apix.jena.impl;
 
 import static org.fcrepo.apix.model.Ontologies.LDP_CONTAINS;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Collection;
 
+import org.fcrepo.apix.jena.Util;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.Registry;
 
@@ -45,6 +49,8 @@ import org.apache.jena.rdf.model.Resource;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Uses a single LDP container as a registry.
@@ -68,6 +74,10 @@ public class LdpContainerRegistry implements Registry {
     private boolean binary = false;
 
     private boolean create = true;
+
+    private URI containerContent;
+
+    private static final Logger LOG = LoggerFactory.getLogger(LdpContainerRegistry.class);
 
     /**
      * Underlying registry delegate for GETs.
@@ -97,9 +107,26 @@ public class LdpContainerRegistry implements Registry {
      * </p>
      */
     public void init() {
-        if (create && !exists(containerId)) {
-            put(WebResource.of(null, "text/turtle",
-                    containerId, null), false);
+
+        boolean found = false;
+
+        while (!found) {
+            try {
+                found = exists(containerId);
+
+                if (create && !found) {
+                    put(WebResource.of(initialContent(), "text/turtle",
+                            containerId, null), false);
+                    found = true;
+                }
+            } catch (final IOException e) {
+                LOG.info("Failed initializing underlying container, re-trying..", e.getMessage());
+                try {
+                    Thread.sleep(1000);
+                } catch (final InterruptedException i) {
+                    Thread.currentThread().interrupt();
+                }
+            }
         }
     }
 
@@ -128,6 +155,20 @@ public class LdpContainerRegistry implements Registry {
      */
     public void setCreateContainer(final boolean create) {
         this.create = create;
+    }
+
+    /**
+     * Initial content content to initialize container with .
+     * <p>
+     * This is only relevant if {@link #setCreateContainer(boolean)} is true, at time of container creation. No
+     * attempts to update the content of an existing container will be made.
+     * </p>
+     *
+     * @param loc URI to a resource containing rdf. May be a file URI (for local content), classpath (for classpath
+     *        resource), or http.
+     */
+    public void setContainerContent(final URI loc) {
+        this.containerContent = loc;
     }
 
     @Override
@@ -178,7 +219,8 @@ public class LdpContainerRegistry implements Registry {
                 }
             }));
         } catch (final Exception e) {
-            throw new RuntimeException("Error executing http request to " + request.getURI().toString(), e);
+            throw new RuntimeException(String.format("Error executing %s request to %s", request.getClass()
+                    .getSimpleName(), request.getURI().toString()), e);
         }
 
     }
@@ -190,11 +232,16 @@ public class LdpContainerRegistry implements Registry {
 
     @Override
     public Collection<URI> list() {
-        final Model model = Util.parse(delegate.get(containerId));
+        try {
+            final Model model = Util.parse(delegate.get(containerId));
 
-        return model.listObjectsOfProperty(model.getProperty(LDP_CONTAINS)).mapWith(
-                RDFNode::asResource)
-                .mapWith(Resource::getURI).mapWith(URI::create).toSet();
+            return model.listObjectsOfProperty(model.getProperty(LDP_CONTAINS)).mapWith(
+                    RDFNode::asResource)
+                    .mapWith(Resource::getURI).mapWith(URI::create).toSet();
+        } catch (final Exception e) {
+            throw new RuntimeException("Error reading from " + containerId, e);
+        }
+
     }
 
     @Override
@@ -209,16 +256,28 @@ public class LdpContainerRegistry implements Registry {
         }
     }
 
-    private boolean exists(final URI uri) {
+    private boolean exists(final URI uri) throws IOException {
         try (CloseableHttpResponse response = client.execute(new HttpHead(uri))) {
             return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
     @Override
     public boolean contains(final URI id) {
         return list().contains(id);
+    }
+
+    private InputStream initialContent() {
+        if (containerContent == null || containerContent.getScheme() == null) {
+            return new ByteArrayInputStream(new byte[0]);
+        } else if (containerContent.getScheme().equals("classpath")) {
+            return this.getClass().getResourceAsStream(containerContent.getPath());
+        }
+
+        try {
+            return containerContent.toURL().openStream();
+        } catch (final IOException e) {
+            throw new RuntimeException("Error retrieving container content from " + containerContent, e);
+        }
     }
 }

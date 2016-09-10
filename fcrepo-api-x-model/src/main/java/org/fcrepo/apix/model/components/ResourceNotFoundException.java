@@ -16,21 +16,22 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.jena.impl;
-
-import org.apache.jena.rdf.model.Model;
+package org.fcrepo.apix.model.components;
 
 /**
- * Any resource that has an accessible Jena model.
+ * Thrown from a registry if a resource is not found.
  *
  * @author apb@jhu.edu
  */
-interface JenaResource {
+@SuppressWarnings("serial")
+public class ResourceNotFoundException extends RuntimeException {
 
     /**
-     * The model for this resource.
+     * Resource not found
      *
-     * @return Jena model.
+     * @param message The message
      */
-    Model model();
+    public ResourceNotFoundException(final String message) {
+        super(message);
+    }
 }

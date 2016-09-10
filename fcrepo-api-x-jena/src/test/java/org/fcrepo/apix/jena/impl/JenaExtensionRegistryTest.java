@@ -18,9 +18,9 @@
 
 package org.fcrepo.apix.jena.impl;
 
-import static org.fcrepo.apix.jena.impl.TestUtil.ltriple;
-import static org.fcrepo.apix.jena.impl.TestUtil.rdfResource;
-import static org.fcrepo.apix.jena.impl.TestUtil.triple;
+import static org.fcrepo.apix.jena.Util.ltriple;
+import static org.fcrepo.apix.jena.Util.rdfResource;
+import static org.fcrepo.apix.jena.Util.triple;
 import static org.fcrepo.apix.model.Ontologies.Apix.PROP_BINDS_TO;
 import static org.fcrepo.apix.model.Ontologies.Apix.PROP_CONSUMES_SERVICE;
 import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE;
@@ -32,13 +32,11 @@ import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.components.Registry;
-import org.fcrepo.apix.model.components.ServiceRegistry;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -63,9 +61,6 @@ public class JenaExtensionRegistryTest {
     static final String SERVICE_2_URI = "test:/service2";
 
     @Mock
-    ServiceRegistry serviceRegistry;
-
-    @Mock
     Registry registryDelegate;
 
     @Mock
@@ -80,10 +75,7 @@ public class JenaExtensionRegistryTest {
     public void setUp() {
         toTest = new JenaExtensionRegistry();
         toTest.setRegistryDelegate(registryDelegate);
-        toTest.setServiceRegistry(serviceRegistry);
 
-        when(serviceRegistry.getService(URI.create(SERVICE_1_URI))).thenReturn(service1);
-        when(serviceRegistry.getService(URI.create(SERVICE_2_URI))).thenReturn(service2);
         when(service1.uri()).thenReturn(URI.create(SERVICE_1_URI));
         when(service2.uri()).thenReturn(URI.create(SERVICE_2_URI));
 
@@ -124,7 +116,7 @@ public class JenaExtensionRegistryTest {
 
         assertEquals(2, extension.exposed().consumed().size());
 
-        assertTrue(extension.exposed().consumed().stream().map(Service::uri).collect(Collectors.toList()).containsAll(
+        assertTrue(extension.exposed().consumed().containsAll(
                 Arrays.asList(service1.uri(), service2.uri())));
     }
 
@@ -135,7 +127,7 @@ public class JenaExtensionRegistryTest {
 
         final Extension extension = toTest.getExtension(EXTENSION_URI);
 
-        assertEquals(service1.uri(), extension.exposed().exposed().uri());
+        assertEquals(service1.uri(), extension.exposed().exposed());
     }
 
     @Test
@@ -191,7 +183,7 @@ public class JenaExtensionRegistryTest {
 
         assertEquals(2, extension.exposed().consumed().size());
 
-        assertTrue(extension.intercepted().consumed().stream().map(Service::uri).collect(Collectors.toList())
+        assertTrue(extension.intercepted().consumed()
                 .containsAll(
                         Arrays.asList(service1.uri(), service2.uri())));
     }

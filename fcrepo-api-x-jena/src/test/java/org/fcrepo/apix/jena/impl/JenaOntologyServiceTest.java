@@ -18,8 +18,8 @@
 
 package org.fcrepo.apix.jena.impl;
 
-import static org.fcrepo.apix.jena.impl.TestUtil.rdfResource;
-import static org.fcrepo.apix.jena.impl.TestUtil.triple;
+import static org.fcrepo.apix.jena.Util.rdfResource;
+import static org.fcrepo.apix.jena.Util.triple;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;

@@ -72,6 +72,14 @@
 
     <dependency>
       <groupId>org.fcrepo.apix</groupId>
+      <artifactId>fcrepo-api-x-discovery</artifactId>
+      <version>${project.version}</version>
+      <classifier>features</classifier>
+      <type>xml</type>
+    </dependency>
+
+    <dependency>
+      <groupId>org.fcrepo.apix</groupId>
       <artifactId>fcrepo-api-x-routing</artifactId>
       <version>${project.version}</version>
       <classifier>features</classifier>

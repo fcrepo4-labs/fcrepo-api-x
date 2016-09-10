@@ -47,6 +47,8 @@ import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.karaf.options.LogLevelOption.LogLevel;
 import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 import org.ops4j.pax.exam.options.MavenUrlReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Base Karaf + Pax Exam boilerplace.
@@ -57,6 +59,8 @@ import org.ops4j.pax.exam.options.MavenUrlReference;
  * @author apb@jhu.edu
  */
 public interface KarafIT {
+
+    Logger _log = LoggerFactory.getLogger(KarafIT.class);
 
     String fcrepoBaseURI = String.format("http://localhost:%s/%s/rest/", System.getProperty(
             "fcrepo.dynamic.test.port", "8080"), System.getProperty("fcrepo.cxtPath", "fcrepo"));
@@ -216,22 +220,28 @@ public interface KarafIT {
                 serviceContainer,
                 ontologyContainer)) {
             // Add the container, if it doesn't exist.
-            try (FcrepoResponse head = client.head(container).perform()) {
-                /* Do nothing */
-            } catch (final FcrepoOperationFailedException e) {
-                if (e.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
-                    try (FcrepoResponse response = client.put(container)
-                            .perform()) {
-                        if (response.getStatusCode() != HttpStatus.SC_CREATED && response
-                                .getStatusCode() != HttpStatus.SC_NO_CONTENT) {
-                            throw new RuntimeException("Could not create container " + container);
+            boolean initialized = false;
+
+            while (!initialized) {
+                try (FcrepoResponse head = client.head(container).perform()) {
+                    initialized = true;
+                } catch (final FcrepoOperationFailedException e) {
+                    if (e.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
+                        try (FcrepoResponse response = client.put(container)
+                                .perform()) {
+                            if (response.getStatusCode() != HttpStatus.SC_CREATED && response
+                                    .getStatusCode() != HttpStatus.SC_NO_CONTENT) {
+                                _log.info("Could not create container {}, retrying...", container);
+                                try {
+                                    Thread.sleep(1000);
+                                } catch (final InterruptedException i) {
+                                    Thread.currentThread().interrupt();
+                                }
+                            }
                         }
                     }
-                } else {
-                    throw (e);
                 }
             }
-
         }
     }
 
