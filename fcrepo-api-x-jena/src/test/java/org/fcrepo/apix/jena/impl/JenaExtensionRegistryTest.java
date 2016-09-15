@@ -127,7 +127,7 @@ public class JenaExtensionRegistryTest {
 
         final Extension extension = toTest.getExtension(EXTENSION_URI);
 
-        assertEquals(service1.uri(), extension.exposed().exposed());
+        assertEquals(service1.uri(), extension.exposed().exposedService());
     }
 
     @Test

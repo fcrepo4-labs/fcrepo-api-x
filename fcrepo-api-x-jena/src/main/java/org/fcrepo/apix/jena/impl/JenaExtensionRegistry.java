@@ -134,14 +134,7 @@ public class JenaExtensionRegistry extends WrappingRegistry implements Extension
 
                 @Override
                 public Scope scope() {
-                    final String exposedAt = objectLiteralOf(uri.toString(), PROP_EXPOSES_SERVICE_AT, model);
-
-                    if (exposedAt == null) {
-                        throw new RuntimeException(String.format(
-                                "Can't determine exposure scope; extension <%s> does not expose any services!", uri));
-                    }
-
-                    final URI exposeAtURI = URI.create(exposedAt);
+                    final URI exposeAtURI = exposedAt();
 
                     if (exposeAtURI.isAbsolute() && exposeAtURI.getScheme().startsWith("http")) {
                         return Scope.EXTERNAL;
@@ -153,8 +146,20 @@ public class JenaExtensionRegistry extends WrappingRegistry implements Extension
                 }
 
                 @Override
-                public URI exposed() {
+                public URI exposedService() {
                     return objectResourceOf(uri.toString(), PROP_EXPOSES_SERVICE, model);
+                }
+
+                @Override
+                public URI exposedAt() {
+                    final String exposedAt = objectLiteralOf(uri.toString(), PROP_EXPOSES_SERVICE_AT, model);
+
+                    if (exposedAt == null) {
+                        throw new RuntimeException(String.format(
+                                "Extension <%s> does not expose any services!", uri));
+                    }
+
+                    return URI.create(exposedAt);
                 }
             };
         }

@@ -111,7 +111,18 @@ public interface Extension {
          *
          * @return the exposed service URI.
          */
-        public URI exposed();
+        public URI exposedService();
+
+        /**
+         * URI the service is exposed at.
+         * <p>
+         * May be absolute or relative. If relative, the {@link org.fcrepo.apix.model.components.Routing} component
+         * will use this to mint the resolvable URI a service is exposed at.
+         * </p>
+         *
+         * @return service exposure URI.
+         */
+        public URI exposedAt();
 
         /**
          * The scope of the exposed service.
