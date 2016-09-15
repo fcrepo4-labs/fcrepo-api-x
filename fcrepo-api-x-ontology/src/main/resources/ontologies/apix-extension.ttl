@@ -1,0 +1,65 @@
+@prefix apix:<http://fedora.info/definitions/v4/api-extension#> .
+@prefix fcr:<http://fedora.info/definitions/v4/repository#> .
+@prefix owl:<http://www.w3.org/2002/07/owl#> .
+@prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#> .
+@prefix svc:<http://fedora.info/definitions/v4/service#> .
+@prefix xsd:<http://www.w3.org/2001/XMLSchema#> .
+
+apix: a owl:Ontology;
+    owl:imports svc:;
+    rdfs:label "API Extension ontology" .
+
+apix:Extension a owl:Class;
+    rdfs:label "API-X extension"@en;
+    rdfs:comment
+    "Relates Services to Repository objects. May expose a service on repository resources (exposing modality), or modify request or responses to repository objects (intercepting modality)."@en .
+
+apix:InterceptingExtension a owl:Class;
+    rdfs:subClassOf apix:Extension;
+    rdfs:label "Intercepting extension"@en;
+    rdfs:comment "Extension that intercepts requests or responses to the repository."@en .
+
+apix:ServiceExposingExtension a owl:Class;
+    rdfs:subClassOf apix:Extension;
+    rdfs:label "Service exposing extension"@en;
+    rdfs:comment "Extension that exposes a service associated with an object."@en .
+
+apix:BindingFilter a owl:Class;
+    rdfs:label "Binding filter"@en;
+    rdfs:comment "Additional filtering criteria that must be satisfied in order for an object to be bound to an extension." .
+
+apix:bindsTo a owl:ObjectProperty;
+    rdfs:domain apix:Extension;
+    rdfs:range owl:Class;
+    rdfs:label "binds to"@en;
+    rdfs:comment "Specifies the type of resource that this extension binds to."@en .
+
+apix:isBoundTo a owl:ObjectProperty;
+    rdfs:domain apix:Extension;
+    rdfs:range fcr:Resource;
+    rdfs:label "is bound to"@en;
+    rdfs:comment "Indicates that an extension is bound to a specific resource."@en .
+
+apix:isFilteredBy a owl:ObjectProperty;
+    rdfs:domain apix:Extension;
+    rdfs:range apix:BindingFilter;
+    rdfs:label "is filtered by"@en;
+    rdfs:comment "Points to additional filtering criteria that must be satisfied in order for an object to be bound to an extension."@en .
+
+apix:exposesService a owl:ObjectProperty;
+    rdfs:domain apix:ServiceExposingExtension;
+    rdfs:range svc:Service;
+    rdfs:label "exposes service"@en;
+    rdfs:comment "Specifies a service exposed by an extension."@en .
+
+apix:consumesService a owl:ObjectProperty;
+    rdfs:domain apix:Extension;
+    rdfs:range svc:Service;
+    rdfs:label "consumes service"@en;
+    rdfs:comment "Specifies service(s) consumed by an extension implementation."@en .
+
+apix:exposesServiceAt a owl:DatatypeProperty;
+    rdfs:domain apix:ServiceExposingExtension;
+    rdfs:range xsd:anyURI;
+    rdfs:label "exposes service at"@en;
+    rdfs:comment "Relative or absolute URI path, or an absolute URI indicating where a service should be exposed."@en .
