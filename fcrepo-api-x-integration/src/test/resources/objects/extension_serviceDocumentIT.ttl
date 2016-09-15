@@ -1,0 +1,6 @@
+@prefix apix:<http://fedora.info/definitions/v4/api-extension#> .
+
+<> a apix:Extension;
+    apix:bindsTo <test:ServiceDocumentIT#exposedServiceTest>;
+    apix:exposesService <http://example.org/externalService>;
+    apix:exposesServiceAt "http://example.org/externalService/endpoint" . 

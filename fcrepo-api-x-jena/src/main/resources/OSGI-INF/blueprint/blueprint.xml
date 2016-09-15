@@ -16,6 +16,15 @@
         value="http://localhost:8080/fcrepo/apix/extensions" />
       <cm:property name="registry.ontology.ldp.container"
         value="http://localhost:8080/fcrepo/apix/ontologies" />
+      <cm:property name="registry.service.ldp.container"
+        value="http://localhost:8080/fcrepo/apix/services" />
+      <cm:property name="registry.ontology.create" value="true" />
+      <cm:property name="registry.extension.create" value="true" />
+      <cm:property name="registry.service.create" value="true" />
+      <cm:property name="registry.extension.content" value="null" />
+      <cm:property name="registry.ontology.content" value="null" />
+      <cm:property name="registry.service.content"
+        value="classpath:/objects/service-registry.ttl" />
     </cm:default-properties>
   </cm:property-placeholder>
 
@@ -30,6 +39,8 @@
     <property name="registryDelegate" ref="underlyingRegistryDelegate" />
     <property name="httpClient" ref="httpClient" />
     <property name="container" value="${registry.extension.ldp.container}" />
+    <property name="createContainer" value="${registry.extension.create}" />
+    <property name="containerContent" value="${registry.extension.content}" />
   </bean>
 
   <bean id="ldpOntologyServiceRegistryDelegate" class="org.fcrepo.apix.jena.impl.LdpContainerRegistry"
@@ -38,10 +49,21 @@
     <property name="httpClient" ref="httpClient" />
     <property name="container" value="${registry.ontology.ldp.container}" />
     <property name="binary" value="true" />
+    <property name="createContainer" value="${registry.ontology.create}" />
+    <property name="containerContent" value="${registry.ontology.content}" />
+  </bean>
+
+  <bean id="ldpServiceRegistryDelegate" class="org.fcrepo.apix.jena.impl.LdpContainerRegistry"
+    init-method="init">
+    <property name="registryDelegate" ref="underlyingRegistryDelegate" />
+    <property name="httpClient" ref="httpClient" />
+    <property name="container" value="${registry.service.ldp.container}" />
+    <property name="createContainer" value="${registry.service.create}" />
+    <property name="containerContent" value="${registry.service.content}" />
   </bean>
 
   <bean id="jenaExtensionRegistryImpl" class="org.fcrepo.apix.jena.impl.JenaExtensionRegistry">
-    <property name="registryDelegate" ref="ldpExtensionRegistryDelegate"></property>
+    <property name="registryDelegate" ref="ldpExtensionRegistryDelegate" />
   </bean>
 
   <bean id="jenaOntologyServiceImpl" class="org.fcrepo.apix.jena.impl.JenaOntologyService">
@@ -53,13 +75,20 @@
     <property name="registryDelegate" ref="ldpOntologyServiceRegistryDelegate" />
   </bean>
 
-  <service id="jenaOntologyRegistry" interface="org.fcrepo.apix.model.components.OntologyRegistry"
-    ref="jenaOntologyRegistryImpl" />
+  <bean id="jenaServiceRegistryImpl" class="org.fcrepo.apix.jena.impl.JenaServiceRegistry">
+    <property name="registryDelegate" ref="ldpServiceRegistryDelegate" />
+  </bean>
+
+  <service id="jenaOntologyRegistry"
+    interface="org.fcrepo.apix.model.components.OntologyRegistry" ref="jenaOntologyRegistryImpl" />
 
   <service id="jenaOntologyService" interface="org.fcrepo.apix.model.components.OntologyService"
     ref="jenaOntologyServiceImpl" />
 
-  <service id="jenaExtensionRegistry" interface="org.fcrepo.apix.model.components.ExtensionRegistry"
-    ref="jenaExtensionRegistryImpl" />
+  <service id="jenaExtensionRegistry"
+    interface="org.fcrepo.apix.model.components.ExtensionRegistry" ref="jenaExtensionRegistryImpl" />
+
+  <service id="jenaServiceRegistry" interface="org.fcrepo.apix.model.components.ServiceRegistry"
+    ref="jenaServiceRegistryImpl" />
 
 </blueprint>

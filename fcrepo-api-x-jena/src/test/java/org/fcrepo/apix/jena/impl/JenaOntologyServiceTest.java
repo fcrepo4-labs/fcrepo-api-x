@@ -18,12 +18,13 @@
 
 package org.fcrepo.apix.jena.impl;
 
+import static org.fcrepo.apix.jena.Util.rdfResource;
+import static org.fcrepo.apix.jena.Util.triple;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
 
@@ -81,32 +82,32 @@ public class JenaOntologyServiceTest {
     @BeforeClass
     public static void populateRegistry() {
 
-        final WebResource ONT1_RESOURCE = ontResource(ONT1,
+        final WebResource ONT1_RESOURCE = rdfResource(ONT1,
                 triple(ONT1, RDF_TYPE, OWL_ONTOLOGY) +
                         triple(CLASS_B, SUBCLASS_OF, CLASS_A));
         when(ONTOLOGY_REGISTRY.get(eq(URI.create(ONT1)))).thenReturn(ONT1_RESOURCE);
 
-        final WebResource ONT2_RESOURCE = ontResource(ONT2,
+        final WebResource ONT2_RESOURCE = rdfResource(ONT2,
                 triple(ONT2, RDF_TYPE, OWL_ONTOLOGY) +
                         triple(CLASS_C, SUBCLASS_OF, CLASS_A));
         when(ONTOLOGY_REGISTRY.get(eq(URI.create(ONT2)))).thenReturn(ONT2_RESOURCE);
 
         final WebResource ONT3_RESOURCE =
-                ontResource(ONT3,
+                rdfResource(ONT3,
                         triple(ONT3, RDF_TYPE, OWL_ONTOLOGY) +
                                 triple(ONT3, OWL_IMPORTS, ONT1) +
                                 triple(ONT3, OWL_IMPORTS, ONT2));
         when(ONTOLOGY_REGISTRY.get(eq(URI.create(ONT3)))).thenReturn(ONT3_RESOURCE);
 
         final WebResource ONT4_RESOURCE =
-                ontResource(ONT4,
+                rdfResource(ONT4,
                         triple(ONT4, RDF_TYPE, OWL_ONTOLOGY) +
                                 triple(ONT4, OWL_IMPORTS, ONT1) +
                                 triple(CLASS_D, SUBCLASS_OF, CLASS_B));
         when(ONTOLOGY_REGISTRY.get(eq(URI.create(ONT4)))).thenReturn(ONT4_RESOURCE);
 
         final WebResource ONT5_RESOURCE =
-                ontResource(ONT5,
+                rdfResource(ONT5,
                         triple(ONT5, RDF_TYPE, OWL_ONTOLOGY) +
                                 triple(ONT5, OWL_IMPORTS, ONT4) +
                                 triple(CLASS_E, SUBCLASS_OF, CLASS_D));
@@ -235,40 +236,4 @@ public class JenaOntologyServiceTest {
         assertTrue(toTest.inferClasses(URI.create(individualURI), individual, ontology).contains(URI.create(
                 CLASS_A)));
     }
-
-    private static String triple(final String s, final String p, final String o) {
-        return String.format("<%s> <%s> <%s> .\n", s, p, o);
-    }
-
-    private static WebResource ontResource(final String uri, final String rdf) {
-
-        return new WebResource() {
-
-            @Override
-            public void close() throws Exception {
-                // nothing
-            }
-
-            @Override
-            public URI uri() {
-                return URI.create(uri);
-            }
-
-            @Override
-            public InputStream representation() {
-                return IOUtils.toInputStream(rdf, Charset.forName("UTF-8"));
-            }
-
-            @Override
-            public Long length() {
-                return 0l;
-            }
-
-            @Override
-            public String contentType() {
-                return "application/n-triples";
-            }
-        };
-    }
-
 }

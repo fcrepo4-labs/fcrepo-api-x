@@ -1,0 +1,8 @@
+@prefix svc:<http://fedora.info/definitions/v4/service#> .
+@prefix ore:<http://www.openarchives.org/ore/terms/> .
+
+<>
+    ore:describes <#instance> .
+
+<#instance> a svc:ServiceInstance;
+    svc:hasEndpoint <http://backend01.cloud.local:1234/Thumbnail> .

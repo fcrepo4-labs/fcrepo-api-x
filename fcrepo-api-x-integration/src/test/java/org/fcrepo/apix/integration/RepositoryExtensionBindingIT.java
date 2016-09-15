@@ -20,9 +20,6 @@ package org.fcrepo.apix.integration;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.ops4j.pax.exam.CoreOptions.maven;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
-import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfigurationFilePut;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -33,25 +30,21 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.fcrepo.apix.model.Extension;
-import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionBinding;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.OntologyRegistry;
 import org.fcrepo.apix.model.components.OntologyService;
 import org.fcrepo.apix.model.components.Registry;
-import org.fcrepo.client.FcrepoOperationFailedException;
-import org.fcrepo.client.FcrepoResponse;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.http.HttpStatus;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.BundleContext;
 
@@ -91,33 +84,25 @@ public class RepositoryExtensionBindingIT implements KarafIT {
     @Inject
     ExtensionBinding extensionBinding;
 
-    static final URI testContainer = URI.create(fcrepoBaseURI.toString() + RepositoryExtensionBindingIT.class
-            .getSimpleName());
-
     @Override
     public List<Option> additionalKarafConfig() {
 
-        // This dependency is not in any features files, so we have to add it manually.
-        final MavenArtifactUrlReference fcrepoClient = maven().groupId("org.fcrepo.client")
-                .artifactId("fcrepo-java-client")
-                .versionAsInProject();
+        return Arrays.asList();
+    }
 
-        return Arrays.asList(
-                // Fcrepo client is not a dependency of anything else, but tests need it.
-                // As this test runs as a maven bundle in Karaf, the test's reactor dependencies are not
-                // available a priori.
-                mavenBundle(fcrepoClient),
+    @Override
+    public String testClassName() {
+        return this.getClass().getSimpleName();
+    }
 
-                // Pax exam runs in a separate VM, so we need to tell Karaf to set any system properties we need.
-                editConfigurationFilePut("etc/system.properties", "fcrepo.dynamic.test.port", System.getProperty(
-                        "fcrepo.dynamic.test.port")),
-                editConfigurationFilePut("etc/system.properties", "project.basedir", System.getProperty(
-                        "project.basedir")),
-                editConfigurationFilePut("/etc/system.properties", "fcrepo.cxtPath", System.getProperty(
-                        "fcrepo.cxtPath")),
+    @Override
+    public String testMethodName() {
+        return name.getMethodName();
+    }
 
-                deployFile("cfg/org.fcrepo.apix.jena.cfg"),
-                deployFile("cfg/org.fcrepo.apix.registry.http.cfg"));
+    @BeforeClass
+    public static void init() throws Exception {
+        KarafIT.createContainers();
     }
 
     @Before
@@ -141,22 +126,6 @@ public class RepositoryExtensionBindingIT implements KarafIT {
                     "objects/extension_rem_ordered_collection.ttl"));
         }
 
-        // Add the container for all repository objects created in this test suite, if it doesn't exist.
-        try (FcrepoResponse head = client.head(testContainer).perform()) {
-            /* Do nothing */
-        } catch (final FcrepoOperationFailedException e) {
-            if (e.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
-                try (FcrepoResponse response = client.put(testContainer)
-                        .perform()) {
-                    if (response.getStatusCode() != HttpStatus.SC_CREATED && response
-                            .getStatusCode() != HttpStatus.SC_NO_CONTENT) {
-                        throw new RuntimeException("Could not create base test container " + testContainer);
-                    }
-                }
-            } else {
-                throw (e);
-            }
-        }
     }
 
     // Extension should be bound to an object if it can be inferred that the object is a member of
@@ -165,7 +134,7 @@ public class RepositoryExtensionBindingIT implements KarafIT {
     // to objects of that class. So we should see that our object has our extensiion bound to it.
     @Test
     public void inferredBindingTest() throws Exception {
-        final URI objectURI = putObjectFromTestResource("objects/object_with_ordered_collection.ttl");
+        final URI objectURI = postFromTestResource("objects/object_with_ordered_collection.ttl", objectContainer);
 
         try {
             final Collection<Extension> extensions = extensionBinding.getExtensionsFor(repository.get(objectURI));
@@ -190,7 +159,7 @@ public class RepositoryExtensionBindingIT implements KarafIT {
         final URI BINDING_CLASS = extensionRegistry.getExtension(extensionURI).bindingClass();
 
         // Now put in our object
-        final URI objectURI = putObjectFromTestResource("objects/object_with_ordered_collection.ttl");
+        final URI objectURI = postFromTestResource("objects/object_with_ordered_collection.ttl", objectContainer);
 
         // We shouldn't bind to the no-import extension, because that would require inferences
         // based on PCDM and ORE (which the ontology neglects to import)
@@ -208,16 +177,6 @@ public class RepositoryExtensionBindingIT implements KarafIT {
                 .map(Extension::uri)
                 .collect(Collectors.toSet())
                 .contains(extensionURI));
-    }
-
-    private URI putObjectFromTestResource(final String filePath) throws Exception {
-        try (final WebResource object = testResource(filePath);
-                final FcrepoResponse response = client.post(testContainer)
-                        .body(object.representation(), object.contentType())
-                        .slug(name.getMethodName())
-                        .perform()) {
-            return response.getLocation();
-        }
     }
 
 }

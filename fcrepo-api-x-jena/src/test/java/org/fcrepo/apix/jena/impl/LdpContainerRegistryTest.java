@@ -18,7 +18,7 @@
 
 package org.fcrepo.apix.jena.impl;
 
-import static org.fcrepo.apix.jena.impl.LdpContainerRegistry.LDP_CONTAINS;
+import static org.fcrepo.apix.model.Ontologies.LDP_CONTAINS;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.isA;
@@ -122,6 +122,37 @@ public class LdpContainerRegistryTest {
         assertEquals(containerURI, requests.get(0).getURI());
     }
 
+    @SuppressWarnings("unchecked")
+    @Test
+    public void createWithInitialContentTest() throws Exception {
+        final URI containerURI = URI.create("test:Container");
+        final LdpContainerRegistry toTest = new LdpContainerRegistry();
+        toTest.setContainer(containerURI);
+
+        when(entityStatus.getStatusCode()).thenReturn(HttpStatus.SC_CREATED);
+
+        when(header.getValue()).thenReturn(containerURI.toString());
+        when(entityResponse.getFirstHeader(HttpHeaders.LOCATION)).thenReturn(header);
+
+        when(headStatus.getStatusCode()).thenReturn(HttpStatus.SC_NOT_FOUND);
+
+        toTest.setCreateContainer(true);
+        toTest.setHttpClient(client);
+        toTest.setContainerContent(URI.create("classpath:/objects/service-registry.ttl"));
+        toTest.init();
+
+        verify(client, times(1)).execute(requestCaptor.capture(), isA(ResponseHandler.class));
+
+        final HttpUriRequest request = requestCaptor.getValue();
+
+        assertEquals(HttpPut.class, request.getClass());
+        assertEquals(containerURI, request.getURI());
+
+        final byte[] content = IOUtils.toByteArray(((HttpPut) request).getEntity().getContent());
+        assertTrue(content.length > 0);
+
+    }
+
     @Test
     public void dontCreateIfExistsTest() throws Exception {
         final URI containerURI = URI.create("test:Container");
@@ -142,11 +173,15 @@ public class LdpContainerRegistryTest {
     @Test
     public void noCreateTest() throws Exception {
         final LdpContainerRegistry toTest = new LdpContainerRegistry();
+
+        when(client.execute(isA(HttpHead.class))).thenReturn(headResponse);
+        when(headStatus.getStatusCode()).thenReturn(HttpStatus.SC_OK);
+
         toTest.setCreateContainer(false);
         toTest.setHttpClient(client);
         toTest.init();
 
-        verify(client, never()).execute(isA(HttpUriRequest.class));
+        verify(client, never()).execute(isA(HttpPut.class));
     }
 
     @Test

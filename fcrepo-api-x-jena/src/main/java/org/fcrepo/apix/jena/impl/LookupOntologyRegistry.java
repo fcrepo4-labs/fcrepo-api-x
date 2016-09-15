@@ -18,7 +18,7 @@
 
 package org.fcrepo.apix.jena.impl;
 
-import static org.fcrepo.apix.jena.impl.Util.parse;
+import static org.fcrepo.apix.jena.Util.parse;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

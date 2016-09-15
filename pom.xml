@@ -22,7 +22,7 @@
     <checkstyle.plugin.version>2.17</checkstyle.plugin.version>
     <commons-io.version>2.5</commons-io.version>
     <docker>false</docker>
-    <fcrepo.version>4.7.0-SNAPSHOT</fcrepo.version>
+    <fcrepo.version>4.6.0</fcrepo.version>
     <fcrepo-build-tools.version>4.4.2</fcrepo-build-tools.version>
     <httpclient.version>4.5.2</httpclient.version>
     <httpcore.version>4.4.5</httpcore.version>
@@ -285,6 +285,7 @@
     <module>fcrepo-api-x-jena</module>
     <module>fcrepo-api-x-integration</module>
     <module>fcrepo-api-x-karaf</module>
+    <module>fcrepo-api-x-discovery</module>
   </modules>
 
   <licenses>

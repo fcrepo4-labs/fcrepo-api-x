@@ -5,8 +5,10 @@
   <feature name="fcrepo-api-x" description="All of api-x"
     version="${project.version}">
     <feature version="${project.version}">fcrepo-api-x-binding</feature>
+    <feature version="${project.version}">fcrepo-api-x-discovery</feature>
     <feature version="${project.version}">fcrepo-api-x-jena</feature>
     <feature version="${project.version}">fcrepo-api-x-model</feature>
     <feature version="${project.version}">fcrepo-api-x-registry</feature>
+    <feature version="${project.version}">fcrepo-api-x-routing</feature>
   </feature>
 </features>

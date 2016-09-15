@@ -21,17 +21,12 @@ package org.fcrepo.apix.model;
 /**
  * Marker interface for ontologies.
  * <p>
- * Contains various namespaces and values of significant ontologies.
+ * An ontology is opaque representation of an ontology scoped to a particular implementation of an
+ * {@link org.fcrepo.apix.model.components.OntologyService}.
  * </p>
  *
  * @author apb@jhu.edu
  */
 public interface Ontology {
-
-    public static final String APIX_NS = "http://example.org/apix#";
-
-    public static final String LDP_NS = "http://www.w3.org/ns/ldp#";
-
-    public static final String EXTENSION_BINDING_CLASS = APIX_NS + "bindsTo";
 
 }

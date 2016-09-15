@@ -1,0 +1,13 @@
+@prefix ldp:<http://www.w3.org/ns/ldp#> .
+@prefix svc:<http://fedora.info/definitions/v4/service#> .
+@prefix ore:<http://www.openarchives.org/ore/terms/> .
+
+<> a ldp:DirectContainer;
+    ldp:membershipResource <#service> ;
+    ldp:hasMemberRelation svc:hasServiceInstanceRegistry ;
+    ore:describes <#service> .
+
+<#service> a svc:Service;
+    svc:canonical <http://example.org/ThumbnailService> .
+
+    

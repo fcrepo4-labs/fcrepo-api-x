@@ -35,8 +35,9 @@ public interface Registry {
      *
      * @param id URI of the resource
      * @return A serialized resource, or an exception if none found.
+     * @throws ResourceNotFoundException if the resource is not found
      */
-    public WebResource get(URI id);
+    public WebResource get(URI id) throws ResourceNotFoundException;
 
     /**
      * Persist a resource in the registry.
@@ -74,4 +75,5 @@ public interface Registry {
      * @return true if the registry contains the given resource
      */
     public boolean contains(URI id);
+
 }
