@@ -2,10 +2,10 @@
 <features xmlns="http://karaf.apache.org/xmlns/features/v1.3.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" name="fcrepo-api-x-karaf"
   xsi:schemaLocation="http://karaf.apache.org/xmlns/features/v1.3.0 http://karaf.apache.org/xmlns/features/v1.3.0">
+  <repository>mvn:org.apache.camel.karaf/apache-camel/2.17.3/xml/features</repository>
   <feature name="fcrepo-api-x" description="All of api-x"
     version="${project.version}">
     <feature version="${project.version}">fcrepo-api-x-binding</feature>
-    <feature version="${project.version}">fcrepo-api-x-discovery</feature>
     <feature version="${project.version}">fcrepo-api-x-jena</feature>
     <feature version="${project.version}">fcrepo-api-x-model</feature>
     <feature version="${project.version}">fcrepo-api-x-registry</feature>

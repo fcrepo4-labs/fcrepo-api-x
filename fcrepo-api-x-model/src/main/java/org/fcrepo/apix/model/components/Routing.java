@@ -46,4 +46,14 @@ public interface Routing {
      */
     public URI serviceDocFor(URI resource);
 
+    /**
+     * Get the identifying path compoment for the given fedora resource URI.
+     *
+     * @param resourceURI the resource URI.
+     * @return absolute path of the resource.
+     * @throws ResourceNotFoundException if the resource URI is syntactically incorrect (e.g has a different base URI
+     *         from the configured Fedora instance, etc).
+     */
+    public String resourcePath(URI resourceURI);
+
 }
