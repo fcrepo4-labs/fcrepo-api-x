@@ -101,10 +101,6 @@ public interface KarafIT {
 
         final String container = String.format("%s%s", fcrepoBaseURI, testClassName());
 
-        // final MavenUrlReference camelRepo = maven().groupId("org.apache.camel.karaf")
-        // .artifactId("apache-camel").type("xml").classifier("features")
-        // .versionAsInProject();
-
         final ArrayList<Option> options = new ArrayList<>();
 
         final Option[] defaultOptions = new Option[] {
@@ -116,8 +112,10 @@ public interface KarafIT {
 
             karafDistributionConfiguration().frameworkUrl(karafUrl)
                     .unpackDirectory(new File("target", "exam")),
-            // configureConsole().ignoreLocalConsole(),
+            // KarafDistributionOption.configureConsole().ignoreLocalConsole(),
             logLevel(LogLevel.WARN),
+
+            // KarafDistributionOption.debugConfiguration("5005", true),
 
             keepRuntimeFolder(),
 
@@ -141,7 +139,8 @@ public interface KarafIT {
                     "/ontologies"),
 
             deployFile("cfg/org.fcrepo.apix.jena.cfg"),
-            deployFile("cfg/org.fcrepo.apix.registry.http.cfg")
+            deployFile("cfg/org.fcrepo.apix.registry.http.cfg"),
+            deployFile("cfg/org.fcrepo.apix.routing.cfg")
         };
 
         options.addAll(Arrays.asList(defaultOptions));

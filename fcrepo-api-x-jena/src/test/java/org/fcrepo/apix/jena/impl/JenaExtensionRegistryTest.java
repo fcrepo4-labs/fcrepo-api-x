@@ -173,6 +173,38 @@ public class JenaExtensionRegistryTest {
     }
 
     @Test
+    public void exposedAtURITest() {
+        final String EXPOSED_AT = "http://127.0.0.1/svc:/123()";
+
+        when(registryDelegate.get(EXTENSION_URI)).thenReturn(rdfResource(EXTENSION,
+                ltriple(EXTENSION, PROP_EXPOSES_SERVICE_AT, EXPOSED_AT)));
+
+        assertEquals(EXPOSED_AT, toTest.getExtension(EXTENSION_URI).exposed().exposedAt().toString());
+    }
+
+    @Test
+    public void exposedAtAbsoluteTest() {
+        final String EXPOSED_AT = "/svc:/123()";
+
+        when(registryDelegate.get(EXTENSION_URI)).thenReturn(rdfResource(EXTENSION,
+                ltriple(EXTENSION, PROP_EXPOSES_SERVICE_AT, EXPOSED_AT)));
+
+        assertEquals(EXPOSED_AT, toTest.getExtension(EXTENSION_URI).exposed().exposedAt().toString());
+        assertEquals(EXPOSED_AT, toTest.getExtension(EXTENSION_URI).exposed().exposedAt().getPath());
+    }
+
+    @Test
+    public void exposedAtRelativeTest() {
+        final String EXPOSED_AT = "svc:/123()";
+
+        when(registryDelegate.get(EXTENSION_URI)).thenReturn(rdfResource(EXTENSION,
+                ltriple(EXTENSION, PROP_EXPOSES_SERVICE_AT, EXPOSED_AT)));
+
+        assertEquals(EXPOSED_AT, toTest.getExtension(EXTENSION_URI).exposed().exposedAt().toString());
+        assertEquals(EXPOSED_AT, toTest.getExtension(EXTENSION_URI).exposed().exposedAt().getPath());
+    }
+
+    @Test
     public void interceptingConsumedServiceTest() {
 
         when(registryDelegate.get(EXTENSION_URI)).thenReturn(rdfResource(EXTENSION,

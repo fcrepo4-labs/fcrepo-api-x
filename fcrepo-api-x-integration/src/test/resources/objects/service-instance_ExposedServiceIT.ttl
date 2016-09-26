@@ -9,5 +9,5 @@
     svc:hasServiceInstance <#instance> .
 
 <#instance> a svc:ServiceInstance;
-    svc:isServiceInstanceOf <CANONICAL_SERVICE_URI>;
-    svc:hasEndpoint <SERVICE_INSTANCE_ENDPOINT> .
+    svc:isServiceInstanceOf <http://example.org/ExposedServiceIT/ResourceScopedService>;
+    svc:hasEndpoint <http://localhost:${services.dynamic.test.port}/ExposedServiceIT> .

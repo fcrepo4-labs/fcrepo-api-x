@@ -28,6 +28,7 @@ import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE;
 import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE_AT;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -159,7 +160,21 @@ public class JenaExtensionRegistry extends WrappingRegistry implements Extension
                                 "Extension <%s> does not expose any services!", uri));
                     }
 
-                    return URI.create(exposedAt);
+                    if (exposedAt.startsWith("/") || exposedAt.startsWith("http")) {
+                        return URI.create(exposedAt);
+                    } else {
+                        try {
+                            // Is there a more elegant way to do this?
+                            // The problem is that it seems impossible to create a relative URI with a path containing
+                            // a colon in it (e.g. "this:that"). Every URI constructor creates a string which is then
+                            // parsed, making "this:that" interpreted as a URI with scheme "this".
+                            final URI base = new URI("none", "none", "/", null, null);
+                            final URI exposed = new URI("none", "none", "/" + exposedAt, null, null);
+                            return base.relativize(exposed);
+                        } catch (final URISyntaxException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
                 }
             };
         }

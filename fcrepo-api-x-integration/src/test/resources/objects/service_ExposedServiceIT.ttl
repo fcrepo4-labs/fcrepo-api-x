@@ -8,6 +8,6 @@
     ore:describes <#service> .
 
 <#service> a svc:Service;
-    svc:canonical <CANONICAL_SERVICE_URI> .
+    svc:canonical <http://example.org/ExposedServiceIT/ResourceScopedService> .
 
     
