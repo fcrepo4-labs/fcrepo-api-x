@@ -18,11 +18,11 @@
 
 package org.fcrepo.apix.jena.impl;
 
-import static org.fcrepo.apix.jena.Util.isA;
 import static org.fcrepo.apix.jena.Util.objectResourceOf;
 import static org.fcrepo.apix.jena.Util.objectResourcesOf;
 import static org.fcrepo.apix.jena.Util.parse;
-import static org.fcrepo.apix.model.Ontologies.Service.CLASS_LDP_SERVICE_INSTANCE_REGISTRY;
+import static org.fcrepo.apix.model.Ontologies.RDF_TYPE;
+import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_CANONICAL;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_ENDPOINT;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_SERVICE_INSTANCE;
@@ -30,28 +30,59 @@ import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_SERVICE_INSTANCE
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.fcrepo.apix.jena.JenaResource;
+import org.fcrepo.apix.jena.Util;
 import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.ServiceInstance;
 import org.fcrepo.apix.model.components.Registry;
+import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.ServiceInstanceRegistry;
 import org.fcrepo.apix.model.components.ServiceRegistry;
+import org.fcrepo.apix.model.components.Updateable;
 
 import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.Resource;
 
 /**
  * Jena-based service registry implementation,
  *
  * @author apb@jhu.edu
  */
-public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegistry {
+public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegistry, Updateable {
 
     @Override
     public void setRegistryDelegate(final Registry delegate) {
         super.setRegistryDelegate(delegate);
+    }
+
+    // Index mapping canonical URI to resource URI
+    private final ConcurrentHashMap<URI, URI> canonicalUriMap = new ConcurrentHashMap<>();
+
+    @Override
+    public void update() {
+        final Map<URI, URI> canonical = list().stream()
+                .map(this::getService)
+                .filter(s -> s.canonicalURI() != null)
+                .collect(Collectors.toMap(s -> s.canonicalURI(), s -> s.uri()));
+
+        canonicalUriMap.putAll(canonical);
+
+        canonicalUriMap.keySet().stream()
+                .filter(k -> !canonical.containsKey(k))
+                .forEach(canonicalUriMap::remove);
+    }
+
+    @Override
+    public void update(final URI uri) {
+        // TODO: Optimize
+        this.update();
     }
 
     @Override
@@ -61,14 +92,12 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
                 service));
 
         if (registryURI == null) {
-            return null;
+            throw new ResourceNotFoundException("No service instance registry found for service " + service.uri());
         }
+
+        // TODO: Allow this to be pluggable to different service instance registry implementations
 
         final Model registry = getRegistry(registryURI, service);
-
-        if (!isA(CLASS_LDP_SERVICE_INSTANCE_REGISTRY, registryURI.toString(), registry)) {
-            throw new RuntimeException(String.format("<%s> is not a LdpServiceInstanceRegistry", registryURI));
-        }
 
         return new ServiceInstanceRegistry() {
 
@@ -111,17 +140,34 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
         return new ServiceImpl(uri);
     }
 
+    @Override
+    public Collection<URI> list() {
+
+        // For all resources in the registry, get the URIs of everything that calls itself a Service
+        return super.list().stream()
+                .map(this::get)
+                .map(Util::parse)
+                .flatMap(m -> m.listSubjectsWithProperty(
+                        m.getProperty(RDF_TYPE),
+                        m.getResource(CLASS_SERVICE))
+                        .mapWith(Resource::getURI)
+                        .toSet().stream())
+                .map(URI::create).collect(
+                        Collectors.toSet());
+    }
+
     class ServiceImpl extends WrappingResource implements Service, JenaResource {
 
         final Model model;
 
         ServiceImpl(final URI uri) {
-            super(get(uri));
+            super(get(resourceURI(uri)));
             this.model = parse(this);
         }
 
         @Override
         public URI canonicalURI() {
+
             final List<URI> canonical = objectResourcesOf(uri().toString(), PROP_CANONICAL, model);
 
             return canonical.isEmpty() ? uri() : canonical.get(0);
@@ -149,6 +195,11 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
         } catch (final URISyntaxException e) {
             throw new RuntimeException("Shoud never happen", e);
         }
+    }
+
+    // Try looking in canonical map first
+    private URI resourceURI(final URI uri) {
+        return Optional.ofNullable(canonicalUriMap.get(uri)).orElse(uri);
     }
 
 }

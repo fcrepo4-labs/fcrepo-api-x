@@ -6,6 +6,7 @@
     ldp:membershipResource <>;
     ldp:hasMemberRelation svc:hasServiceInstance;
     ldp:insertedContentRelation ore:describes;
+    ore:describes <#instance>;
     svc:hasServiceInstance <#instance> .
 
 <#instance> a svc:ServiceInstance;

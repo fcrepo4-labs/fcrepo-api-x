@@ -18,8 +18,7 @@
 
 package org.fcrepo.apix.routing.impl;
 
-import static org.fcrepo.apix.routing.impl.RoutingStub.segment;
-import static org.fcrepo.apix.routing.impl.RoutingStub.terminal;
+import static org.fcrepo.apix.routing.Util.append;
 
 import java.net.URI;
 import java.util.List;
@@ -120,13 +119,16 @@ public class ExposedServiceUriAnalyzer implements Updateable {
             }
 
             final String resourcePath = rawPath.substring(0, rawPath.indexOf(matches.get(0)) - 1);
+            final URI exposedServiceURI = append(exposeBaseURI, resourcePath, matches.get(0));
 
-            return new ServiceExposingBinding(endpoints.get(matches.get(0)),
-                    URI.create(String.format("%s/%s",
-                            segment(fcrepoBaseURI), terminal(resourcePath))));
+            return new ServiceExposingBinding(
+                    endpoints.get(matches.get(0)),
+                    append(fcrepoBaseURI, resourcePath),
+                    exposedServiceURI,
+                    requestURI.toString().replace(exposedServiceURI.toString(), ""));
 
         } else {
-            // TODO: Implement other patterns
+            // TODO: Perhaps this should be an exception?
             return null;
         }
     }
@@ -137,11 +139,27 @@ public class ExposedServiceUriAnalyzer implements Updateable {
 
         public URI repositoryResourceURI;
 
+        public URI baseURI;
+
+        public String additionalPath;
+
         /** Create a concrete binding */
-        public ServiceExposingBinding(final Extension extension, final URI resource) {
+        public ServiceExposingBinding(final Extension extension, final URI resource, final URI exposed,
+                final String additionalPath) {
             this.extension = extension;
             this.repositoryResourceURI = resource;
+            this.baseURI = exposed;
+            this.additionalPath = additionalPath;
         }
 
+        /** Get the exposed URI of this binding */
+        public URI getExposedURI() {
+            return baseURI;
+        }
+
+        /** Get additional path segments */
+        public String getAdditionalPath() {
+            return additionalPath;
+        }
     }
 }

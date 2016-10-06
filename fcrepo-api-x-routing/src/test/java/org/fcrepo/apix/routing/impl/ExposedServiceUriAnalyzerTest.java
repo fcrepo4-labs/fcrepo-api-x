@@ -18,8 +18,8 @@
 
 package org.fcrepo.apix.routing.impl;
 
-import static org.fcrepo.apix.routing.impl.RoutingStub.segment;
-import static org.fcrepo.apix.routing.impl.RoutingStub.terminal;
+import static org.fcrepo.apix.routing.Util.segment;
+import static org.fcrepo.apix.routing.Util.terminal;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;

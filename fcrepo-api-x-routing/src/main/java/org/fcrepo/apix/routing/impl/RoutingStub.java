@@ -18,6 +18,9 @@
 
 package org.fcrepo.apix.routing.impl;
 
+import static org.fcrepo.apix.routing.Util.segment;
+import static org.fcrepo.apix.routing.Util.terminal;
+
 import java.net.URI;
 
 import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
@@ -114,14 +117,6 @@ public class RoutingStub implements Routing {
     public URI serviceDocFor(final URI resource) {
         return URI.create(String.format("http://%s:%d/%s/%s", host, port, segment(discoveryPath), terminal(
                 resourcePath(resource))));
-    }
-
-    static String segment(final String s) {
-        return s.replaceFirst("^/", "").replaceFirst("/$", "");
-    }
-
-    static String terminal(final String s) {
-        return s.replaceFirst("^/", "");
     }
 
     @Override

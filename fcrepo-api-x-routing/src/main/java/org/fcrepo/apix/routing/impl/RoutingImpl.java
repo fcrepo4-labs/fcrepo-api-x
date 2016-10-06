@@ -18,8 +18,8 @@
 
 package org.fcrepo.apix.routing.impl;
 
-import static org.fcrepo.apix.routing.impl.RoutingStub.segment;
-import static org.fcrepo.apix.routing.impl.RoutingStub.terminal;
+import static org.fcrepo.apix.routing.Util.segment;
+import static org.fcrepo.apix.routing.Util.terminal;
 
 import java.net.URI;
 import java.util.Collection;
@@ -27,10 +27,12 @@ import java.util.List;
 import java.util.Random;
 
 import org.fcrepo.apix.model.Extension;
+import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.ServiceInstance;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.ServiceDiscovery;
+import org.fcrepo.apix.model.components.ServiceInstanceRegistry;
 import org.fcrepo.apix.model.components.ServiceRegistry;
 import org.fcrepo.apix.routing.impl.ExposedServiceUriAnalyzer.ServiceExposingBinding;
 
@@ -52,13 +54,19 @@ public class RoutingImpl extends RouteBuilder {
 
     public static final String EXECUTION_EXPOSE_MODALITY = "direct:execute_expose";
 
-    public static final String EXPOSING_EXTENSION = "apix.extension.exposing";
+    public static final String EXPOSING_EXTENSION = "CamelApixExposingExtension";
 
-    public static final String REPOSITORY_RESOURCE_URI = "fcrepo.resource";
+    public static final String REPOSITORY_RESOURCE_URI = "Apix-Ldp-Resource";
 
-    public static final String SERVICE_INSTANCE_URI = "setvice_instance_uri";
+    public static final String REPOSITORY_ROOT_URI = "Apix-Ldp-Root";
+
+    public static final String EXPOSED_SERVICE_URI = "Apix-Exposed-Uri";
+
+    public static final String SERVICE_INSTANCE_URI = "CamelApixServiceInstanceUri";
 
     public static final String EXTENSION_NOT_FOUND = "direct:extension_not_found";
+
+    public static final String BINDING = "CamelApixServiceExposureBinding";
 
     private ExposedServiceUriAnalyzer analyzer;
 
@@ -118,12 +126,11 @@ public class RoutingImpl extends RouteBuilder {
                 .otherwise().to(EXECUTION_EXPOSE_MODALITY);
 
         from("jetty:http://{{apix.host}}:{{apix.port}}/{{apix.interceptPath}}?matchOnUriPrefix=true")
-                .routeId("endpoint-intercpt").routeDescription("Endpoint for intercept/proxy to Fedora")
+                .routeId("endpoint-intercept").routeDescription("Endpoint for intercept/proxy to Fedora")
                 .to("jetty:http://{{fcrepo.baseURI}}?bridgeEndpoint=true" +
                         "&throwExceptionOnFailure=false" +
                         "&disableStreamCache=true" +
-                        "preserveHostHeader=true")
-                .setHeader("Link", method(this, "linkRel"));
+                        "preserveHostHeader=true");
 
         from(EXTENSION_NOT_FOUND).id("not-found-extension").routeDescription("Extension not found")
                 .process(e -> e.getOut().setHeader(Exchange.HTTP_RESPONSE_CODE, 404));
@@ -131,31 +138,33 @@ public class RoutingImpl extends RouteBuilder {
         from(EXECUTION_EXPOSE_MODALITY)
                 .routeId("apix-proxy-service-endpoint")
                 .routeDescription("Proxies an exposed service to a service instance")
-                .setHeader("Link").simple("<${headers.CamelApixRegistration}>; rel=\"describedby\"")
                 .process(SELECT_SERVICE_INSTANCE)
-                .setHeader(Exchange.HTTP_URI).header(SERVICE_INSTANCE_URI)
-                .to("jetty://localhost");
+                .setHeader(Exchange.HTTP_PATH).simple("${in.header." + BINDING + ".additionalPath}")
+                .recipientList(simple(
+                        "jetty://${in.header." + SERVICE_INSTANCE_URI + "}" +
+                                "?bridgeEndpoint=true" +
+                                "&preserveHostHeader=true" + "" +
+                                "&throwExceptionOnFailure=false"));
 
-    }
-
-    /**
-     * Get link relation text to the service doc.
-     *
-     * @param ex Camel exchange.
-     * @return link relation text
-     */
-    public String linkRel(final Exchange ex) {
-
-        return "<> rel=\"service\"";
     }
 
     final Processor ANALYZE_URI = (ex -> {
         final ServiceExposingBinding binding = analyzer.match(
-                ex.getIn().getHeader(Exchange.HTTP_URI, URI.class));
+                URI.create(ex.getIn().getHeader(Exchange.HTTP_URL, String.class)));
 
         if (binding != null) {
+            ex.getIn().setHeader(BINDING, binding);
             ex.getIn().setHeader(EXPOSING_EXTENSION, binding.extension);
-            ex.getIn().setHeader(REPOSITORY_RESOURCE_URI, binding.repositoryResourceURI);
+
+            ex.getIn().setHeader(EXPOSED_SERVICE_URI, binding.getExposedURI());
+
+            // resource URI is only conveyed for resource-scope services
+            if (Scope.RESOURCE.equals(binding.extension.exposed().scope())) {
+                ex.getIn().setHeader(REPOSITORY_RESOURCE_URI, binding.repositoryResourceURI);
+            } else if (Scope.REPOSITORY.equals(binding.extension.exposed().scope())) {
+                ex.getIn().setHeader(REPOSITORY_RESOURCE_URI, binding.repositoryResourceURI);
+            }
+
         }
 
     });
@@ -178,10 +187,14 @@ public class RoutingImpl extends RouteBuilder {
                 "Exposed services must have exactly one consumed service in extension: " +
                         extension.uri());
 
-        // TODO This is a little ugly. Do we really want to allow multiple service instances, each one with multiple
-        // endpoints?
-        final ServiceInstance instance = oneOf(
-                serviceRegistry.instancesOf(serviceRegistry.getService(consumedServiceURI)).instances(),
+        final ServiceInstanceRegistry instanceRegistry = serviceRegistry.instancesOf(serviceRegistry.getService(
+                consumedServiceURI));
+
+        if (instanceRegistry == null) {
+            throw new ResourceNotFoundException("No instance registry for service " + consumedServiceURI);
+        }
+
+        final ServiceInstance instance = oneOf(instanceRegistry.instances(),
                 "There must be at least one service instance for " + consumedServiceURI);
 
         ex.getIn().setHeader(SERVICE_INSTANCE_URI, oneOf(

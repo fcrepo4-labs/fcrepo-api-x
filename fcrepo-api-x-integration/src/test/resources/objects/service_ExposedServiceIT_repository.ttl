@@ -4,7 +4,7 @@
 <> ore:describes <#instances> .
 
 <#service> a svc:Service;
-    svc:canonical <http://example.org/ExposedServiceIT/ResourceScopedService>;
+    svc:canonical <http://example.org/ExposedServiceIT/RepositoryScopedService>;
     svc:hasServiceInstanceRegistry <#instanceRegistry> .
 
 <#instanceRegistry> a svc:ServiceInstanceRegistry;

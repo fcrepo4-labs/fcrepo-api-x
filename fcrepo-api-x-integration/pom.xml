@@ -180,6 +180,13 @@
     </dependency>
 
     <dependency>
+      <groupId>org.fcrepo.apix</groupId>
+      <artifactId>fcrepo-api-x-routing</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.camel</groupId>
       <artifactId>camel-test</artifactId>
       <version>${camel.version}</version>

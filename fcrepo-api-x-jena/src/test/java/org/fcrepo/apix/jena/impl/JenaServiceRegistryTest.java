@@ -22,11 +22,13 @@ import static org.fcrepo.apix.jena.Util.rdfResource;
 import static org.fcrepo.apix.jena.Util.triple;
 import static org.fcrepo.apix.model.Ontologies.RDF_TYPE;
 import static org.fcrepo.apix.model.Ontologies.Service.CLASS_LDP_SERVICE_INSTANCE_REGISTRY;
+import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_CANONICAL;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_ENDPOINT;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_SERVICE_INSTANCE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_SERVICE_INSTANCE_REGISTRY;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -36,6 +38,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.ServiceInstance;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.Registry;
@@ -68,7 +71,7 @@ public class JenaServiceRegistryTest {
 
     // Verifies that if a canonical URI is specified, it's returned.
     @Test
-    public void canonicalTest() {
+    public void canonicalPresenceTest() {
         final String CANONICAL = "http://example.org/canonical/service";
         final String SERVICE = "http://example.org/service#uri";
         final URI SERVICE_URI = URI.create(SERVICE);
@@ -80,7 +83,7 @@ public class JenaServiceRegistryTest {
 
     // If there's no canonical, then the service URI is implicitly canonical
     @Test
-    public void noCanonicalTest() {
+    public void noCanonicalPresentTest() {
         final String CANONICAL = "http://example.org/canonical/service";
         final String SERVICE = "http://example.org/service#uri";
         final URI SERVICE_URI = URI.create(SERVICE);
@@ -88,6 +91,25 @@ public class JenaServiceRegistryTest {
                 rdfResource(SERVICE, triple(SERVICE, "http://example.org/NOT_CANONICAL", CANONICAL)));
 
         assertEquals(SERVICE, toTest.getService(SERVICE_URI).canonicalURI().toString());
+    }
+
+    @Test
+    public void canonicalLookupTest() {
+        final String CANONICAL = "http://example.org/canonical/service";
+        final String SERVICE = "http://repository.local/service#uri";
+        final URI SERVICE_URI = URI.create(SERVICE);
+        when(delegate.get(SERVICE_URI)).thenReturn(
+                rdfResource(SERVICE, triple(SERVICE, RDF_TYPE, CLASS_SERVICE) +
+                        triple(SERVICE, PROP_CANONICAL, CANONICAL)));
+        when(delegate.list()).thenReturn(Arrays.asList(SERVICE_URI));
+
+        toTest.update();
+
+        final Service svc = toTest.getService(URI.create(CANONICAL));
+
+        assertNotNull(svc);
+        assertEquals(svc.canonicalURI().toString(), CANONICAL);
+        assertEquals(svc.uri(), SERVICE_URI);
     }
 
     // Verifies that 'instancesOf' returns services instances for LdpServiceInstanceRegistries

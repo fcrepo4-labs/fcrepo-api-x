@@ -124,8 +124,12 @@ public interface KarafIT {
             // We need to tell Karaf to set any system properties we need.
             // This code is run prior to executing Karaf, the tests themselves are run in Karaf, in a separate
             // VM.
+            editConfigurationFilePut("etc/system.properties", "apix.dynamic.test.port", System.getProperty(
+                    "apix.dynamic.test.port")),
             editConfigurationFilePut("etc/system.properties", "fcrepo.dynamic.test.port", System.getProperty(
                     "fcrepo.dynamic.test.port")),
+            editConfigurationFilePut("etc/system.properties", "services.dynamic.test.port", System.getProperty(
+                    "services.dynamic.test.port")),
             editConfigurationFilePut("etc/system.properties", "project.basedir", System.getProperty(
                     "project.basedir")),
             editConfigurationFilePut("/etc/system.properties", "fcrepo.cxtPath", System.getProperty(
