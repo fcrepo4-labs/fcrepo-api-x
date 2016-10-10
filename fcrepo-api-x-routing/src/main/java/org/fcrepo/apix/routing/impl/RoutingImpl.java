@@ -33,6 +33,7 @@ import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.ServiceInstance;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ResourceNotFoundException;
+import org.fcrepo.apix.model.components.Routing;
 import org.fcrepo.apix.model.components.ServiceDiscovery;
 import org.fcrepo.apix.model.components.ServiceInstanceRegistry;
 import org.fcrepo.apix.model.components.ServiceRegistry;
@@ -70,6 +71,8 @@ public class RoutingImpl extends RouteBuilder {
 
     private ServiceRegistry serviceRegistry;
 
+    private Routing routing;
+
     /**
      * Set Fedora's baseURI.
      *
@@ -106,6 +109,15 @@ public class RoutingImpl extends RouteBuilder {
         this.analyzer = analyzer;
     }
 
+    /**
+     * Set the routing.
+     *
+     * @param routing routing.
+     */
+    public void setRouting(final Routing routing) {
+        this.routing = routing;
+    }
+
     @Override
     public void configure() throws Exception {
 
@@ -123,10 +135,12 @@ public class RoutingImpl extends RouteBuilder {
 
         from("jetty:http://{{apix.host}}:{{apix.port}}/{{apix.interceptPath}}?matchOnUriPrefix=true")
                 .routeId("endpoint-intercept").routeDescription("Endpoint for intercept/proxy to Fedora")
-                .to("jetty:http://{{fcrepo.baseURI}}?bridgeEndpoint=true" +
+                .to("jetty:" + fcrepoBaseURI +
+                        "?bridgeEndpoint=true" +
                         "&throwExceptionOnFailure=false" +
                         "&disableStreamCache=true" +
-                        "preserveHostHeader=true");
+                        "&preserveHostHeader=true")
+                .process(ADD_SERVICE_HEADER);
 
         from(EXTENSION_NOT_FOUND).id("not-found-extension").routeDescription("Extension not found")
                 .process(e -> e.getOut().setHeader(Exchange.HTTP_RESPONSE_CODE, 404));
@@ -191,6 +205,12 @@ public class RoutingImpl extends RouteBuilder {
                 instance.endpoints(),
                 "There must be at least one endpoint for instances of " + consumedServiceURI));
 
+    });
+
+    final Processor ADD_SERVICE_HEADER = (ex -> {
+        ex.getIn().setHeader("Link",
+                String.format("<%s>; rel=\"service\"", routing.serviceDocFor(
+                        ex.getIn().getHeader(Exchange.HTTP_PATH, String.class))));
     });
 
     private static <T> T exactlyOne(final Collection<T> of, final String errMsg) {

@@ -45,7 +45,7 @@ public abstract class Util {
      * @return Normalized segmen
      */
     public static String terminal(final String path) {
-        return path.replaceFirst("^/", "");
+        return path.equals("") ? "/" : path.replaceFirst("^/", "");
     }
 
     /**

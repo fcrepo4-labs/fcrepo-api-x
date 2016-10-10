@@ -56,6 +56,22 @@ public interface Routing {
     public URI serviceDocFor(URI resource);
 
     /**
+     * Get the endpoint for the service doc of a given resource path.
+     *
+     * @param resourcePath repository resource path
+     * @return URI that resolves to the service document.
+     */
+    public URI serviceDocFor(String resourcePath);
+
+    /**
+     * Get the intercept (proxy) URI for a given resource.
+     *
+     * @param resource Fedora resource URI
+     * @return URI that routes through the intercept(proxy) endpoint.
+     */
+    public URI interceptUriFor(URI resource);
+
+    /**
      * Get the identifying path compoment for the given fedora resource URI.
      *
      * @param resourceURI the resource URI.
