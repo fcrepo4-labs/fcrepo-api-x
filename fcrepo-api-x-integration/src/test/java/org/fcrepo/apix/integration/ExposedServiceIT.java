@@ -26,8 +26,11 @@ import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE_INSTANCE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_ENDPOINT;
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_EXPOSED_SERVICE_URI;
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_RESOURCE_URI;
+import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_ROOT_URI;
 import static org.fcrepo.apix.routing.Util.append;
+import static org.fcrepo.apix.routing.Util.segment;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
@@ -164,6 +167,43 @@ public class ExposedServiceIT implements KarafIT {
         // Create the object
         final URI object = postFromTestResource("objects/object_ExposedServiceIT.ttl", objectContainer);
 
+        commonTests(object);
+
+        // Make sure the repository resource URI is relayed to our service, in the expected header.
+        assertEquals(object.toString(), requestToService.getHeader(HTTP_HEADER_REPOSITORY_RESOURCE_URI));
+    }
+
+    @Test
+    public void repositoryScopeTest() throws Exception {
+
+        // Register the extension
+        extensionRegistry.put(testResource(
+                "objects/extension_ExposedServiceIT_repository.ttl"));
+
+        // Register the service
+        final URI serviceURI = serviceRegistry.put(testResource("objects/service_ExposedServiceIT_repository.ttl"));
+
+        // Register the test service instance endpoint (run by the camel route in this IT)
+        client.patch(serviceURI).body(
+                IOUtils.toInputStream(
+                        String.format("INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
+                                PROP_HAS_ENDPOINT, serviceEndpoint, CLASS_SERVICE_INSTANCE), "UTF-8")).perform();
+
+        // Create the object
+        final URI object = postFromTestResource("objects/object_ExposedServiceIT_repository.ttl", objectContainer);
+
+        commonTests(object);
+
+        // Make sure the repository resource URI is null for repository-scoped services.
+        assertNull(requestToService.getHeader(HTTP_HEADER_REPOSITORY_RESOURCE_URI));
+
+        // Make sure repository root URI is set
+        assertEquals(segment(fcrepoBaseURI), segment(requestToService.getHeader(HTTP_HEADER_REPOSITORY_ROOT_URI,
+                String.class)));
+    }
+
+    private void commonTests(final URI object) throws Exception {
+
         // Update all services
         bundleContext.getServiceReferences(Updateable.class, null).stream()
                 .map(bundleContext::getService)
@@ -219,8 +259,5 @@ public class ExposedServiceIT implements KarafIT {
 
         // Make sure the exposed service URI relayed to our service, in the expected header.
         assertEquals(exposedServiceEndpoint.toString(), requestToService.getHeader(HTTP_HEADER_EXPOSED_SERVICE_URI));
-
-        // Make sure the repository resource URI is relayed to our service, in the expected header.
-        assertEquals(object.toString(), requestToService.getHeader(HTTP_HEADER_REPOSITORY_RESOURCE_URI));
     }
 }

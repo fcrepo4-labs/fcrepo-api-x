@@ -19,6 +19,7 @@
 package org.fcrepo.apix.routing.impl;
 
 import static org.fcrepo.apix.routing.Util.append;
+import static org.fcrepo.apix.routing.Util.segment;
 
 import java.net.URI;
 import java.util.List;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
+import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.Updateable;
 
 /**
@@ -81,7 +83,7 @@ public class ExposedServiceUriAnalyzer implements Updateable {
         final Map<String, Extension> exts = extensions.list().stream()
                 .map(extensions::getExtension)
                 .filter(Extension::isExposing)
-                .filter(e -> e.exposed().scope().equals(Scope.RESOURCE))
+                .filter(e -> e.exposed().scope() != Scope.EXTERNAL)
                 .collect(Collectors.toMap((e -> e.exposed().exposedAt().getPath()), e -> e));
 
         endpoints.putAll(exts);
@@ -100,8 +102,8 @@ public class ExposedServiceUriAnalyzer implements Updateable {
     /**
      * Match a request URI to a concrete extension binding.
      *
-     * @param requestURI
-     * @return
+     * @param requestURI a request URI
+     * @return Service exposing extension binding
      */
     public ServiceExposingBinding match(final URI requestURI) {
 
@@ -118,18 +120,26 @@ public class ExposedServiceUriAnalyzer implements Updateable {
                         requestURI, matches));
             }
 
-            final String resourcePath = rawPath.substring(0, rawPath.indexOf(matches.get(0)) - 1);
-            final URI exposedServiceURI = append(exposeBaseURI, resourcePath, matches.get(0));
+            final String exposeSegment = matches.get(0);
+            final Extension extension = endpoints.get(exposeSegment);
+
+            final String resourcePath = Scope.RESOURCE.equals(extension.exposed().scope())
+                    ? rawPath.substring(0, rawPath.indexOf(exposeSegment) - 1)
+                    : null;
+
+            final URI exposedServiceURI = Scope.RESOURCE.equals(extension.exposed().scope())
+                    ? append(exposeBaseURI, resourcePath, exposeSegment)
+                    : URI.create(String.format("%s/%s", segment(exposeBaseURI), exposeSegment));
 
             return new ServiceExposingBinding(
-                    endpoints.get(matches.get(0)),
-                    append(fcrepoBaseURI, resourcePath),
+                    extension,
+                    resourcePath != null ? append(fcrepoBaseURI, resourcePath) : null,
                     exposedServiceURI,
                     requestURI.toString().replace(exposedServiceURI.toString(), ""));
 
         } else {
-            // TODO: Perhaps this should be an exception?
-            return null;
+            throw new ResourceNotFoundException(String.format(
+                    "Request URI '%s' does not route to any exposed services", requestURI));
         }
     }
 
@@ -143,7 +153,14 @@ public class ExposedServiceUriAnalyzer implements Updateable {
 
         public String additionalPath;
 
-        /** Create a concrete binding */
+        /**
+         * Create a concrete binding
+         *
+         * @param extension The extension
+         * @param resource The relevant resource, or null if none
+         * @param exposed URI the extension exposes the service at
+         * @param additionalPath Additional path segments from request.
+         */
         public ServiceExposingBinding(final Extension extension, final URI resource, final URI exposed,
                 final String additionalPath) {
             this.extension = extension;
@@ -152,12 +169,20 @@ public class ExposedServiceUriAnalyzer implements Updateable {
             this.additionalPath = additionalPath;
         }
 
-        /** Get the exposed URI of this binding */
+        /**
+         * Get the exposed URI of this binding
+         *
+         * @return Exposed URI.
+         */
         public URI getExposedURI() {
             return baseURI;
         }
 
-        /** Get additional path segments */
+        /**
+         * Get additional path segments.
+         *
+         * @return Additional segments
+         */
         public String getAdditionalPath() {
             return additionalPath;
         }

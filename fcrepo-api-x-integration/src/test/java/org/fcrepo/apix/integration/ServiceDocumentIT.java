@@ -38,7 +38,6 @@ import org.fcrepo.apix.model.components.ServiceDiscovery;
 
 import org.apache.jena.rdf.model.Model;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -85,7 +84,6 @@ public class ServiceDocumentIT implements KarafIT {
 
     // Verifies that an object with no services or extensions produces an empty document
     @Test
-    @Ignore
     public void emptyServiceDocumentTest() throws Exception {
         try (WebResource resource = discovery.getServiceDocumentFor(serviceContainer,
                 "text/turtle")) {
@@ -101,7 +99,6 @@ public class ServiceDocumentIT implements KarafIT {
     }
 
     @Test
-    @Ignore
     public void exposedExternalServiceTest() throws Exception {
         // Add an extension that binds to our object
         // Now put in an extension that binds to a class from that ontology

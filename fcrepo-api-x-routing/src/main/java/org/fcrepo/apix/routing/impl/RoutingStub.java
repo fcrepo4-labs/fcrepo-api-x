@@ -101,7 +101,7 @@ public class RoutingStub implements Routing {
         case EXTERNAL:
             return spec.exposedAt();
         case REPOSITORY:
-            return URI.create(String.format("http://%s:%s/%s/%s", host, port,
+            return URI.create(String.format("http://%s:%s/%s//%s", host, port,
                     segment(exposePath),
                     terminal(spec.exposedAt().getPath())));
         case RESOURCE:

@@ -215,7 +215,7 @@ public interface KarafIT {
      * configuration files for jena registry impls.
      * </p>
      *
-     * @throws Exception
+     * @throws Exception when something goes wrong
      */
     public static void createContainers() throws Exception {
 

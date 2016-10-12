@@ -119,7 +119,7 @@ public class LdpContainerRegistry implements Registry {
                             containerId, null), false);
                     found = true;
                 }
-            } catch (final IOException e) {
+            } catch (final Exception e) {
                 LOG.info("Failed initializing underlying container, re-trying..", e.getMessage());
                 try {
                     Thread.sleep(1000);

@@ -18,8 +18,10 @@
 
 package org.fcrepo.apix.routing.impl;
 
-import static org.fcrepo.apix.routing.Util.segment;
-import static org.fcrepo.apix.routing.Util.terminal;
+import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_EXPOSED_SERVICE_URI;
+import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_RESOURCE_URI;
+import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_ROOT_URI;
+import static org.fcrepo.apix.routing.Util.append;
 
 import java.net.URI;
 import java.util.Collection;
@@ -55,12 +57,6 @@ public class RoutingImpl extends RouteBuilder {
     public static final String EXECUTION_EXPOSE_MODALITY = "direct:execute_expose";
 
     public static final String EXPOSING_EXTENSION = "CamelApixExposingExtension";
-
-    public static final String REPOSITORY_RESOURCE_URI = "Apix-Ldp-Resource";
-
-    public static final String REPOSITORY_ROOT_URI = "Apix-Ldp-Root";
-
-    public static final String EXPOSED_SERVICE_URI = "Apix-Exposed-Uri";
 
     public static final String SERVICE_INSTANCE_URI = "CamelApixServiceInstanceUri";
 
@@ -152,27 +148,21 @@ public class RoutingImpl extends RouteBuilder {
         final ServiceExposingBinding binding = analyzer.match(
                 URI.create(ex.getIn().getHeader(Exchange.HTTP_URL, String.class)));
 
-        if (binding != null) {
-            ex.getIn().setHeader(BINDING, binding);
-            ex.getIn().setHeader(EXPOSING_EXTENSION, binding.extension);
+        ex.getIn().setHeader(BINDING, binding);
+        ex.getIn().setHeader(EXPOSING_EXTENSION, binding.extension);
+        ex.getIn().setHeader(HTTP_HEADER_EXPOSED_SERVICE_URI, binding.getExposedURI());
 
-            ex.getIn().setHeader(EXPOSED_SERVICE_URI, binding.getExposedURI());
-
-            // resource URI is only conveyed for resource-scope services
-            if (Scope.RESOURCE.equals(binding.extension.exposed().scope())) {
-                ex.getIn().setHeader(REPOSITORY_RESOURCE_URI, binding.repositoryResourceURI);
-            } else if (Scope.REPOSITORY.equals(binding.extension.exposed().scope())) {
-                ex.getIn().setHeader(REPOSITORY_RESOURCE_URI, binding.repositoryResourceURI);
-            }
-
+        // resource URI is only conveyed for resource-scope services
+        if (Scope.RESOURCE.equals(binding.extension.exposed().scope())) {
+            ex.getIn().setHeader(HTTP_HEADER_REPOSITORY_RESOURCE_URI, binding.repositoryResourceURI);
+        } else {
+            ex.getIn().setHeader(HTTP_HEADER_REPOSITORY_ROOT_URI, fcrepoBaseURI);
         }
-
     });
 
     final Processor WRITE_SERVICE_DOC = (ex -> {
         final String accept = ex.getIn().getHeader("Accept", "text/turtle", String.class).split("\\s*,\\s*")[0];
-        final URI resource = URI.create(String.format("%s/%s", segment(fcrepoBaseURI.toString()), terminal(ex.getIn()
-                .getHeader(Exchange.HTTP_PATH, String.class))));
+        final URI resource = append(fcrepoBaseURI, ex.getIn().getHeader(Exchange.HTTP_PATH));
 
         try (WebResource serviceDoc = serviceDiscovery.getServiceDocumentFor(resource, accept)) {
             ex.getOut().setBody(IOUtils.toByteArray(serviceDoc.representation()));

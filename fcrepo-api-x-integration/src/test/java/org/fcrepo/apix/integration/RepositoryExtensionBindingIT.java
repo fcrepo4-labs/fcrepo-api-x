@@ -39,7 +39,6 @@ import org.fcrepo.apix.model.components.Registry;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -134,7 +133,6 @@ public class RepositoryExtensionBindingIT implements KarafIT {
     // Our ontology defines a class for ORE aggregation ordered with proxies, and our extension binds
     // to objects of that class. So we should see that our object has our extensiion bound to it.
     @Test
-    @Ignore
     public void inferredBindingTest() throws Exception {
         final URI objectURI = postFromTestResource("objects/object_with_ordered_collection.ttl", objectContainer);
 
@@ -149,7 +147,6 @@ public class RepositoryExtensionBindingIT implements KarafIT {
     // here, we never import ORE or PCDM in the extension, so API-X do the inferences needed in order to bind to the
     // extension. Modifying the object with an explicitly matching rdf:type should allow binding to occur.
     @Test
-    @Ignore
     public void noInferredBindingTest() throws Exception {
 
         // Put in an ontology that doesn't import ORE or PCDM
