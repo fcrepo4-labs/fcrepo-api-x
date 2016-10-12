@@ -1,0 +1,171 @@
+/*
+ * Licensed to DuraSpace under one or more contributor license agreements.
+ * See the NOTICE file distributed with this work for additional information
+ * regarding copyright ownership.
+ *
+ * DuraSpace licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package org.fcrepo.apix.routing.impl;
+
+import static org.fcrepo.apix.routing.Util.append;
+import static org.fcrepo.apix.routing.Util.interceptingServiceInstance;
+
+import java.net.URI;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.stream.Collectors;
+
+import org.fcrepo.apix.model.Extension;
+import org.fcrepo.apix.model.components.ExtensionBinding;
+import org.fcrepo.apix.model.components.ExtensionRegistry;
+import org.fcrepo.apix.model.components.ServiceRegistry;
+import org.fcrepo.apix.model.components.Updateable;
+
+import org.apache.camel.Exchange;
+import org.apache.camel.Processor;
+import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.processor.aggregate.AggregationStrategy;
+import org.eclipse.jetty.util.ConcurrentHashSet;
+
+/**
+ * @author apb@jhu.edu
+ */
+public class GenericInterceptExecution extends RouteBuilder implements Updateable {
+
+    public static final String ROUTE_INTERCEPT_INCOMING = "direct:intercept_incoming";
+
+    public static final String ROUTE_INTERCEPT_OUTGOING = "direct:intercept_incoming";
+
+    public static final String ROUTE_INVOKE_SERVICE = "direct:intercept_invoke";
+
+    public static final String HEADER_INVOKE_STATUS = "CamelApixInvokeStatusCode";
+
+    public static final String HEADER_SERVICE_ENDPOINTS = "CamelApixServiceEndpoints";
+
+    private ExtensionBinding binding;
+
+    private ExtensionRegistry extensionRegistry;
+
+    private ServiceRegistry serviceRegistry;
+
+    private URI fcrepoBaseURI;
+
+    /**
+     * Set the extension binding.
+     *
+     * @param binding Extension binding.
+     */
+    public void setExtensionBinding(final ExtensionBinding binding) {
+        this.binding = binding;
+    }
+
+    /**
+     * Set the extension registry.
+     *
+     * @param registry The extension registry.
+     */
+    public void setExtensionRegistry(final ExtensionRegistry registry) {
+        this.extensionRegistry = registry;
+    }
+
+    /**
+     * Set the service registry.
+     *
+     * @param registry The registry.
+     */
+    public void setServiceRegistry(final ServiceRegistry registry) {
+        this.serviceRegistry = registry;
+    }
+
+    /**
+     * Set Fedora's baseURI.
+     *
+     * @param uri the base URI.
+     */
+    public void setFcrepoBaseURI(final URI uri) {
+        this.fcrepoBaseURI = uri;
+    }
+
+    private final Collection<Extension> extensions = new ConcurrentHashSet<>();
+
+    @Override
+    public void update() {
+        final List<Extension> found = extensionRegistry.list().stream()
+                .map(extensionRegistry::getExtension)
+                .filter(Extension::isIntercepting)
+                .collect(Collectors.toList());
+
+        extensions.addAll(found);
+        extensions.removeIf(x -> !found.contains(x));
+    }
+
+    @Override
+    public void update(final URI inResponseTo) {
+        // TODO: optimize later
+        update();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void configure() throws Exception {
+
+        from(ROUTE_INTERCEPT_INCOMING).id("intercept-incoming").process(GET_INCOMING_ENDPOINTS)
+                .loopDoWhile(simple("${in.headers.CamelApixServiceEndpoints.size} > 0"))
+                .enrich(ROUTE_INVOKE_SERVICE, HANDLE_RESPONSE)
+                .end();
+
+        from(ROUTE_INVOKE_SERVICE).id("intercept-invoke")
+                .process(e -> e.getIn().setHeader(
+                        Exchange.HTTP_URI,
+                        e.getIn().getHeader(HEADER_SERVICE_ENDPOINTS, Queue.class).remove()))
+                .to("jetty://localhost?throwExceptionOnFailure=false");
+    }
+
+    final Processor GET_INCOMING_ENDPOINTS = (ex -> {
+        final URI fedoraResource = append(fcrepoBaseURI, ex.getIn().getHeader(Exchange.HTTP_PATH));
+
+        ex.getIn().setHeader(HEADER_SERVICE_ENDPOINTS,
+                new LinkedList<>(binding.getExtensionsFor(fedoraResource, extensions).stream()
+                        .map(e -> interceptingServiceInstance(e, serviceRegistry))
+                        .collect(Collectors.toList())));
+    });
+
+    final AggregationStrategy HANDLE_RESPONSE = ((req, resp) -> {
+
+        final Map<String, Object> respHeaders = resp.getIn().getHeaders().entrySet().stream()
+                .filter(e -> !e.getKey().toString().startsWith("Camel"))
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+
+        if (resp.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class) > 299) {
+            req.getIn().getHeader(HEADER_SERVICE_ENDPOINTS, Queue.class).clear();
+            req.getOut().setHeaders(respHeaders);
+            req.getOut().setHeader(Exchange.HTTP_RESPONSE_CODE, resp.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE));
+            req.getOut().setBody(resp.getIn().getBody());
+        }
+
+        req.getOut().setHeader(HEADER_INVOKE_STATUS, resp.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE));
+
+        if (resp.getIn().getBody() != null) {
+            req.getOut().setBody(resp.getIn().getBody());
+        }
+
+        return req;
+    });
+
+}

@@ -22,6 +22,9 @@ import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_EXPOSED_SERVI
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_RESOURCE_URI;
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_ROOT_URI;
 import static org.fcrepo.apix.routing.Util.append;
+import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.HEADER_INVOKE_STATUS;
+import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.ROUTE_INTERCEPT_INCOMING;
+import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.ROUTE_INTERCEPT_OUTGOING;
 
 import java.net.URI;
 import java.util.Collection;
@@ -135,12 +138,17 @@ public class RoutingImpl extends RouteBuilder {
 
         from("jetty:http://{{apix.host}}:{{apix.port}}/{{apix.interceptPath}}?matchOnUriPrefix=true")
                 .routeId("endpoint-intercept").routeDescription("Endpoint for intercept/proxy to Fedora")
+                .to(ROUTE_INTERCEPT_INCOMING)
+                .choice().when(e -> !e.getIn().getHeaders().containsKey(
+                        HEADER_INVOKE_STATUS) || e.getIn().getHeader(
+                                HEADER_INVOKE_STATUS, Integer.class) < 300)
                 .to("jetty:" + fcrepoBaseURI +
                         "?bridgeEndpoint=true" +
                         "&throwExceptionOnFailure=false" +
                         "&disableStreamCache=true" +
                         "&preserveHostHeader=true")
-                .process(ADD_SERVICE_HEADER);
+                .process(ADD_SERVICE_HEADER)
+                .to(ROUTE_INTERCEPT_OUTGOING);
 
         from(EXTENSION_NOT_FOUND).id("not-found-extension").routeDescription("Extension not found")
                 .process(e -> e.getOut().setHeader(Exchange.HTTP_RESPONSE_CODE, 404));

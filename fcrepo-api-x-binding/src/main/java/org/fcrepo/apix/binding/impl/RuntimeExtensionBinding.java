@@ -102,11 +102,16 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
     @Override
     public Collection<Extension> getExtensionsFor(final WebResource resource) {
 
-        final Collection<Extension> extensions = extensionRegistry.getExtensions();
+        return getExtensionsFor(resource, extensionRegistry.getExtensions());
+    }
+
+    @Override
+    public Collection<Extension> getExtensionsFor(final WebResource resource,
+            final Collection<Extension> extensions) {
 
         final Set<URI> rdfTypes = extensions.stream()
                 .map(Extension::getResource)
-                .peek(extURI -> LOG.debug("Examinining the ontology closure of extension {}", extURI))
+                .peek(r -> LOG.debug("Examinining the ontology closure of extension {}", r.uri()))
                 .map(ontologySvc::parseOntology)
                 .flatMap(o -> ontologySvc.inferClasses(resource.uri(), resource, o).stream())
                 .peek(rdfType -> LOG.debug("Instance {} is of class {}", resource.uri(), rdfType))
@@ -118,6 +123,16 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
                 .peek(e -> LOG.debug("Extension {} bound to instance {} via {}", e.uri(), resource.uri(), e
                         .bindingClass()))
                 .collect(Collectors.toList());
+    }
+
+    /** Just does a dumb dereference and lookup */
+    @Override
+    public Collection<Extension> getExtensionsFor(final URI resourceURI, final Collection<Extension> from) {
+        try (WebResource resource = registry.get(resourceURI)) {
+            return getExtensionsFor(resource, from);
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /** Just does a dumb dereference and lookup */

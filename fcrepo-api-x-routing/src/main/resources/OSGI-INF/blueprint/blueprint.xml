@@ -56,10 +56,17 @@
     <property name="routing" ref="routingStub" />
   </bean>
 
+  <bean id="interceptImpl" class="org.fcrepo.apix.routing.impl.GenericInterceptExecution">
+    <property name="fcrepoBaseURI" value="${fcrepo.baseURI}" />
+    <property name="extensionBinding" ref="extensionBinding" />
+    <property name="serviceRegistry" ref="serviceRegistry" />
+    <property name="extensionRegistry" ref="extensionRegistry" />
+  </bean>
+
   <bean id="serviceDiscoveryImpl" class="org.fcrepo.apix.routing.impl.ServiceDocumentGenerator">
     <property name="extensionBinding" ref="extensionBinding" />
-    <property name="routing" ref="routingStub" />
     <property name="relativeURIs" value="${discovery.relativeURIs}" />
+    <property name="routing" ref="routingStub" />
   </bean>
 
   <service id="routing" interface="org.fcrepo.apix.model.components.Routing"
@@ -71,7 +78,11 @@
   <service id="uriAnalyzerUpdate" interface="org.fcrepo.apix.model.components.Updateable"
     ref="exposedServiceUriAnalyzer" />
 
+  <service id="interceptUpdate" interface="org.fcrepo.apix.model.components.Updateable"
+    ref="interceptImpl" />
+
   <camel:camelContext>
     <camel:routeBuilder ref="routingImpl" />
+    <camel:routeBuilder ref="interceptImpl" />
   </camel:camelContext>
 </blueprint>
