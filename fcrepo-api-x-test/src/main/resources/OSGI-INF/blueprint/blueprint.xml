@@ -14,7 +14,7 @@
 
   <service interface="org.apache.camel.CamelContext" ref="testContext">
     <service-properties>
-      <entry key="role" value="testy" />
+      <entry key="role" value="test" />
     </service-properties>
   </service>
 </blueprint>
