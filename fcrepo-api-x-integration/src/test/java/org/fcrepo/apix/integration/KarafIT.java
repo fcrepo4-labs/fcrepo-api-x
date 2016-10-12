@@ -111,7 +111,7 @@ public interface KarafIT {
             mavenBundle(fcrepoClient),
 
             karafDistributionConfiguration().frameworkUrl(karafUrl)
-                    .unpackDirectory(new File("target", "exam")),
+                    .unpackDirectory(new File("target", "exam")).useDeployFolder(false),
             // KarafDistributionOption.configureConsole().ignoreLocalConsole(),
             logLevel(LogLevel.WARN),
 
