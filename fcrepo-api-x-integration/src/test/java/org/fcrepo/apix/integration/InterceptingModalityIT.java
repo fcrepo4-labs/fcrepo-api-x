@@ -18,18 +18,23 @@
 
 package org.fcrepo.apix.integration;
 
+import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.HTTP_HEADER_MODALITY;
+import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.MODALITY_INTERCEPT_INCOMING;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.net.URI;
 
 import javax.inject.Inject;
 
-import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.Routing;
 import org.fcrepo.client.FcrepoClient;
+import org.fcrepo.client.FcrepoOperationFailedException;
 import org.fcrepo.client.FcrepoResponse;
 
 import org.apache.camel.Exchange;
+import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -45,9 +50,6 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
 
     @Inject
     Routing routing;
-
-    @Inject
-    ExtensionRegistry extensionRegistry;
 
     @Rule
     public TestName name = new TestName();
@@ -101,6 +103,58 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
 
         assertEquals(RESPONSE_CODE, response.getStatusCode());
         assertEquals(LOCATION, response.getHeaderValue("Location"));
+    }
+
+    @Test
+    public void incomingInterceptHeaderTest() throws Exception {
+        registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
+        registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
+
+        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+
+        // Have our extension service set an implausible If-Match header for the request
+        onServiceRequest(ex -> {
+            if (MODALITY_INTERCEPT_INCOMING.equals(ex.getIn().getHeader(HTTP_HEADER_MODALITY))) {
+                ex.getOut().setHeader("If-Match", "shall not match");
+            }
+        });
+
+        final URI object = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
+                objectContainer_intercept);
+
+        try {
+            client.get(object).perform();
+            fail("Should have failed on If-Match mismatch");
+        } catch (final FcrepoOperationFailedException e) {
+            // expected
+        }
+    }
+
+    @Test
+    public void incomingRequestBodyTest() throws Exception {
+        registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
+        registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
+
+        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+
+        final String TYPE = "test:" + name.getMethodName();
+
+        // Give our request a specific body
+        onServiceRequest(ex -> {
+            if (MODALITY_INTERCEPT_INCOMING.equals(ex.getIn().getHeader(HTTP_HEADER_MODALITY))) {
+                ex.getOut().setBody(String.format("<> a <%s> .", TYPE));
+            }
+        });
+
+        final URI container = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
+                objectContainer_intercept);
+
+        final URI newObject = FcrepoClient.client().build().post(container)
+                .body(IOUtils.toInputStream("<> a test:nothing .", "UTF-8"), "text/turtle")
+                .perform().getLocation();
+
+        assertTrue(IOUtils.toString(client.get(newObject).perform().getBody(), "UTF-8").contains(TYPE));
+
     }
 
 }

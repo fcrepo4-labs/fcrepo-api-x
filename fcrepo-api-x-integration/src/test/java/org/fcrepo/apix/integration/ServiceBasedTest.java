@@ -36,6 +36,7 @@ import org.fcrepo.apix.model.components.Updateable;
 
 import org.apache.camel.CamelContext;
 import org.apache.camel.Message;
+import org.apache.camel.Processor;
 import org.apache.camel.RoutesBuilder;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultMessage;
@@ -72,6 +73,8 @@ public abstract class ServiceBasedTest implements KarafIT {
 
     protected final Message requestToService = new DefaultMessage();
 
+    private Processor processFromTest;
+
     @Override
     public List<Option> additionalKarafConfig() {
         final MavenArtifactUrlReference testBundle = maven()
@@ -85,6 +88,10 @@ public abstract class ServiceBasedTest implements KarafIT {
     @Before
     public void start() throws Exception {
         cxt.addRoutes(createRouteBuilder());
+    }
+
+    protected void onServiceRequest(final Processor process) {
+        processFromTest = process;
     }
 
     protected URI registerService(final WebResource service) throws Exception {
@@ -103,6 +110,7 @@ public abstract class ServiceBasedTest implements KarafIT {
     }
 
     protected URI registerExtension(final WebResource extension) throws Exception {
+
         final URI extensionURI = extensionRegistry.put(extension);
 
         update();
@@ -117,7 +125,7 @@ public abstract class ServiceBasedTest implements KarafIT {
                 .forEach(Updateable::update);
     }
 
-    protected RoutesBuilder createRouteBuilder() throws Exception {
+    private RoutesBuilder createRouteBuilder() throws Exception {
 
         return new RouteBuilder() {
 
@@ -128,6 +136,11 @@ public abstract class ServiceBasedTest implements KarafIT {
                                 .process(ex -> {
                                     ex.getOut().copyFrom(responseFromService);
                                     requestToService.copyFrom(ex.getIn());
+
+                                    if (processFromTest != null) {
+                                        processFromTest.process(ex);
+                                    }
+
                                 });
             }
         };

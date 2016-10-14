@@ -35,11 +35,11 @@ public interface Routing {
     /** Repository or resource-scoped exposed service URI */
     public static final String HTTP_HEADER_EXPOSED_SERVICE_URI = "Apix-Exposed-Uri";
 
-    /** Reppsitory root (baseURI) */
+    /** Repository root (baseURI) */
     public static final String HTTP_HEADER_REPOSITORY_ROOT_URI = "Apix-Ldp-Root";
 
     /**
-     * Get the endpoint for the service exposed by the given extension on the given resource.
+     * /** Get the endpoint for the service exposed by the given extension on the given resource.
      *
      * @param spec specification for exposing a service
      * @param onResource the resource on which the service is exposed.

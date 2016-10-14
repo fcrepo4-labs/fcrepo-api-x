@@ -216,6 +216,7 @@ public class RoutingImpl extends RouteBuilder {
     });
 
     final Processor ADD_SERVICE_HEADER = (ex -> {
+
         ex.getIn().setHeader("Link",
                 String.format("<%s>; rel=\"service\"", routing.serviceDocFor(
                         ex.getIn().getHeader(Exchange.HTTP_PATH, String.class))));

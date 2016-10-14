@@ -48,13 +48,19 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
 
     public static final String ROUTE_INTERCEPT_INCOMING = "direct:intercept_incoming";
 
-    public static final String ROUTE_INTERCEPT_OUTGOING = "direct:intercept_incoming";
+    public static final String ROUTE_INTERCEPT_OUTGOING = "direct:intercept_outgoing";
 
     public static final String ROUTE_INVOKE_SERVICE = "direct:intercept_invoke";
 
     public static final String HEADER_INVOKE_STATUS = "CamelApixInvokeStatusCode";
 
     public static final String HEADER_SERVICE_ENDPOINTS = "CamelApixServiceEndpoints";
+
+    public static final String HTTP_HEADER_MODALITY = "Apix-Modality";
+
+    public static final String MODALITY_INTERCEPT_INCOMING = "intercept; incoming";
+
+    public static final String MODALITY_INTERCEPT_OUTGOING = "intercept; outgoing";
 
     private ExtensionBinding binding;
 
@@ -127,8 +133,15 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
 
         from(ROUTE_INTERCEPT_INCOMING).id("intercept-incoming").process(GET_INCOMING_ENDPOINTS)
                 .loopDoWhile(simple("${in.headers.CamelApixServiceEndpoints.size} > 0"))
-                .enrich(ROUTE_INVOKE_SERVICE, HANDLE_RESPONSE)
+                .setHeader(HTTP_HEADER_MODALITY).constant(MODALITY_INTERCEPT_INCOMING)
+                .enrich(ROUTE_INVOKE_SERVICE, INCOMING_HANDLE_RESPONSE)
                 .end();
+
+        from(ROUTE_INTERCEPT_OUTGOING).id("intercept-outgoing").process(GET_INCOMING_ENDPOINTS);
+        // .loopDoWhile(simple("${in.headers.CamelApixServiceEndpoints.size} > 0"))
+        // .setHeader(HTTP_HEADER_MODALITY).constant(MODALITY_INTERCEPT_OUTGOING)
+        // .enrich(ROUTE_INVOKE_SERVICE, OUTGOING_HANDLE_RESPONSE)
+        // .end();
 
         from(ROUTE_INVOKE_SERVICE).id("intercept-invoke")
                 .process(e -> e.getIn().setHeader(
@@ -146,23 +159,54 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
                         .collect(Collectors.toList())));
     });
 
-    final AggregationStrategy HANDLE_RESPONSE = ((req, resp) -> {
+    // Handle the response from an extension invocation for
+    final AggregationStrategy INCOMING_HANDLE_RESPONSE = ((req, resp) -> {
 
         final Map<String, Object> respHeaders = resp.getIn().getHeaders().entrySet().stream()
                 .filter(e -> !e.getKey().toString().startsWith("Camel"))
                 .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
 
         if (resp.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class) > 299) {
+            // Error/redirect path. An extension has given a non-200 code. This entire message will be
+            // returned directly to the client as a response.
             req.getIn().getHeader(HEADER_SERVICE_ENDPOINTS, Queue.class).clear();
             req.getOut().setHeaders(respHeaders);
             req.getOut().setHeader(Exchange.HTTP_RESPONSE_CODE, resp.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE));
             req.getOut().setBody(resp.getIn().getBody());
+        } else {
+            // Success path. Headers will be merged with the current request,
+            // and forwarded to the next destination (Fedora, or extension)
+            req.getOut().setHeaders(req.getIn().getHeaders());
+            req.getOut().getHeaders().putAll(respHeaders);
         }
 
         req.getOut().setHeader(HEADER_INVOKE_STATUS, resp.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE));
 
         if (resp.getIn().getBody() != null) {
             req.getOut().setBody(resp.getIn().getBody());
+        }
+
+        return req;
+    });
+
+    // Handle the response from an extension invocation for
+    final AggregationStrategy OUTGOING_HANDLE_RESPONSE = ((req, resp) -> {
+
+        final Map<String, Object> respHeaders = resp.getIn().getHeaders().entrySet().stream()
+                .filter(e -> !e.getKey().toString().startsWith("Camel"))
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+
+        req.getOut().setHeaders(req.getIn().getHeaders());
+        req.getOut().setBody(req.getIn().getBody());
+
+        if (resp.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class) < 299) {
+            // and forwarded to the next destination (Fedora, or extension)
+            req.getOut().setHeaders(req.getIn().getHeaders());
+            req.getOut().getHeaders().putAll(respHeaders);
+
+            if (resp.getIn().getBody() != null) {
+                req.getOut().setBody(resp.getIn().getBody());
+            }
         }
 
         return req;

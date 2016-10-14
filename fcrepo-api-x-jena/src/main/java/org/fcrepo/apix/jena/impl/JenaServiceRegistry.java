@@ -67,10 +67,13 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     @Override
     public void update() {
+
+        // Map canonical URI to service resource. If multiple service resources
+        // indicate the same canonical URI, pick one arbitrarily.
         final Map<URI, URI> canonical = list().stream()
                 .map(this::getService)
                 .filter(s -> s.canonicalURI() != null)
-                .collect(Collectors.toMap(s -> s.canonicalURI(), s -> s.uri()));
+                .collect(Collectors.toMap(s -> s.canonicalURI(), s -> s.uri(), (a, b) -> a));
 
         canonicalUriMap.putAll(canonical);
 
