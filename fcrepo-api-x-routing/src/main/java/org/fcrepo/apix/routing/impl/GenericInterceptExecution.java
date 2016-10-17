@@ -21,6 +21,9 @@ package org.fcrepo.apix.routing.impl;
 import static org.fcrepo.apix.routing.Util.append;
 import static org.fcrepo.apix.routing.Util.interceptingServiceInstance;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -40,6 +43,8 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
 import org.eclipse.jetty.util.ConcurrentHashSet;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author apb@jhu.edu
@@ -61,6 +66,8 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
     public static final String MODALITY_INTERCEPT_INCOMING = "intercept; incoming";
 
     public static final String MODALITY_INTERCEPT_OUTGOING = "intercept; outgoing";
+
+    private static final Logger LOG = LoggerFactory.getLogger(GenericInterceptExecution.class);
 
     private ExtensionBinding binding;
 
@@ -137,11 +144,11 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
                 .enrich(ROUTE_INVOKE_SERVICE, INCOMING_HANDLE_RESPONSE)
                 .end();
 
-        from(ROUTE_INTERCEPT_OUTGOING).id("intercept-outgoing").process(GET_INCOMING_ENDPOINTS);
-        // .loopDoWhile(simple("${in.headers.CamelApixServiceEndpoints.size} > 0"))
-        // .setHeader(HTTP_HEADER_MODALITY).constant(MODALITY_INTERCEPT_OUTGOING)
-        // .enrich(ROUTE_INVOKE_SERVICE, OUTGOING_HANDLE_RESPONSE)
-        // .end();
+        from(ROUTE_INTERCEPT_OUTGOING).id("intercept-outgoing").process(GET_INCOMING_ENDPOINTS)
+                .loopDoWhile(simple("${in.headers.CamelApixServiceEndpoints.size} > 0"))
+                .setHeader(HTTP_HEADER_MODALITY).constant(MODALITY_INTERCEPT_OUTGOING)
+                .enrich(ROUTE_INVOKE_SERVICE, OUTGOING_HANDLE_RESPONSE)
+                .end();
 
         from(ROUTE_INVOKE_SERVICE).id("intercept-invoke")
                 .process(e -> e.getIn().setHeader(
@@ -178,13 +185,15 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
             // and forwarded to the next destination (Fedora, or extension)
             req.getOut().setHeaders(req.getIn().getHeaders());
             req.getOut().getHeaders().putAll(respHeaders);
+
+            final PeekInputStream serviceResponse = new PeekInputStream(resp.getIn().getBody(InputStream.class));
+
+            if (serviceResponse.hasContent()) {
+                req.getOut().setBody(serviceResponse);
+            }
         }
 
         req.getOut().setHeader(HEADER_INVOKE_STATUS, resp.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE));
-
-        if (resp.getIn().getBody() != null) {
-            req.getOut().setBody(resp.getIn().getBody());
-        }
 
         return req;
     });
@@ -200,16 +209,40 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
         req.getOut().setBody(req.getIn().getBody());
 
         if (resp.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class) < 299) {
-            // and forwarded to the next destination (Fedora, or extension)
-            req.getOut().setHeaders(req.getIn().getHeaders());
             req.getOut().getHeaders().putAll(respHeaders);
 
-            if (resp.getIn().getBody() != null) {
-                req.getOut().setBody(resp.getIn().getBody());
+            final PeekInputStream responseBody = new PeekInputStream(resp.getIn().getBody(InputStream.class));
+
+            if (responseBody.hasContent()) {
+                req.getOut().setBody(responseBody);
             }
+        } else {
+            // I think we can only log this, we can't abort the request at this point.
+            LOG.warn("Outgoing intercept:  Response from {} returned {}", resp.getIn().getHeader(Exchange.HTTP_URI),
+                    resp.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE));
         }
 
         return req;
     });
 
+    private static class PeekInputStream extends PushbackInputStream {
+
+        public PeekInputStream(final InputStream in) {
+            super(in);
+        }
+
+        public boolean hasContent() {
+            try {
+                final int next = read();
+                if (next > -1) {
+                    unread(next);
+                    return true;
+                }
+
+                return false;
+            } catch (final IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
 }

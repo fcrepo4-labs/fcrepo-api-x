@@ -138,10 +138,14 @@ Finally, the service responds with an image:
 
 This execution engine supports the intercepting modality.  It operates by proxying a request or response to a service instance, and inspecting the response.  Like the generic endpoint proxy, it adds a header `Apix-Ldp-Resource` to the request before sending it to the consumed service instance.
 
-* If the response is a 2xx code with no body, the extension will pass the request unmodified.   Headers will be merged.
-* If the response is a 2xx code with a body,   the body of the request will be substituted with the response body.  Headers will be merged.
-* If the response is a redirect, it will be followed.
-* If the response an error (4xx+), that response will immediately be returned to the client.
+* If the response  from a given service is a 2xx code with no body, the extension will pass the request unmodified.   Headers will be merged.
+* If the response from a given service is a 2xx code with a body,   the body of the request will be substituted with the response body.  Headers will be merged.
+* If the response from a given service is an error or redirect (3xx+), that response will immediately be returned to the client.
+
+Responses from the repository are also intercepted and passed to the extension under similar rules:
+
+* If the response from a given service is a 2xx, headers will be merged, and the body will be replaced, if present
+* If the response from a given service is an error or redirect, it is ignored.
 
 <h4><a id="intercepting-example" href="#intercepting-example" class="anchor">Intercepting Example</a></h4>
 

@@ -20,6 +20,7 @@ package org.fcrepo.apix.integration;
 
 import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.HTTP_HEADER_MODALITY;
 import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.MODALITY_INTERCEPT_INCOMING;
+import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.MODALITY_INTERCEPT_OUTGOING;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -47,6 +48,8 @@ import org.ops4j.pax.exam.junit.PaxExam;
  */
 @RunWith(PaxExam.class)
 public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT {
+
+    final String TEST_OBJECT_TYPE = "test:InterceptingModalityIT#object";
 
     @Inject
     Routing routing;
@@ -131,6 +134,27 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
     }
 
     @Test
+    public void incomingInterceptHeaderResponseTest() throws Exception {
+        registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
+        registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
+
+        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+
+        // Have our extension service set an implausible If-Match header for the request
+        onServiceRequest(ex -> {
+            if (MODALITY_INTERCEPT_INCOMING.equals(ex.getIn().getHeader(HTTP_HEADER_MODALITY))) {
+                ex.getOut().setHeader("foo", "bar");
+            }
+        });
+
+        final URI object = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
+                objectContainer_intercept);
+
+        final FcrepoResponse response = client.get(object).accept("application/n-triples").perform();
+        assertTrue(IOUtils.toString(response.getBody(), "UTF-8").contains(TEST_OBJECT_TYPE));
+    }
+
+    @Test
     public void incomingRequestBodyTest() throws Exception {
         registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
         registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
@@ -154,6 +178,83 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
                 .perform().getLocation();
 
         assertTrue(IOUtils.toString(client.get(newObject).perform().getBody(), "UTF-8").contains(TYPE));
+
+    }
+
+    @Test
+    public void outgoingHeaderTest() throws Exception {
+        registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
+        registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
+
+        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+        final String TEST_HEADER = "testHeader";
+        final String TEST_HEADER_VALUE = "testHeaderValue";
+
+        // Give our request a specific body
+        onServiceRequest(ex -> {
+            if (MODALITY_INTERCEPT_OUTGOING.equals(ex.getIn().getHeader(HTTP_HEADER_MODALITY))) {
+                ex.getOut().setHeader(TEST_HEADER, TEST_HEADER_VALUE);
+            }
+        });
+
+        final URI object = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
+                objectContainer_intercept);
+
+        final FcrepoResponse response = client.get(object).accept("application/n-triples").perform();
+
+        assertEquals(TEST_HEADER_VALUE, response.getHeaderValue(TEST_HEADER));
+        assertTrue(IOUtils.toString(response.getBody(), "UTF-8").contains(TEST_OBJECT_TYPE));
+    }
+
+    @Test
+    public void outgoingBodyTest() throws Exception {
+        registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
+        registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
+
+        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+
+        final String BODY = "theBody";
+
+        // Give our request a specific body
+        onServiceRequest(ex -> {
+            if (MODALITY_INTERCEPT_OUTGOING.equals(ex.getIn().getHeader(HTTP_HEADER_MODALITY))) {
+                ex.getOut().setBody(BODY);
+            }
+        });
+
+        final URI object = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
+                objectContainer_intercept);
+
+        final FcrepoResponse response = client.get(object).perform();
+
+        assertTrue(IOUtils.toString(response.getBody(), "UTF-8").equals(BODY));
+
+    }
+
+    @Test
+    public void outgoingErrorTest() throws Exception {
+        registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
+        registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
+
+        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+
+        // Give our request a specific body
+        onServiceRequest(ex -> {
+            if (MODALITY_INTERCEPT_OUTGOING.equals(ex.getIn().getHeader(HTTP_HEADER_MODALITY))) {
+                ex.getOut().setHeader(Exchange.HTTP_RESPONSE_CODE, 418);
+            }
+        });
+
+        final URI object = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
+                objectContainer_intercept);
+
+        final FcrepoResponse response = client.get(object).accept("application/n-triples").perform();
+
+        // Response code should be Fedora's 200
+        assertEquals(200, response.getStatusCode());
+
+        // Body should be returned as normal
+        assertTrue(IOUtils.toString(response.getBody(), "UTF-8").contains(TEST_OBJECT_TYPE));
 
     }
 
