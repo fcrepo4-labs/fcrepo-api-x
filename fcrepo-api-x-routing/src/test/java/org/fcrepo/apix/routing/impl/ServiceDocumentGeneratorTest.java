@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.discovery.impl;
+package org.fcrepo.apix.routing.impl;
 
 import static org.fcrepo.apix.jena.Util.parse;
 import static org.fcrepo.apix.jena.Util.query;
@@ -44,9 +44,7 @@ import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
 import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionBinding;
-import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.Routing;
-import org.fcrepo.apix.model.components.ServiceRegistry;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
@@ -71,9 +69,6 @@ public class ServiceDocumentGeneratorTest {
 
     @Mock
     ExtensionBinding binding;
-
-    @Mock
-    WebResource theResource;
 
     @Mock
     Extension EXPOSING_EXTENSION_RESOURCE_SCOPED;
@@ -102,9 +97,6 @@ public class ServiceDocumentGeneratorTest {
     @Mock
     Extension INTERCEPTING_EXTENSION;
 
-    @Mock
-    ServiceRegistry SERVICE_REGISTRY;
-
     final URI RESOURCE_URI = URI.create("http://example.org/resource");
 
     final URI RESOURCE_SCOPE_SERVICE_URI = URI.create("http://example.org/services/resourceScoped");
@@ -123,7 +115,6 @@ public class ServiceDocumentGeneratorTest {
 
     @Before
     public void setUp() {
-        when(theResource.uri()).thenReturn(RESOURCE_URI);
 
         when(EXPOSING_EXTENSION_REPOSITORY_SCOPED.isExposing()).thenReturn(true);
         when(EXPOSING_EXTENSION_RESOURCE_SCOPED.isExposing()).thenReturn(true);
@@ -134,19 +125,12 @@ public class ServiceDocumentGeneratorTest {
         when(EXPOSING_EXTENSION_RESOURCE_SCOPED.exposed()).thenReturn(RESOURCE_SCOPE_SPEC);
         when(EXPOSING_EXTENSION_UNREGISTERED.exposed()).thenReturn(UNREGISTERED_SERVICE_SPEC);
 
-        when(REPOSITORY_SCOPE_SPEC.exposed()).thenReturn(REPOSITORY_SCOPE_SERVICE_URI);
+        when(REPOSITORY_SCOPE_SPEC.exposedService()).thenReturn(REPOSITORY_SCOPE_SERVICE_URI);
         when(REPOSITORY_SCOPE_SPEC.scope()).thenReturn(Scope.REPOSITORY);
-        when(RESOURCE_SCOPE_SPEC.exposed()).thenReturn(RESOURCE_SCOPE_SERVICE_URI);
+        when(RESOURCE_SCOPE_SPEC.exposedService()).thenReturn(RESOURCE_SCOPE_SERVICE_URI);
         when(RESOURCE_SCOPE_SPEC.scope()).thenReturn(Scope.RESOURCE);
         when(UNREGISTERED_SERVICE_SPEC.scope()).thenReturn(Scope.RESOURCE);
-        when(UNREGISTERED_SERVICE_SPEC.exposed()).thenReturn(UNREGISTERED_SERVICE_URI);
-
-        when(REPOSITORY_SCOPE_SERVICE.canonicalURI()).thenReturn(REPOSITORY_SCOPE_SERVICE_URI);
-        when(RESOURCE_SCOPE_SERVICE.canonicalURI()).thenReturn(RESOURCE_SCOPE_SERVICE_URI);
-
-        when(SERVICE_REGISTRY.getService(REPOSITORY_SCOPE_SERVICE_URI)).thenReturn(REPOSITORY_SCOPE_SERVICE);
-        when(SERVICE_REGISTRY.getService(RESOURCE_SCOPE_SERVICE_URI)).thenReturn(RESOURCE_SCOPE_SERVICE);
-        when(SERVICE_REGISTRY.getService(UNREGISTERED_SERVICE_URI)).thenThrow(new ResourceNotFoundException("NO"));
+        when(UNREGISTERED_SERVICE_SPEC.exposedService()).thenReturn(UNREGISTERED_SERVICE_URI);
 
         when(routing.endpointFor(REPOSITORY_SCOPE_SPEC, RESOURCE_URI)).thenReturn(REPOSITORY_SCOPE_ENDPOINT_URI);
         when(routing.endpointFor(RESOURCE_SCOPE_SPEC, RESOURCE_URI)).thenReturn(RESOURCE_SCOPE_ENDPOINT_URI);
@@ -155,17 +139,16 @@ public class ServiceDocumentGeneratorTest {
 
         toTest.setRouting(routing);
         toTest.setExtensionBinding(binding);
-        toTest.setServiceRegistry(SERVICE_REGISTRY);
     }
 
     // Verifies that resource-scoped services are a function of the resource, and those that aren't don't have it.
     @Test
     public void functionOfTest() throws Exception {
-        when(binding.getExtensionsFor(theResource)).thenReturn(
+        when(binding.getExtensionsFor(RESOURCE_URI)).thenReturn(
                 Arrays.asList(EXPOSING_EXTENSION_RESOURCE_SCOPED, EXPOSING_EXTENSION_UNREGISTERED,
                         EXPOSING_EXTENSION_REPOSITORY_SCOPED));
 
-        final Model doc = parse(toTest.getServiceDocumentFor(theResource, "text/turtle"));
+        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle"));
 
         final String sparql = "CONSTRUCT { ?service <test:/rel> ?serviceInstance . } WHERE { " +
                 String.format("?serviceInstance <%s> <%s> . ", PROP_IS_FUNCTION_OF, RESOURCE_URI) +
@@ -185,12 +168,12 @@ public class ServiceDocumentGeneratorTest {
         final String SERVICE_DOC_URI = "test:/doc";
         when(routing.serviceDocFor(RESOURCE_URI)).thenReturn(URI.create(SERVICE_DOC_URI));
 
-        final Model doc = parse(toTest.getServiceDocumentFor(theResource, "text/turtle"));
+        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle"));
 
         assertTrue(doc.contains(
                 doc.getResource(SERVICE_DOC_URI),
                 doc.getProperty(PROP_IS_SERVICE_DOCUMENT_FOR),
-                doc.getResource(theResource.uri().toString())));
+                doc.getResource(RESOURCE_URI.toString())));
     }
 
     @Test
@@ -199,12 +182,12 @@ public class ServiceDocumentGeneratorTest {
         when(routing.serviceDocFor(RESOURCE_URI)).thenReturn(URI.create(SERVICE_DOC_URI));
         toTest.setRelativeURIs(true);
 
-        final Model doc = parse(toTest.getServiceDocumentFor(theResource, "text/turtle"));
+        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle"));
 
         assertTrue(doc.contains(
                 null,
                 doc.getProperty(PROP_IS_SERVICE_DOCUMENT_FOR),
-                doc.getResource(theResource.uri().toString())));
+                doc.getResource(RESOURCE_URI.toString())));
 
         final List<String> subjects = doc.listResourcesWithProperty(doc.getProperty(PROP_IS_SERVICE_DOCUMENT_FOR))
                 .mapWith(
@@ -217,11 +200,11 @@ public class ServiceDocumentGeneratorTest {
     // and that it's 'isServiceInstanceOf' the right service.
     @Test
     public void serviceInstanceOfTest() {
-        when(binding.getExtensionsFor(theResource)).thenReturn(
+        when(binding.getExtensionsFor(RESOURCE_URI)).thenReturn(
                 Arrays.asList(EXPOSING_EXTENSION_RESOURCE_SCOPED, EXPOSING_EXTENSION_UNREGISTERED,
                         EXPOSING_EXTENSION_REPOSITORY_SCOPED, INTERCEPTING_EXTENSION));
 
-        final Model doc = parse(toTest.getServiceDocumentFor(theResource, "text/turtle"));
+        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle"));
 
         final String sparql = "CONSTRUCT { ?service <test:/isPresentFromInstance> ?serviceInstance . } WHERE { " +
                 String.format("?serviceInstance <%s> <%s> . ", RDF_TYPE, CLASS_SERVICE_INSTANCE) +
@@ -240,11 +223,11 @@ public class ServiceDocumentGeneratorTest {
     // Verify that service instances point to their URI.
     @Test
     public void endpointURITest() {
-        when(binding.getExtensionsFor(theResource)).thenReturn(
+        when(binding.getExtensionsFor(RESOURCE_URI)).thenReturn(
                 Arrays.asList(EXPOSING_EXTENSION_RESOURCE_SCOPED, EXPOSING_EXTENSION_UNREGISTERED,
                         EXPOSING_EXTENSION_REPOSITORY_SCOPED, INTERCEPTING_EXTENSION));
 
-        final Model doc = parse(toTest.getServiceDocumentFor(theResource, "text/turtle"));
+        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle"));
 
         final String sparql = "CONSTRUCT { ?endpoint <test:/endpointFor> ?serviceInstance . } WHERE { " +
                 String.format("?serviceInstance <%s> <%s> . ", RDF_TYPE, CLASS_SERVICE_INSTANCE) +
@@ -262,14 +245,14 @@ public class ServiceDocumentGeneratorTest {
     // Verify that a specific serialization can be produced by specifying content type
     @Test
     public void contentTypeTest() throws Exception {
-        final WebResource serviceDoc = toTest.getServiceDocumentFor(theResource, "application/rdf+xml");
+        final WebResource serviceDoc = toTest.getServiceDocumentFor(RESOURCE_URI, "application/rdf+xml");
 
         final Model doc = ModelFactory.createDefaultModel().read(serviceDoc.representation(), Lang.RDFXML.getName());
 
         assertTrue(doc.contains(
                 null,
                 doc.getProperty(PROP_IS_SERVICE_DOCUMENT_FOR),
-                doc.getResource(theResource.uri().toString())));
+                doc.getResource(RESOURCE_URI.toString())));
 
     }
 
@@ -277,8 +260,8 @@ public class ServiceDocumentGeneratorTest {
     @Test
     public void emptyRegistriesTest() {
 
-        when(binding.getExtensionsFor(theResource)).thenReturn(new ArrayList<>());
+        when(binding.getExtensionsFor(RESOURCE_URI)).thenReturn(new ArrayList<>());
 
-        toTest.getServiceDocumentFor(theResource, "text/turtle");
+        toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle");
     }
 }

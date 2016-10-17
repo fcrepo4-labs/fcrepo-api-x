@@ -8,6 +8,6 @@
     ore:describes <#service> .
 
 <#service> a svc:Service;
-    svc:canonical <http://example.org/ThumbnailService> .
+    svc:canonical <CANONICAL_SERVICE_URI> .
 
     

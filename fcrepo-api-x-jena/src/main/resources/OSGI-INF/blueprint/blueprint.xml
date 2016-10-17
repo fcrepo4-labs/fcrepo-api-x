@@ -91,4 +91,7 @@
   <service id="jenaServiceRegistry" interface="org.fcrepo.apix.model.components.ServiceRegistry"
     ref="jenaServiceRegistryImpl" />
 
+  <service id="jenaServiceRegistryUpdater"
+    interface="org.fcrepo.apix.model.components.Updateable" ref="jenaServiceRegistryImpl" />
+
 </blueprint>

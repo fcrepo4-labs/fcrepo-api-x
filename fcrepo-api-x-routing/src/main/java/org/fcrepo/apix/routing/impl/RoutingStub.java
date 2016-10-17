@@ -18,30 +18,116 @@
 
 package org.fcrepo.apix.routing.impl;
 
+import static org.fcrepo.apix.routing.Util.segment;
+import static org.fcrepo.apix.routing.Util.terminal;
+
 import java.net.URI;
 
 import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
+import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.Routing;
 
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-
 /**
- * Stub/placeholder Routing implementation that does nothing.
- *
  * @author apb@jhu.edu
  */
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RoutingStub implements Routing {
+
+    private String host;
+
+    private int port;
+
+    private String discoveryPath;
+
+    private String exposePath;
+
+    private URI fcrepoBaseURI;
+
+    /**
+     * Set the API-X host.
+     *
+     * @param host IP or dns name
+     */
+    public void setHost(final String host) {
+        this.host = host;
+    }
+
+    /**
+     * Set the API-X port.
+     *
+     * @param port port number.
+     */
+    public void setPort(final int port) {
+        this.port = port;
+    }
+
+    /**
+     * Set the API-X service path.
+     * <p>
+     * Used for providing access to service document resources, as in
+     * <code>http://${apix.host}:${apix.port}/${apix.svcPath}/path/to/object</code>
+     * </p>
+     *
+     * @param path The path segment.
+     */
+    public void setDiscoveryPath(final String path) {
+        this.discoveryPath = path;
+    }
+
+    /**
+     * Set Fedora's baseURI.
+     *
+     * @param uri the base URI.
+     */
+    public void setFcrepoBaseURI(final URI uri) {
+        this.fcrepoBaseURI = uri;
+    }
+
+    /**
+     * Set the API-X Service Exposure path.
+     * <p>
+     * This establishes a baseURI for exposed services;
+     * <code>http://${apix.host}:${apix.port}/${apix.svcPath}/path/to/object/${exposedAt}</code>
+     * </p>
+     *
+     * @param path The path segment.
+     */
+    public void setExposePath(final String path) {
+        this.exposePath = path;
+    }
 
     @Override
     public URI endpointFor(final ServiceExposureSpec spec, final URI onResource) {
-        return URI.create("test:/endpoint" + onResource.getPath());
+        switch (spec.scope()) {
+        case EXTERNAL:
+            return spec.exposedAt();
+        case REPOSITORY:
+            return URI.create(String.format("http://%s:%s/%s//%s", host, port,
+                    segment(exposePath),
+                    terminal(spec.exposedAt().getPath())));
+        case RESOURCE:
+            return URI.create(String.format("http://%s:%s/%s/%s/%s", host, port, segment(exposePath),
+                    segment(resourcePath(onResource)),
+                    terminal(spec.exposedAt().getPath())));
+        default:
+            throw new RuntimeException("Unknown service exposure scope " + spec.scope());
+        }
     }
 
     @Override
     public URI serviceDocFor(final URI resource) {
-        return URI.create("test:/serviceDoc" + resource.getPath());
+        return URI.create(String.format("http://%s:%d/%s/%s", host, port, segment(discoveryPath), terminal(
+                resourcePath(resource))));
+    }
+
+    @Override
+    public String resourcePath(final URI resourceURI) {
+
+        if (!resourceURI.toString().startsWith(fcrepoBaseURI.toString())) {
+            throw new ResourceNotFoundException(String.format("Resource URI %s is not prefixed by base URI %s",
+                    resourceURI,
+                    fcrepoBaseURI));
+        }
+        return "/" + fcrepoBaseURI.relativize(resourceURI).getPath();
     }
 
 }

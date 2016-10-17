@@ -29,6 +29,15 @@ import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
  */
 public interface Routing {
 
+    /** Fedora repository resource relevant to a resource-scoped exposed service */
+    public static final String HTTP_HEADER_REPOSITORY_RESOURCE_URI = "Apix-Ldp-Resource";
+
+    /** Repository or resource-scoped exposed service URI */
+    public static final String HTTP_HEADER_EXPOSED_SERVICE_URI = "Apix-Exposed-Uri";
+
+    /** Reppsitory root (baseURI) */
+    public static final String HTTP_HEADER_REPOSITORY_ROOT_URI = "Apix-Ldp-Root";
+
     /**
      * Get the endpoint for the service exposed by the given extension on the given resource.
      *
@@ -45,5 +54,15 @@ public interface Routing {
      * @return URI that resolves to the service document.
      */
     public URI serviceDocFor(URI resource);
+
+    /**
+     * Get the identifying path compoment for the given fedora resource URI.
+     *
+     * @param resourceURI the resource URI.
+     * @return absolute path of the resource.
+     * @throws ResourceNotFoundException if the resource URI is syntactically incorrect (e.g has a different base URI
+     *         from the configured Fedora instance, etc).
+     */
+    public String resourcePath(URI resourceURI);
 
 }

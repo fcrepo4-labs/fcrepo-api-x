@@ -28,7 +28,7 @@
 
 
   <service id="httpClient-default-service" ref="httpClient-default"
-    auto-export="all-classes">
+    interface="org.apache.http.impl.client.CloseableHttpClient">
     <service-properties>
       <entry key="role" value="registry-default" />
     </service-properties>

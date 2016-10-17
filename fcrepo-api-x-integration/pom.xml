@@ -17,6 +17,7 @@
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-failsafe-plugin</artifactId>
+        <!-- This is intentional, due to a bug in 2.19.x -->
         <version>2.18.1</version>
         <executions>
           <execution>
@@ -28,11 +29,12 @@
         </executions>
         <configuration>
           <systemPropertyVariables>
+            <apix.dynamic.test.port>${apix.dynamic.test.port}</apix.dynamic.test.port>
             <pax.exam.karaf.version>${karaf.version}</pax.exam.karaf.version>
             <fcrepo.dynamic.test.port>${fcrepo.dynamic.test.port}</fcrepo.dynamic.test.port>
             <fcrepo.cxtPath>${fcrepo.cxtPath}</fcrepo.cxtPath>
-            <karaf.dynamic.test.port>${karaf.dynamic.test.port}</karaf.dynamic.test.port>
             <project.basedir>${project.basedir}</project.basedir>
+            <services.dynamic.test.port>${services.dynamic.test.port}</services.dynamic.test.port>
           </systemPropertyVariables>
         </configuration>
       </plugin>
@@ -55,11 +57,11 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
-        <version>1.12</version>
         <configuration>
           <portNames>
+            <portName>apix.dynamic.test.port</portName>
             <portName>fcrepo.dynamic.test.port</portName>
-            <portName>karaf.dynamic.test.port</portName>
+            <portName>services.dynamic.test.port</portName>
           </portNames>
         </configuration>
         <executions>
@@ -143,9 +145,24 @@
     </dependency>
 
     <dependency>
+      <groupId>org.apache.camel.karaf</groupId>
+      <artifactId>apache-camel</artifactId>
+      <version>${camel.version}</version>
+      <classifier>features</classifier>
+      <type>xml</type>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.apache.httpcomponents</groupId>
       <artifactId>httpclient-osgi</artifactId>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.fcrepo.apix</groupId>
+      <artifactId>fcrepo-api-x-test</artifactId>
+      <version>${project.version}</version>
     </dependency>
 
     <dependency>
@@ -159,6 +176,20 @@
       <groupId>org.fcrepo.apix</groupId>
       <artifactId>fcrepo-api-x-jena</artifactId>
       <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.fcrepo.apix</groupId>
+      <artifactId>fcrepo-api-x-routing</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.camel</groupId>
+      <artifactId>camel-test</artifactId>
+      <version>${camel.version}</version>
       <scope>test</scope>
     </dependency>
 
@@ -218,6 +249,12 @@
       <artifactId>org.osgi.core</artifactId>
       <version>${osgi.version}</version>
       <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.felix</groupId>
+      <artifactId>org.apache.felix.framework</artifactId>
+      <version>5.4.0</version>
     </dependency>
 
     <dependency>

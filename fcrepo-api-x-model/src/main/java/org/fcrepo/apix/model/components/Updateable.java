@@ -20,22 +20,30 @@ package org.fcrepo.apix.model.components;
 
 import java.net.URI;
 
-import org.fcrepo.apix.model.WebResource;
-
 /**
- * Service discovery component
+ * Component that can update its internal state in response to external changes.
+ * <p>
+ * External changes include updates to repository objects.
+ * </p>
  *
  * @author apb@jhu.edu
  */
-public interface ServiceDiscovery {
+public interface Updateable {
 
     /**
-     * Produce a service document for the given resource
-     *
-     * @param resource A repository resource URI
-     * @param contentType Desired media type, or null if any serialization is acceptable.
-     * @return Serialized service document
+     * Update internal state, in whatever manner is appropriate.
      */
-    WebResource getServiceDocumentFor(URI resource, String contentType);
+    void update();
+
+    /**
+     * Update internal state in response to changes to the given resource.
+     * <p>
+     * Given the identity of a resource that mat have changed, an implementation may decide if and how to update
+     * itself.
+     * </p>
+     *
+     * @param inResponseTo URI of some web resource.
+     */
+    void update(URI inResponseTo);
 
 }

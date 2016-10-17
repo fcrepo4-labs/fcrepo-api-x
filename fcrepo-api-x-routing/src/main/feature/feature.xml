@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0"
+  name="fcrepo-api-x-routing">
+  <repository>mvn:org.apache.camel.karaf/apache-camel/${camel.version}/xml/features</repository>
+  <feature name="fcrepo-api-x-routing" description="fcrepo-api-x-routing"
+    version="${project.version}">
+    <feature version="${camel.version}">camel-blueprint</feature>
+    <feature version="${camel.version}">camel-jetty</feature>  
+  </feature>
+</features>
