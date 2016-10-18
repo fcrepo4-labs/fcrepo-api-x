@@ -114,7 +114,7 @@ public interface KarafIT {
             karafDistributionConfiguration().frameworkUrl(karafUrl)
                     .unpackDirectory(new File("target", "exam")).useDeployFolder(false),
             // KarafDistributionOption.configureConsole().ignoreLocalConsole(),
-            logLevel(LogLevel.WARN),
+            logLevel(LogLevel.DEBUG),
 
             // KarafDistributionOption.debugConfiguration("5005", true),
 
@@ -148,7 +148,11 @@ public interface KarafIT {
             deployFile("cfg/org.fcrepo.apix.routing.cfg"),
 
             vmOptions("-XX:+UnlockDiagnosticVMOptions", "-XX:ErrorFile=./java_error.log", "-XX:+LogVMOutput",
-                    "-XX:+HeapDumpOnOutOfMemoryError", "-XX:HeapDumpPath=./java_heap.log", "-XX:LogFile=./java.log")
+                    "-XX:+HeapDumpOnOutOfMemoryError", "-XX:HeapDumpPath=./java_heap.log", "-XX:LogFile=./java.log",
+                    "-XX:ThreadStackSize=1m",
+                    "-XX:+UnlockCommercialFeatures",
+                    "-XX:+FlightRecorder",
+    "-XX:FlightRecorderOptions=defaultrecording=true,dumponexit=true,dumponexitpath=./jfr.log,maxage=60s,disk=true")
 
         };
 
