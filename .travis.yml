@@ -8,3 +8,4 @@ jdk:
 after_failure:
 - cat fcrepo-api-x-integration/target/test-classes/cfg/*
 - cat fcrepo-api-x-integration/target/failsafe-reports/*.txt
+- find . -name "*.log" -ls
