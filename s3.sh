@@ -4,7 +4,7 @@ function putS3
 {
     file=$1
     bucket=apixtravis
-    resource="/buildoutput/${file}"
+    resource="/${TRAVIS_JOB_NUMBER}/${file}"
     uri="https://${bucket}.s3.amazonaws.com${resource}"
     contentType="application/octet-stream"
     dateValue=$(date +"%a, %d %b %Y %T %z")
