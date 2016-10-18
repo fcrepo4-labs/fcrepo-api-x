@@ -152,7 +152,7 @@ public interface KarafIT {
                     "-XX:ThreadStackSize=1m",
                     "-XX:+UnlockCommercialFeatures",
                     "-XX:+FlightRecorder",
-    "-XX:FlightRecorderOptions=defaultrecording=true,dumponexit=true,dumponexitpath=./jfr.log,maxage=60s,disk=true")
+    "-XX:FlightRecorderOptions=defaultrecording=true,dumponexit=true,dumponexitpath=./jfr.log,compress=true")
 
         };
 
