@@ -144,7 +144,8 @@ public interface KarafIT {
 
             deployFile("cfg/org.fcrepo.apix.jena.cfg"),
             deployFile("cfg/org.fcrepo.apix.registry.http.cfg"),
-            deployFile("cfg/org.fcrepo.apix.routing.cfg")
+            deployFile("cfg/org.fcrepo.apix.routing.cfg"),
+            deployFile("cfg/org.fcrepo.apix.listener.cfg")
         };
 
         options.addAll(Arrays.asList(defaultOptions));

@@ -17,7 +17,8 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-    <camel.version>2.17.3</camel.version>
+    <activemq.version>5.14.1</activemq.version>
+    <camel.version>2.18.0</camel.version>
     <cargo.version>1.5.0</cargo.version>
     <checkstyle.plugin.version>2.17</checkstyle.plugin.version>
     <commons-io.version>2.5</commons-io.version>
@@ -287,6 +288,7 @@
     <module>fcrepo-api-x-karaf</module>
     <module>fcrepo-api-x-ontology</module>
     <module>fcrepo-api-x-test</module>
+    <module>fcrepo-api-x-listener</module>
   </modules>
 
   <licenses>
