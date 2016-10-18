@@ -5,7 +5,7 @@ function putS3
     objectName=$1
     file=$objectName
     bucket=apixtravis
-    resource="/${bucket}/${objectName}"
+    resource="/${bucket}/buildoutput/${objectName}"
     contentType="application/octet-stream"
     dateValue=$(date +"%a, %d %b %Y %T %z")
     stringToSign="PUT\n\n${contentType}\n${dateValue}\n${resource}"
