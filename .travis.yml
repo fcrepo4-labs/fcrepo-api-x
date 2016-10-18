@@ -9,10 +9,6 @@ after_failure:
 - cat fcrepo-api-x-integration/target/failsafe-reports/*.txt
 - find . -name "*.log" -ls
 - find . -name "*hprof*" -ls
-env:
-- ARTIFACTS_KEY=AKIAJ6BGDFULYC6AC7KA
-- ARTIFACTS_SECRET=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
-- ARTIFACTS_BUCKET=apixtravis
 addons:
   artifacts:
     bucket: apixtravis
