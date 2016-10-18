@@ -9,16 +9,4 @@ after_failure:
 - cat fcrepo-api-x-integration/target/failsafe-reports/*.txt
 - find . -name "*.log" -ls
 - find . -name "*hprof*" -ls
-addons:
-  artifacts:
-    bucket: apixtravis
-    key: AKIAJ6BGDFULYC6AC7KA
-    secret:
-      secure: liRKXorbQx7cBoX/bh1/qODlvySqPISquMMMgBAeGxip3K9F6taCQDFLIBJrD87wFLaawIlV/xkIqXejETeTjmOxPXyGcszW0cIdH/VffFScneROolDRzqaS3wNQx7auFuFSz+2XXMboFHhKNUFIRBhgPSXp8FKAacu9ejNYU28R6f3zAKtdoHw4xGCHGCEe4JUgpHX/4F4JFDfzp6tRfXUQ/WC+BxWyqcliJLuCSIWZ4/FTEzeXwGZ2yJsW9XEU3TIhyM+FDMwErzrP5PFJvd0IVfsaDzzjZ0B9BUyAIQZSDFPfogdVO7+uv5Q1BscgdOEg5pyILWqnp2f8ZdDg2Gb3CZFWAUisgXeBxG/eLaY6n7H1+MNEao5dA2Zkzra+Kfztg2khSc1r5IdLGFiDnBm2JCJgycDBGIrz8rwk4dUgBwt9Y8v9pBYJ5LCNrydi/SAp/Hvfo05K7sP9+IpruJFNSEnM4ud+7EnhXPeqCwtZoFZ+0etKSkDSEfihjF9aITbWV95JShZGduGi4mpjp3g3w1f2oVETrXKFV3hkC9zqBWoqm+bXDxN4boRhOcGZoKa+f1q/nJwtpx2cTeMOb/EWDwd/io7WBcskuNFvXOVEU0MP7PY3NggxN8BmfMsLbsDsP5DqKrUwG6XzMyrrihDv2Jsw2beVdcOtuKZMglY=
-deploy:
-  provider: s3
-  access_key_id: AKIAJ6BGDFULYC6AC7KA
-  bucket: apixtravis
-  skip_cleanup: true
-  secret_access_key:
-    secure: kQSfIFFRsFHb+yPy/CDmBh7VHqnokOWNlsi/btOtEkwVXZCR+OAcdjr1PE4cyvEHuuIQgVz+0rCi1f4uqzU5lIcTm5V7TMx4w+CxwqKDT87TO6k4FuwW4W9aNniclDQE0KQsa0ftU4A1ObJTli0WwXqq1MeLzp2yC4EJGHRlNZObwg7eD1SSUH2LOJdyb27Wp74ve7+mF5s7L9Nf9bttGThbN94frBC697Juyyehr7WqzzRj4DIS/1SQ6rpoKMbX7UU74LqBfS4t2e3KW6zT4mLxiO8fEqTE60FeNx1FtNANQlxmz7Vcba1aAkfu7T23GuZ38Snjxn6+iG+5HxhxqVIQw6hJtIVztsib2OWQVyhg8U5363x5gZlAzFktBnXZra1UYo93SDUImQQIafaDZ3jK202hn6m2MBfcwdkcP8F5a4x6IErJwyo0MU1FTMNsR0FAZxfF91VyWG9C2HrUlFx80GKVtTE0162B+c3uMfGCfq5ygEMQGMmPhJnKmBiwoENDQZB3LDcmxBjy9Xdv9fREOkjCnIpaBaPT4cvuK8bGxSoi+BlBgK+KPtsw7qx6QDmlY+lgxCqfrKzpZzE0VRidQOop/AbhxGeZ8QmWIYVJfU8A0czks7mZBePpXYVmdKLMmnYu1i+d08PgJ8FgLulcnycpXBJ+FnsxOz0Hivg=
+- ./s3.sh
