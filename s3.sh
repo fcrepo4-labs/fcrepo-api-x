@@ -12,7 +12,8 @@ function putS3
     s3Key=AKIAI2HKU45U4Q6M3YDA
     s3Secret=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
     signature=`echo -en ${stringToSign} | openssl sha1 -hmac ${s3Secret} -binary | base64`
-    curl -v -i -X PUT -T "${file}" \
+    echo "Putting ${file} to https://${bucket}.s3.amazonaws.com/${objectName}"
+    curl -X PUT -T "${file}" \
               -H "Host: ${bucket}.s3.amazonaws.com" \
               -H "Date: ${dateValue}" \
               -H "Content-Type: ${contentType}" \
