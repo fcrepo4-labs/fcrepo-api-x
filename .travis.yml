@@ -10,3 +10,6 @@ after_failure:
 - find . -name "*.log" -ls
 - find . -name "*hprof*" -ls
 - ./s3.sh
+cache:
+  directories:
+  - ~/.m2
