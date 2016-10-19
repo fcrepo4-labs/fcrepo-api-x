@@ -90,16 +90,19 @@ public class LookupOntologyRegistryTest {
         final WebResource ontologyToPersist = new ReadableResource(this.getClass().getResourceAsStream(
                 "/ontologyWithoutIRI.ttl"), "text/turtle", ontologyLocationURI, null);
 
+        final ArrayList<URI> entries = new ArrayList<>();
+
         when(delegate.put(any(WebResource.class))).then(new Answer<URI>() {
 
             @Override
             public URI answer(final InvocationOnMock invocation) throws Throwable {
                 final WebResource submitted = ((WebResource) invocation.getArguments()[0]);
                 when(delegate.get(ontologyLocationURI)).thenReturn(submitted);
+                entries.add(ontologyLocationURI);
                 return ontologyLocationURI;
             }
         });
-        when(delegate.list()).thenReturn(new ArrayList<>());
+        when(delegate.list()).thenReturn(entries);
 
         toTest.setRegistryDelegate(delegate);
         toTest.init();

@@ -74,9 +74,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
         canonicalUriMap.putAll(canonical);
 
-        canonicalUriMap.keySet().stream()
-                .filter(k -> !canonical.containsKey(k))
-                .forEach(canonicalUriMap::remove);
+        canonicalUriMap.keySet().removeIf(k -> !canonical.containsKey(k));
     }
 
     @Override

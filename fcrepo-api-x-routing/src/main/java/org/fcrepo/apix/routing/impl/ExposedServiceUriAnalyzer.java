@@ -88,9 +88,7 @@ public class ExposedServiceUriAnalyzer implements Updateable {
 
         endpoints.putAll(exts);
 
-        endpoints.keySet().stream()
-                .filter(k -> !exts.containsKey(k))
-                .forEach(endpoints::remove);
+        endpoints.keySet().removeIf(k -> !exts.containsKey(k));
     }
 
     @Override
