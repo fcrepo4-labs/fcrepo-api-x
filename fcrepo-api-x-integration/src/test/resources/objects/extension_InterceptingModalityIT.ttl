@@ -1,0 +1,5 @@
+@prefix apix:<http://fedora.info/definitions/v4/api-extension#> .
+
+<> a apix:Extension;
+    apix:bindsTo <test:InterceptingModalityIT#object> ;
+    apix:consumesService <http://example.org/InterceptingServiceIt/service> .

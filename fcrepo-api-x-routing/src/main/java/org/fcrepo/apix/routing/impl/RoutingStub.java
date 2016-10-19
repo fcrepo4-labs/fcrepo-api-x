@@ -18,8 +18,7 @@
 
 package org.fcrepo.apix.routing.impl;
 
-import static org.fcrepo.apix.routing.Util.segment;
-import static org.fcrepo.apix.routing.Util.terminal;
+import static org.fcrepo.apix.routing.Util.append;
 
 import java.net.URI;
 
@@ -39,6 +38,8 @@ public class RoutingStub implements Routing {
     private String discoveryPath;
 
     private String exposePath;
+
+    private String interceptPath;
 
     private URI fcrepoBaseURI;
 
@@ -74,6 +75,15 @@ public class RoutingStub implements Routing {
     }
 
     /**
+     * Set the intercept path segment
+     *
+     * @param path intercept path segment
+     */
+    public void setInterceptPath(final String path) {
+        this.interceptPath = path;
+    }
+
+    /**
      * Set Fedora's baseURI.
      *
      * @param uri the base URI.
@@ -101,13 +111,9 @@ public class RoutingStub implements Routing {
         case EXTERNAL:
             return spec.exposedAt();
         case REPOSITORY:
-            return URI.create(String.format("http://%s:%s/%s//%s", host, port,
-                    segment(exposePath),
-                    terminal(spec.exposedAt().getPath())));
+            return append(baseURI(), exposePath, "", spec.exposedAt().getPath());
         case RESOURCE:
-            return URI.create(String.format("http://%s:%s/%s/%s/%s", host, port, segment(exposePath),
-                    segment(resourcePath(onResource)),
-                    terminal(spec.exposedAt().getPath())));
+            return append(baseURI(), exposePath, resourcePath(onResource), spec.exposedAt());
         default:
             throw new RuntimeException("Unknown service exposure scope " + spec.scope());
         }
@@ -115,8 +121,12 @@ public class RoutingStub implements Routing {
 
     @Override
     public URI serviceDocFor(final URI resource) {
-        return URI.create(String.format("http://%s:%d/%s/%s", host, port, segment(discoveryPath), terminal(
-                resourcePath(resource))));
+        return serviceDocFor(resourcePath(resource));
+    }
+
+    @Override
+    public URI serviceDocFor(final String resourcePath) {
+        return append(baseURI(), discoveryPath, resourcePath);
     }
 
     @Override
@@ -128,6 +138,18 @@ public class RoutingStub implements Routing {
                     fcrepoBaseURI));
         }
         return "/" + fcrepoBaseURI.relativize(resourceURI).getPath();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public URI interceptUriFor(final URI resource) {
+        return append(baseURI(), interceptPath, resourcePath(resource));
+    }
+
+    private URI baseURI() {
+        return URI.create(String.format("http://%s:%s/", host, port));
     }
 
 }

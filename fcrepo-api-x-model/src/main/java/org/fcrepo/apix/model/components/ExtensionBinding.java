@@ -51,6 +51,15 @@ public interface ExtensionBinding {
     public Collection<Extension> getExtensionsFor(WebResource resource);
 
     /**
+     * Determine which of the given extensions bind to the given resource.
+     *
+     * @param resource Candidate resource
+     * @param from Candidate extensions
+     * @return All extensions from the list that bind to the resource, or empty if none.
+     */
+    public Collection<Extension> getExtensionsFor(WebResource resource, Collection<Extension> from);
+
+    /**
      * Determine all known extensions that bind to the given resource, given its URI.
      * <p>
      * The given URI may be a resource in the repository, on the web, or otherwise within a registry specified by the
@@ -65,5 +74,14 @@ public interface ExtensionBinding {
      * @return All extensions that bind to the given resource, or an empty collection if none.
      */
     public Collection<Extension> getExtensionsFor(URI resourceURI);
+
+    /**
+     * Determine which of the given extensions bind to the given resource.
+     *
+     * @param resourceURI URI of resource, will be dereferenced.
+     * @param from from Candidate extensions
+     * @return All extensions from the list that bind to the resource, or empty if none.
+     */
+    public Collection<Extension> getExtensionsFor(URI resourceURI, Collection<Extension> from);
 
 }
