@@ -1,5 +1,7 @@
 # API-X development
 
+[![Build Status](https://travis-ci.org/fcrepo4-labs/fcrepo-api-x.png?branch=master)](https://travis-ci.org/fcrepo4-labs/fcrepo-api-x)
+
 This repository contains development and proof-of-concept code for API-X.  API-X may
 be demonstrated in action by running [Docker Compose](https://docs.docker.com/compose/overview/) or
 [Vagrant](https://www.vagrantup.com/about.html).  Docker Compose and Vagrant offer two distinct
