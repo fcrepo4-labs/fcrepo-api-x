@@ -200,6 +200,7 @@ public class ExposedServiceUriAnalyzerTest {
     @Test
     public void updateURITest() {
         when(extensisons.getExtension(extension2URI)).thenReturn(extension2);
+        when(extensisons.hasInDomain(extension2URI)).thenReturn(true);
         when(extension2.isExposing()).thenReturn(true);
         when(extension2.exposed()).thenReturn(extension2Spec);
         when(extension2Spec.exposedAt()).thenReturn(extension2ExposedAt);

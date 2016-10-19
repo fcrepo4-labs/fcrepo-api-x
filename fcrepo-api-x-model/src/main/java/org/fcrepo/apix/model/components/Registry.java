@@ -76,4 +76,16 @@ public interface Registry {
      */
     public boolean contains(URI id);
 
+    /**
+     * Determine if a URI is in the domain of this registry.
+     * <p>
+     * A resource is in a registry's domain if it is contained by the registry, or could potentially be contained by
+     * it, based on inspecting the URI (e.g. for the presence of a baseURI)
+     * </p>
+     *
+     * @param uri URI to test
+     * @return true if the URI is within the registry domain.
+     */
+    public boolean hasInDomain(URI uri);
+
 }

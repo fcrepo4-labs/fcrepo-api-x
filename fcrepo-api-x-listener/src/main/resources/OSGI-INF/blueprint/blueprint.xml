@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+  xmlns:ext="http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0"
+  xmlns:camel="http://camel.apache.org/schema/blueprint"
+  xsi:schemaLocation="
+       http://www.osgi.org/xmlns/blueprint/v1.0.0 https://osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+       http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0 http://aries.apache.org/schemas/blueprint-ext/blueprint-ext.xsd
+       http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0  http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
+       http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+
+  <cm:property-placeholder persistent-id="org.fcrepo.apix.listener"
+    update-strategy="reload">
+    <cm:default-properties>
+      <cm:property name="input.uri" value="activemq:topic:fedora" />
+      <cm:property name="broker.uri" value="tcp://localhost:61616" />
+      <cm:property name="fcrepo.BaseURI" value="http://localhost:8080/fcrepo/rest" />
+    </cm:default-properties>
+  </cm:property-placeholder>
+
+  <reference-list id="toUpdate" member-type="service-object"
+    interface="org.fcrepo.apix.model.components.Updateable"
+    availability="optional" />
+
+  <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+    <property name="brokerURL" value="${broker.uri}" />
+  </bean>
+
+  <bean id="updaterRoutes" class="org.fcrepo.apix.listener.impl.UpdateListener">
+    <property name="toUpdate" ref="toUpdate" />
+    <property name="fcrepoBaseURI" value="${fcrepo.baseURI}" />
+  </bean>
+
+  <camel:camelContext id="apix-listener">
+    <camel:routeBuilder ref="updaterRoutes" />
+  </camel:camelContext>
+</blueprint>

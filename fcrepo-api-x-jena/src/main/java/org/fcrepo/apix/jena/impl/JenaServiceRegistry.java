@@ -77,15 +77,15 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
         canonicalUriMap.putAll(canonical);
 
-        canonicalUriMap.keySet().stream()
-                .filter(k -> !canonical.containsKey(k))
-                .forEach(canonicalUriMap::remove);
+        canonicalUriMap.keySet().removeIf(k -> !canonical.containsKey(k));
     }
 
     @Override
     public void update(final URI uri) {
-        // TODO: Optimize
-        this.update();
+        if (hasInDomain(uri)) {
+            // TODO: This can be optimized more
+            update();
+        }
     }
 
     @Override
@@ -203,6 +203,11 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     // Try looking in canonical map first
     private URI resourceURI(final URI uri) {
         return Optional.ofNullable(canonicalUriMap.get(uri)).orElse(uri);
+    }
+
+    @Override
+    public boolean hasInDomain(final URI uri) {
+        return delegate.hasInDomain(uri) || canonicalUriMap.values().contains(uri);
     }
 
 }

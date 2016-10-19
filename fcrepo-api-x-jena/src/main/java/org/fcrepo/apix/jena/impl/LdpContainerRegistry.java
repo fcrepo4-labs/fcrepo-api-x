@@ -280,4 +280,9 @@ public class LdpContainerRegistry implements Registry {
             throw new RuntimeException("Error retrieving container content from " + containerContent, e);
         }
     }
+
+    @Override
+    public boolean hasInDomain(final URI uri) {
+        return uri.toString().startsWith(containerId.toString());
+    }
 }

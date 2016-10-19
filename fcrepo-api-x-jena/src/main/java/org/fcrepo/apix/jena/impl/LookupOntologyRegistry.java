@@ -23,14 +23,18 @@ import static org.fcrepo.apix.jena.Util.parse;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.BinaryOperator;
+import java.util.stream.Collectors;
 
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.OntologyRegistry;
 import org.fcrepo.apix.model.components.Registry;
+import org.fcrepo.apix.model.components.Updateable;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
@@ -48,23 +52,23 @@ import org.slf4j.LoggerFactory;
  * </p>
  * <p>
  * This indexes all ontologies upon initialization, and maintains the index in response to {@link #put(WebResource)}
- * or {@link #put(WebResource, URI)}. TODO: remove entries for {{@link #delete(URI)};
+ * or {@link #put(WebResource, URI)}.
  * </p>
  * <p>
- * For ontology registries backed by an LDP container in the repository, this class could be used by an asynchronous
+ * For ontology registries backed by an LDP container in the repository, this class may be used by an asynchronous
  * message consumer to update the ontology registry in response to ontologies added/removed manually by clients via
- * LDP interactions with the repository. TOOO: Create such a consumer.
+ * LDP interactions with the repository.
  * </p>
  *
  * @author apb@jhu.edu
  */
-public class LookupOntologyRegistry implements OntologyRegistry {
+public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
 
     static final String RDF_TYPE = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 
     static final String OWL_ONTOLOGY = "http://www.w3.org/2002/07/owl#Ontology";
 
-    private Map<URI, URI> ontologyIRIsToLocation;
+    private final Map<URI, URI> ontologyIRIsToLocation = new ConcurrentHashMap<>();
 
     private Registry registry;
 
@@ -115,15 +119,15 @@ public class LookupOntologyRegistry implements OntologyRegistry {
     @Override
     public void delete(final URI uri) {
         registry.delete(uri);
+        update();
     }
 
     /** Try infinitely to read contents of registry in order to index ontologyIRIs */
     public void init() {
-        ontologyIRIsToLocation = new ConcurrentHashMap<>();
 
         for (boolean indexed = false; !indexed;) {
             try {
-                registry.list().stream().forEach(this::index);
+                update();
                 indexed = true;
             } catch (final Exception e) {
                 LOG.warn("Indexing existing ontologies failed, retrying: ", e);
@@ -131,7 +135,6 @@ public class LookupOntologyRegistry implements OntologyRegistry {
                     Thread.sleep(1000);
                 } catch (final InterruptedException i) {
                     Thread.currentThread().interrupt();
-                    ontologyIRIsToLocation = null;
                     return;
                 }
             }
@@ -151,7 +154,7 @@ public class LookupOntologyRegistry implements OntologyRegistry {
                         ontologyIRIsToLocation.get(ontologyIRI), ontologyLocation));
             }
 
-            LOG.debug("Registering ontology IRI {} which resolves to location {}", ontologyIRI, ontologyLocation);
+            LOG.debug("Indexing ontology IRI {} which resolves to location {}", ontologyIRI, ontologyLocation);
 
             ontologyIRIsToLocation.put(ontologyIRI, ontologyLocation);
         }
@@ -179,5 +182,37 @@ public class LookupOntologyRegistry implements OntologyRegistry {
     @Override
     public boolean contains(final URI id) {
         return ontologyIRIsToLocation.containsKey(id) || registry.contains(id);
+    }
+
+    @Override
+    public boolean hasInDomain(final URI uri) {
+        return registry.hasInDomain(uri);
+    }
+
+    @Override
+    public void update() {
+        final Map<URI, URI> iriMap = registry.list().stream()
+                .flatMap(loc -> ontologyURIs(load(loc)).stream()
+                        .map(uri -> new SimpleEntry<URI, URI>(uri, loc)))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, CONFLICT));
+
+        ontologyIRIsToLocation.putAll(iriMap);
+
+        ontologyIRIsToLocation.keySet().removeIf(iri -> !iriMap.containsKey(iri));
+
+        ontologyIRIsToLocation.entrySet().forEach(e -> LOG.debug(
+                "Indexing ontology IRI {} which resolves to location {}", e.getKey(), e.getValue()));
+    }
+
+    private static BinaryOperator<URI> CONFLICT = (v1, v2) -> {
+        throw new RuntimeException(
+                String.format("Resources %s and %s both define the same ontology IRI", v1, v2));
+    };
+
+    @Override
+    public void update(final URI inResponseTo) {
+        if (registry.hasInDomain(inResponseTo)) {
+            update();
+        }
     }
 }
