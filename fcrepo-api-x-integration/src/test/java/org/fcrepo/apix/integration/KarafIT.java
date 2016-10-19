@@ -45,6 +45,7 @@ import org.apache.http.HttpStatus;
 import org.ops4j.pax.exam.Configuration;
 import org.ops4j.pax.exam.ConfigurationManager;
 import org.ops4j.pax.exam.Option;
+import org.ops4j.pax.exam.karaf.options.KarafDistributionBaseConfigurationOption;
 import org.ops4j.pax.exam.karaf.options.LogLevelOption.LogLevel;
 import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 import org.ops4j.pax.exam.options.MavenUrlReference;
@@ -152,7 +153,9 @@ public interface KarafIT {
                     "-XX:ThreadStackSize=1m",
                     "-XX:+UnlockCommercialFeatures",
                     "-XX:+FlightRecorder",
-    "-XX:FlightRecorderOptions=defaultrecording=true,dumponexit=true,dumponexitpath=./jfr.log")
+    "-XX:FlightRecorderOptions=defaultrecording=true,dumponexit=true,dumponexitpath=./jfr.log"),
+
+                karafDistributionConfiguration().runEmbedded(true)
 
         };
 
