@@ -20,6 +20,7 @@ package org.fcrepo.apix.jena.impl;
 
 import static org.fcrepo.apix.model.Ontologies.LDP_CONTAINS;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.isA;
 import static org.mockito.Mockito.never;
@@ -204,5 +205,16 @@ public class LdpContainerRegistryTest {
 
         assertTrue(members.containsAll(expectedMembers));
         assertTrue(expectedMembers.containsAll(members));
+    }
+
+    @Test
+    public void domainTest() {
+        final LdpContainerRegistry toTest = new LdpContainerRegistry();
+        final String CONTAINER = "http://example.org/container";
+        toTest.setContainer(URI.create(CONTAINER));
+
+        assertTrue(toTest.hasInDomain(URI.create(CONTAINER)));
+        assertTrue(toTest.hasInDomain(URI.create(CONTAINER + "/other/path")));
+        assertFalse(toTest.hasInDomain(URI.create("http://bad.example.org/not")));
     }
 }

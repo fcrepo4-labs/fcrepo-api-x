@@ -67,4 +67,9 @@ abstract class WrappingRegistry implements Registry {
         return delegate.contains(id);
     }
 
+    @Override
+    public boolean hasInDomain(final URI uri) {
+        return delegate.hasInDomain(uri);
+    }
+
 }

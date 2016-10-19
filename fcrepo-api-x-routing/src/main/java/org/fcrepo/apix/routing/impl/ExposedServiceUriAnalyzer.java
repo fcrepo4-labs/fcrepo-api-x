@@ -95,8 +95,10 @@ public class ExposedServiceUriAnalyzer implements Updateable {
 
     @Override
     public void update(final URI inResponseTo) {
-        // TODO: optimize later
-        update();
+        if (extensions.hasInDomain(inResponseTo)) {
+            // TODO: This can be optimized more
+            update();
+        }
     }
 
     /**

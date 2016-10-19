@@ -238,4 +238,9 @@ public class HttpRegistry implements Registry {
     public void delete(final URI uri) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public boolean hasInDomain(final URI uri) {
+        return uri.getScheme().startsWith("http");
+    }
 }

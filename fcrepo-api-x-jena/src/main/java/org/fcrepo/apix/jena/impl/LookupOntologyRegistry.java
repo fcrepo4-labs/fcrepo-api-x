@@ -180,4 +180,9 @@ public class LookupOntologyRegistry implements OntologyRegistry {
     public boolean contains(final URI id) {
         return ontologyIRIsToLocation.containsKey(id) || registry.contains(id);
     }
+
+    @Override
+    public boolean hasInDomain(final URI uri) {
+        return registry.hasInDomain(uri);
+    }
 }
