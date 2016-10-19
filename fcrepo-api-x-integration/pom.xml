@@ -33,6 +33,7 @@
             <pax.exam.karaf.version>${karaf.version}</pax.exam.karaf.version>
             <fcrepo.dynamic.test.port>${fcrepo.dynamic.test.port}</fcrepo.dynamic.test.port>
             <fcrepo.cxtPath>${fcrepo.cxtPath}</fcrepo.cxtPath>
+            <fcrepo.dynamic.jms.port>${fcrepo.dynamic.jms.port}</fcrepo.dynamic.jms.port>
             <project.basedir>${project.basedir}</project.basedir>
             <services.dynamic.test.port>${services.dynamic.test.port}</services.dynamic.test.port>
           </systemPropertyVariables>
@@ -62,6 +63,8 @@
             <portName>apix.dynamic.test.port</portName>
             <portName>fcrepo.dynamic.test.port</portName>
             <portName>services.dynamic.test.port</portName>
+            <portName>fcrepo.dynamic.jms.port</portName>
+            <portName>fcrepo.dynamic.stomp.port</portName>
           </portNames>
         </configuration>
         <executions>
@@ -87,6 +90,8 @@
             <systemProperties>
               <fcrepo.home>${project.build.directory}/fcrepo</fcrepo.home>
               <fcrepo.modeshape.configuration>classpath:/config/minimal-default/repository.json</fcrepo.modeshape.configuration>
+              <fcrepo.dynamic.jms.port>${fcrepo.dynamic.jms.port}</fcrepo.dynamic.jms.port>
+              <fcrepo.dynamic.stomp.port>${fcrepo.dynamic.stomp.port}</fcrepo.dynamic.stomp.port>
             </systemProperties>
           </container>
           <deployables>

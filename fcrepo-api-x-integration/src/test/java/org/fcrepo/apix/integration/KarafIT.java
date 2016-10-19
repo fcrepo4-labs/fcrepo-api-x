@@ -130,6 +130,8 @@ public interface KarafIT {
                     "fcrepo.dynamic.test.port")),
             editConfigurationFilePut("etc/system.properties", "services.dynamic.test.port", System.getProperty(
                     "services.dynamic.test.port")),
+            editConfigurationFilePut("etc/system.properties", "fcrepo.dynamic.jms.port", System.getProperty(
+                    "fcrepo.dynamic.jms.port")),
             editConfigurationFilePut("etc/system.properties", "project.basedir", System.getProperty(
                     "project.basedir")),
             editConfigurationFilePut("/etc/system.properties", "fcrepo.cxtPath", System.getProperty(
@@ -248,5 +250,4 @@ public interface KarafIT {
             }
         }
     }
-
 }

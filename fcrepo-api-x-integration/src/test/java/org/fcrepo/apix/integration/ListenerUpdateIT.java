@@ -76,12 +76,10 @@ public class ListenerUpdateIT implements KarafIT {
 
         final BlockingQueue<URI> objects = new LinkedBlockingQueue<>();
 
-        System.out.println("Registering service");
         cxt.registerService(Updateable.class, new Updateable() {
 
             @Override
             public void update(final URI uri) {
-                System.out.println("Handling!");
                 objects.add(uri);
             }
 
