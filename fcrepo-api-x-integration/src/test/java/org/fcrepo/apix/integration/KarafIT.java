@@ -142,6 +142,8 @@ public interface KarafIT {
                     "/services"),
             editConfigurationFilePut("/etc/system.properties", "registry.ontology.container", container +
                     "/ontologies"),
+            editConfigurationFilePut("etc/org.ops4j.pax.logging.cfg",
+                    "log4j.logger.org.ops4j.pax.exam.karaf.container.internal", "DEBUG, out, stdout"),
 
             deployFile("cfg/org.fcrepo.apix.jena.cfg"),
             deployFile("cfg/org.fcrepo.apix.registry.http.cfg"),
@@ -153,8 +155,6 @@ public interface KarafIT {
                     "-XX:+UnlockCommercialFeatures",
                     "-XX:+FlightRecorder",
     "-XX:FlightRecorderOptions=defaultrecording=true,dumponexit=true,dumponexitpath=./jfr.log"),
-
-                karafDistributionConfiguration().runEmbedded(true)
 
         };
 
