@@ -98,6 +98,11 @@ public class JenaServiceRegistryTest {
         final String CANONICAL = "http://example.org/canonical/service";
         final String SERVICE = "http://repository.local/service#uri";
         final URI SERVICE_URI = URI.create(SERVICE);
+        final String REGISTRY_CONTAINER = "http://example.org/container";
+        final URI REGISTRY_CONTAINER_URI = URI.create(REGISTRY_CONTAINER);
+        toTest.setRegistryContainer(REGISTRY_CONTAINER_URI);
+
+        when(delegate.get(REGISTRY_CONTAINER_URI)).thenReturn(rdfResource(REGISTRY_CONTAINER, ""));
         when(delegate.get(SERVICE_URI)).thenReturn(
                 rdfResource(SERVICE, triple(SERVICE, RDF_TYPE, CLASS_SERVICE) +
                         triple(SERVICE, PROP_CANONICAL, CANONICAL)));

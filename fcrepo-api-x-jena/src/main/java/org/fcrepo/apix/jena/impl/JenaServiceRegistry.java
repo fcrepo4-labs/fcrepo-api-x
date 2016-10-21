@@ -24,18 +24,24 @@ import static org.fcrepo.apix.jena.Util.parse;
 import static org.fcrepo.apix.model.Ontologies.RDF_TYPE;
 import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_CANONICAL;
+import static org.fcrepo.apix.model.Ontologies.Service.PROP_CONTAINS_SERVICE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_ENDPOINT;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_SERVICE_INSTANCE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_SERVICE_INSTANCE_REGISTRY;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.fcrepo.apix.jena.JenaResource;
 import org.fcrepo.apix.jena.Util;
@@ -46,7 +52,9 @@ import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.ServiceInstanceRegistry;
 import org.fcrepo.apix.model.components.ServiceRegistry;
 import org.fcrepo.apix.model.components.Updateable;
+import org.fcrepo.client.FcrepoClient;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
@@ -56,6 +64,28 @@ import org.apache.jena.rdf.model.Resource;
  * @author apb@jhu.edu
  */
 public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegistry, Updateable {
+
+    private URI registryContainer;
+
+    private FcrepoClient client;
+
+    /**
+     * Set the Fedora client.
+     *
+     * @param client the client
+     */
+    public void setFcrepoClient(final FcrepoClient client) {
+        this.client = client;
+    }
+
+    /**
+     * Set the LDP container corresponding to this service registry.
+     *
+     * @param container the container;
+     */
+    public void setRegistryContainer(final URI container) {
+        registryContainer = container;
+    }
 
     @Override
     public void setRegistryDelegate(final Registry delegate) {
@@ -68,11 +98,27 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     @Override
     public void update() {
 
+        // For all resources in the registry, get the URIs of everything that calls itself a Service, or is explicitly
+        // registered as a service
+
+        final Set<URI> serviceURIs = Stream.concat(super.list().stream()
+                .map(this::get)
+                .map(Util::parse)
+                .flatMap(m -> m.listSubjectsWithProperty(
+                        m.getProperty(RDF_TYPE),
+                        m.getResource(CLASS_SERVICE))
+                        .mapWith(Resource::getURI)
+                        .toSet().stream()
+                        .map(URI::create)),
+                objectResourcesOf(null, PROP_CONTAINS_SERVICE, parse(this.get(
+                        registryContainer))).stream())
+                .collect(
+                        Collectors.toSet());
+
         // Map canonical URI to service resource. If multiple service resources
         // indicate the same canonical URI, pick one arbitrarily.
-        final Map<URI, URI> canonical = list().stream()
+        final Map<URI, URI> canonical = serviceURIs.stream()
                 .map(this::getService)
-                .filter(s -> s.canonicalURI() != null)
                 .collect(Collectors.toMap(s -> s.canonicalURI(), s -> s.uri(), (a, b) -> a));
 
         canonicalUriMap.putAll(canonical);
@@ -85,6 +131,27 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
         if (hasInDomain(uri)) {
             // TODO: This can be optimized more
             update();
+        }
+    }
+
+    @Override
+    public void register(final URI uri) {
+        try {
+            this.client.patch(registryContainer).body(patchAddService(uri)).perform().close();
+        } catch (final Exception e) {
+            throw new RuntimeException(String.format("Could not add <%s> to service registry <%s>", uri,
+                    registryContainer), e);
+        }
+
+        update(uri);
+    }
+
+    private InputStream patchAddService(final URI service) {
+        try {
+            return IOUtils.toInputStream(String.format(
+                    "INSERT {<> <%s> <%s> .} WHERE {}", PROP_CONTAINS_SERVICE, service), "utf8");
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -145,18 +212,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     @Override
     public Collection<URI> list() {
-
-        // For all resources in the registry, get the URIs of everything that calls itself a Service
-        return super.list().stream()
-                .map(this::get)
-                .map(Util::parse)
-                .flatMap(m -> m.listSubjectsWithProperty(
-                        m.getProperty(RDF_TYPE),
-                        m.getResource(CLASS_SERVICE))
-                        .mapWith(Resource::getURI)
-                        .toSet().stream())
-                .map(URI::create).collect(
-                        Collectors.toSet());
+        return new HashSet<>(canonicalUriMap.values());
     }
 
     class ServiceImpl extends WrappingResource implements Service, JenaResource {
@@ -209,5 +265,4 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     public boolean hasInDomain(final URI uri) {
         return delegate.hasInDomain(uri) || canonicalUriMap.values().contains(uri);
     }
-
 }
