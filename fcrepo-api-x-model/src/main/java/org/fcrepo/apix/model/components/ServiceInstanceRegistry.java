@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.model.components;
 
+import java.net.URI;
 import java.util.List;
 
 import org.fcrepo.apix.model.ServiceInstance;
@@ -38,4 +39,12 @@ public interface ServiceInstanceRegistry {
      * @return list of all instances.
      */
     public List<ServiceInstance> instances();
+
+    /**
+     * Add an endpoint to the registry.
+     *
+     * @param endpoint the endpoint.
+     * @return URI of the corresponding service instance.
+     */
+    public URI addEndpoint(URI endpoint);
 }

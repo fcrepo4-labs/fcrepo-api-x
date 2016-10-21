@@ -21,14 +21,18 @@ package org.fcrepo.apix.jena.impl;
 import static org.fcrepo.apix.jena.Util.objectResourceOf;
 import static org.fcrepo.apix.jena.Util.objectResourcesOf;
 import static org.fcrepo.apix.jena.Util.parse;
+import static org.fcrepo.apix.jena.Util.subjectOf;
 import static org.fcrepo.apix.model.Ontologies.RDF_TYPE;
 import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE;
+import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE_INSTANCE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_CANONICAL;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_CONTAINS_SERVICE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_ENDPOINT;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_SERVICE_INSTANCE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_SERVICE_INSTANCE_REGISTRY;
+import static org.fcrepo.apix.model.Ontologies.Service.PROP_IS_SERVICE_INSTANCE_OF;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -53,10 +57,13 @@ import org.fcrepo.apix.model.components.ServiceInstanceRegistry;
 import org.fcrepo.apix.model.components.ServiceRegistry;
 import org.fcrepo.apix.model.components.Updateable;
 import org.fcrepo.client.FcrepoClient;
+import org.fcrepo.client.FcrepoOperationFailedException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Jena-based service registry implementation,
@@ -68,6 +75,8 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     private URI registryContainer;
 
     private FcrepoClient client;
+
+    private static final Logger LOG = LoggerFactory.getLogger(JenaServiceRegistry.class);
 
     /**
      * Set the Fedora client.
@@ -115,10 +124,12 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
                 .collect(
                         Collectors.toSet());
 
+        System.out.println("\n---\n,Service URIs in registry: " + serviceURIs);
+
         // Map canonical URI to service resource. If multiple service resources
         // indicate the same canonical URI, pick one arbitrarily.
         final Map<URI, URI> canonical = serviceURIs.stream()
-                .map(this::getService)
+                .flatMap(this::attemptLookupService)
                 .collect(Collectors.toMap(s -> s.canonicalURI(), s -> s.uri(), (a, b) -> a));
 
         canonicalUriMap.putAll(canonical);
@@ -129,6 +140,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     @Override
     public void update(final URI uri) {
         if (hasInDomain(uri)) {
+            System.out.println("UPDATING: " + uri);
             // TODO: This can be optimized more
             update();
         }
@@ -137,6 +149,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     @Override
     public void register(final URI uri) {
         try {
+            System.out.println("PATCH: Adding service:\n" + IOUtils.toString(patchAddService(uri), "utf8"));
             this.client.patch(registryContainer).body(patchAddService(uri)).perform().close();
         } catch (final Exception e) {
             throw new RuntimeException(String.format("Could not add <%s> to service registry <%s>", uri,
@@ -151,6 +164,25 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
             return IOUtils.toInputStream(String.format(
                     "INSERT {<> <%s> <%s> .} WHERE {}", PROP_CONTAINS_SERVICE, service), "utf8");
         } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public ServiceInstanceRegistry createInstanceRegistry(final Service service) {
+        System.out.println("PATCH: Creating service instance registry");
+        try {
+            final URI uri = client.post(service.uri()).body(this.getClass().getResourceAsStream(
+                    "objects/service-instance-registry.ttl")).perform().getLocation();
+
+            client.patch(uri).body(
+                    new ByteArrayInputStream(
+                            String.format(
+                                    "INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
+                                    PROP_IS_SERVICE_INSTANCE_OF, service.uri(), CLASS_SERVICE_INSTANCE).getBytes()))
+                    .perform();
+            return instancesOf(getService(service.uri()));
+        } catch (final FcrepoOperationFailedException e) {
             throw new RuntimeException(e);
         }
     }
@@ -176,6 +208,22 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
                 return objectResourcesOf(registryURI.toString(), PROP_HAS_SERVICE_INSTANCE, registry).stream()
                         .map(uri -> new LdpServiceInstanceImpl(uri, service))
                         .collect(Collectors.toList());
+            }
+
+            @Override
+            public URI addEndpoint(final URI endpoint) {
+                System.out.println("PATCH: Adding endpoint");
+                try {
+                    client.patch(registryURI).body(
+                            new ByteArrayInputStream(
+                                    String.format(
+                                            "INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
+                                            PROP_HAS_ENDPOINT, endpoint, CLASS_SERVICE_INSTANCE).getBytes()))
+                            .perform();
+                    return registryURI;
+                } catch (final FcrepoOperationFailedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         };
     }
@@ -219,9 +267,24 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
         final Model model;
 
+        final URI uri;
+
         ServiceImpl(final URI uri) {
             super(get(resourceURI(uri)));
             this.model = parse(this);
+
+            // Sanity check - verify that the uri is a service. If not, and if there is exactly one service, use that.
+            if (!model.contains(model.getResource(uri.toString()), model.getProperty(RDF_TYPE), model.getResource(
+                    CLASS_SERVICE))) {
+                try {
+                    this.uri = subjectOf(RDF_TYPE, CLASS_SERVICE, model);
+                } catch (final ResourceNotFoundException e) {
+                    model.write(System.out, "TTL");
+                    throw new RuntimeException(e);
+                }
+            } else {
+                this.uri = uri;
+            }
         }
 
         @Override
@@ -235,6 +298,11 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
         @Override
         public Model model() {
             return model;
+        }
+
+        @Override
+        public URI uri() {
+            return uri;
         }
 
     }
@@ -265,4 +333,14 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     public boolean hasInDomain(final URI uri) {
         return delegate.hasInDomain(uri) || canonicalUriMap.values().contains(uri);
     }
+
+    private Stream<Service> attemptLookupService(final URI uri) {
+        try {
+            return Stream.of(this.getService(uri));
+        } catch (final Exception e) {
+            LOG.warn("Could not resolve service for " + uri, e);
+            return Stream.of();
+        }
+    }
+
 }

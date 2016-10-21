@@ -63,9 +63,10 @@ public abstract class Util {
      * Parse serialized rdf into a jena Model.
      *
      * @param r resource containing serialized rdf
+     * @param base base URI for the purpose of relative URIs
      * @return The model
      */
-    public static Model parse(final WebResource r) {
+    public static Model parse(final WebResource r, final String base) {
 
         if (r instanceof JenaResource && ((JenaResource) r).model() != null) {
             return ((JenaResource) r).model();
@@ -73,16 +74,30 @@ public abstract class Util {
 
         final Model model =
                 ModelFactory.createDefaultModel();
+        model.setNsPrefix("", "");
 
         final Lang lang = RDFLanguages.contentTypeToLang(r.contentType());
 
         LOG.debug("Parsing rdf from {}", r.uri());
         try (InputStream representation = r.representation()) {
-            RDFDataMgr.read(model, representation, r.uri() != null ? r.uri().toString() : "", lang);
+            RDFDataMgr.read(model, representation, base, lang);
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
         return model;
+    }
+
+    /**
+     * Parse serialized rdf into a jena Model.
+     * <p>
+     * If the resource has a URI, that uri will be used as the base for the purpose of relative URIs.
+     * </p>
+     *
+     * @param r resource containing serialized rdf
+     * @return The model
+     */
+    public static Model parse(final WebResource r) {
+        return parse(r, r.uri() != null ? r.uri().toString() : "");
     }
 
     /**
@@ -95,7 +110,7 @@ public abstract class Util {
      */
     public static List<URI> objectResourcesOf(final String s, final String p, final Model model) {
         return model.listStatements(
-                model.getResource(s),
+                s != null ? model.getResource(s) : null,
                 model.getProperty(p),
                 (RDFNode) null)
                 .mapWith(Statement::getObject)
