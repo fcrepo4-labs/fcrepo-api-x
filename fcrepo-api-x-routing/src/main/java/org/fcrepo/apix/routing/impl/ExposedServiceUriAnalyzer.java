@@ -107,11 +107,19 @@ public class ExposedServiceUriAnalyzer implements Updateable {
      */
     public ServiceExposingBinding match(final URI requestURI) {
 
+        System.out.println("ANALYZER:  Analyzing URI for exposed extensions" + requestURI);
+
         if (requestURI.toString().startsWith(exposeBaseURI)) {
             final String rawPath = requestURI.toString().replaceFirst("^" + exposeBaseURI, "");
 
+            System.out.println("ANALYZER: raw path: " + rawPath);
+
+            System.out.println("ANALYZER: candidates:" + endpoints.keySet());
+
             final List<String> matches = endpoints.keySet().stream().filter(rawPath::contains).collect(Collectors
                     .toList());
+
+            System.out.println("ANALYZER: matches: " + matches);
 
             if (matches.isEmpty()) {
                 return null;

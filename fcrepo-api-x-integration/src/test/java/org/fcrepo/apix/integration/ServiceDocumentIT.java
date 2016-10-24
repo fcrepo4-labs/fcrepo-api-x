@@ -34,7 +34,6 @@ import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.Registry;
 import org.fcrepo.apix.model.components.Routing;
-import org.fcrepo.apix.model.components.ServiceDiscovery;
 
 import org.apache.jena.rdf.model.Model;
 import org.junit.BeforeClass;
@@ -50,9 +49,6 @@ import org.ops4j.pax.exam.util.Filter;
  */
 @RunWith(PaxExam.class)
 public class ServiceDocumentIT implements KarafIT {
-
-    @Inject
-    public ServiceDiscovery discovery;
 
     @Inject
     @Filter("(org.fcrepo.apix.registry.role=default)")
@@ -85,14 +81,17 @@ public class ServiceDocumentIT implements KarafIT {
     // Verifies that an object with no services or extensions produces an empty document
     @Test
     public void emptyServiceDocumentTest() throws Exception {
-        try (WebResource resource = discovery.getServiceDocumentFor(serviceContainer,
-                "text/turtle")) {
+
+        final URI object = routing.interceptUriFor(serviceContainer);
+        final URI serviceDocURI = client.head(object).perform().getLinkHeaders("service").get(0);
+
+        try (WebResource resource = repository.get(serviceDocURI)) {
             final Model doc = parse(resource);
 
             assertTrue(doc.contains(
                     null,
                     doc.getProperty(PROP_IS_SERVICE_DOCUMENT_FOR),
-                    doc.getResource(serviceContainer.toString())));
+                    doc.getResource(object.toString())));
 
             assertFalse(doc.contains(null, doc.getProperty(RDF_TYPE), doc.getResource(CLASS_SERVICE_INSTANCE)));
         }
@@ -105,9 +104,13 @@ public class ServiceDocumentIT implements KarafIT {
         extensionRegistry.put(testResource(
                 "objects/extension_serviceDocumentIT.ttl"));
 
-        final URI object = postFromTestResource("objects/object_serviceDocumentIT.ttl", objectContainer);
+        final URI container = routing.interceptUriFor(objectContainer);
 
-        try (WebResource resource = discovery.getServiceDocumentFor(object, "text/turtle")) {
+        final URI object = postFromTestResource("objects/object_serviceDocumentIT.ttl", container);
+
+        final URI serviceDocURI = client.head(object).perform().getLinkHeaders("service").get(0);
+
+        try (WebResource resource = repository.get(serviceDocURI)) {
             final Model doc = parse(resource);
 
             assertTrue(doc.contains(

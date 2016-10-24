@@ -25,11 +25,15 @@ import org.fcrepo.apix.model.components.Updateable;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.builder.RouteBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author apb@jhu.edu
  */
 public class UpdateListener extends RouteBuilder {
+
+    private static final Logger LOG = LoggerFactory.getLogger(UpdateListener.class);
 
     private List<Updateable> toUpdate;
 
@@ -61,9 +65,17 @@ public class UpdateListener extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
+
         from("{{input.uri}}").id("listener-update-apix")
                 .choice().when(e -> e.getIn().getHeader(TYPE, String.class).contains(TYPE_RESOURCE))
-                .process(e -> toUpdate.forEach(u -> u.update(objectURI(e))));
+                .process(e -> LOG.debug("UPDATING {}", e.getIn().getHeader(RESOURCE_PATH)))
+                .process(e -> toUpdate.forEach(u -> {
+                    try {
+                        u.update(objectURI(e));
+                    } catch (final Exception x) {
+                        LOG.warn(String.format("Update to <%s> failed", objectURI(e)), x);
+                    }
+                }));
     }
 
     private URI objectURI(final Exchange e) {

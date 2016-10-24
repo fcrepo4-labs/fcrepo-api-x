@@ -1,0 +1,10 @@
+@prefix apix:<http://fedora.info/definitions/v4/api-extension#> .
+@prefix svc:<http://fedora.info/definitions/v4/service#> .
+
+<> a apix:Extension;
+    apix:bindsTo <test:LoaderIT#full>;
+    apix:exposesService <http://example.org/LoaderIT/full>;
+    apix:exposesServiceAt "test:LoaderIT/full" .
+
+<#service> a svc:Service;
+    svc:canonical <http://example.org/LoaderIT/full> .

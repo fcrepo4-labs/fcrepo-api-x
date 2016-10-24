@@ -28,8 +28,10 @@ import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.ROUTE_INTER
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Extension.Scope;
@@ -170,6 +172,10 @@ public class RoutingImpl extends RouteBuilder {
         final ServiceExposingBinding binding = analyzer.match(
                 URI.create(ex.getIn().getHeader(Exchange.HTTP_URL, String.class)));
 
+        if (binding == null) {
+            return;
+        }
+
         ex.getIn().setHeader(BINDING, binding);
         ex.getIn().setHeader(EXPOSING_EXTENSION, binding.extension);
         ex.getIn().setHeader(HTTP_HEADER_EXPOSED_SERVICE_URI, binding.getExposedURI());
@@ -195,7 +201,10 @@ public class RoutingImpl extends RouteBuilder {
     final Processor SELECT_SERVICE_INSTANCE = (ex -> {
         final Extension extension = ex.getIn().getHeader(EXPOSING_EXTENSION, Extension.class);
 
-        final URI consumedServiceURI = exactlyOne(extension.exposed().consumed(),
+        final Set<URI> services = new HashSet<>(extension.exposed().consumed());
+        services.add(extension.exposed().exposedService());
+
+        final URI consumedServiceURI = exactlyOne(services,
                 "Exposed services must have exactly one consumed service in extension: " +
                         extension.uri());
 

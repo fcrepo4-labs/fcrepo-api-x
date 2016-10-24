@@ -20,6 +20,7 @@
       <cm:property name="apix.interceptPath" value="fcrepo/rest" />
       <cm:property name="fcrepo.baseURI" value="http://localhost:8080/fcrepo/rest" />
       <cm:property name="discovery.relativeURIs" value="true" />
+      <cm:property name="discovery.interceptURIs" value="true" />
     </cm:default-properties>
   </cm:property-placeholder>
 
@@ -66,6 +67,7 @@
   <bean id="serviceDiscoveryImpl" class="org.fcrepo.apix.routing.impl.ServiceDocumentGenerator">
     <property name="extensionBinding" ref="extensionBinding" />
     <property name="relativeURIs" value="${discovery.relativeURIs}" />
+    <property name="interceptURIs" value="${discovery.interceptURIs}" />
     <property name="routing" ref="routingStub" />
   </bean>
 

@@ -20,6 +20,7 @@ package org.fcrepo.apix.binding.impl;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -128,6 +129,11 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
     /** Just does a dumb dereference and lookup */
     @Override
     public Collection<Extension> getExtensionsFor(final URI resourceURI, final Collection<Extension> from) {
+
+        if (from.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         try (WebResource resource = registry.get(resourceURI)) {
             return getExtensionsFor(resource, from);
         } catch (final Exception e) {

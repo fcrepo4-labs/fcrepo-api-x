@@ -9,6 +9,7 @@
     <feature version="${project.version}">fcrepo-api-x-binding</feature>
     <feature version="${project.version}">fcrepo-api-x-jena</feature>
     <feature version="${project.version}">fcrepo-api-x-listener</feature>
+    <feature version="${project.version}">fcrepo-api-x-loader</feature>
     <feature version="${project.version}">fcrepo-api-x-model</feature>
     <feature version="${project.version}">fcrepo-api-x-registry</feature>
     <feature version="${project.version}">fcrepo-api-x-routing</feature>

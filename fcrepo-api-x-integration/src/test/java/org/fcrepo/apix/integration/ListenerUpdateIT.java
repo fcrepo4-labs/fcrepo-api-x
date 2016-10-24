@@ -92,7 +92,7 @@ public class ListenerUpdateIT implements KarafIT {
         final URI OBJECT = client.post(objectContainer).perform().getLocation();
 
         URI uri;
-        while (!OBJECT.equals(uri = objects.poll(10, TimeUnit.SECONDS))) {
+        while (!OBJECT.equals(uri = objects.poll(30, TimeUnit.SECONDS))) {
             assertNotNull("Our object did not update", uri);
         }
 

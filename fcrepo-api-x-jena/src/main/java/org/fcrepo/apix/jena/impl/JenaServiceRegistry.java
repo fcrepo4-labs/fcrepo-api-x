@@ -124,8 +124,6 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
                 .collect(
                         Collectors.toSet());
 
-        System.out.println("\n---\n,Service URIs in registry: " + serviceURIs);
-
         // Map canonical URI to service resource. If multiple service resources
         // indicate the same canonical URI, pick one arbitrarily.
         final Map<URI, URI> canonical = serviceURIs.stream()
@@ -140,7 +138,6 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     @Override
     public void update(final URI uri) {
         if (hasInDomain(uri)) {
-            System.out.println("UPDATING: " + uri);
             // TODO: This can be optimized more
             update();
         }
@@ -149,7 +146,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     @Override
     public void register(final URI uri) {
         try {
-            System.out.println("PATCH: Adding service:\n" + IOUtils.toString(patchAddService(uri), "utf8"));
+            System.out.println("\nPATCH: Adding service:\n" + IOUtils.toString(patchAddService(uri), "utf8"));
             this.client.patch(registryContainer).body(patchAddService(uri)).perform().close();
         } catch (final Exception e) {
             throw new RuntimeException(String.format("Could not add <%s> to service registry <%s>", uri,
@@ -170,7 +167,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     @Override
     public ServiceInstanceRegistry createInstanceRegistry(final Service service) {
-        System.out.println("PATCH: Creating service instance registry");
+        System.out.println("POST: Creating service instance registry");
         try {
             final URI uri = client.post(service.uri()).body(this.getClass().getResourceAsStream(
                     "objects/service-instance-registry.ttl")).perform().getLocation();

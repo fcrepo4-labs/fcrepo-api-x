@@ -1,0 +1,6 @@
+@prefix apix:<http://fedora.info/definitions/v4/api-extension#> .
+
+<> a apix:Extension;
+    apix:bindsTo <test:LoaderIT#minimal>;
+    apix:exposesService <http://example.org/LoaderIT/minimal>;
+    apix:exposesServiceAt "test:LoaderIT/minimal" .

@@ -118,7 +118,7 @@ public abstract class ServiceBasedTest implements KarafIT {
         return extensionURI;
     }
 
-    private void update() throws Exception {
+    protected void update() throws Exception {
 
         bundleContext.getServiceReferences(Updateable.class, null).stream()
                 .map(bundleContext::getService)
