@@ -44,6 +44,7 @@
   </properties>
 
   <build>
+
     <pluginManagement>
       <plugins>
         <plugin>
@@ -164,7 +165,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
       </plugin>
-      
+
     </plugins>
 
 
@@ -177,6 +178,18 @@
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
         <version>${commons-io.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-arq</artifactId>
+        <version>${jena.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.jena</groupId>
+        <artifactId>jena-core</artifactId>
+        <version>${jena.version}</version>
       </dependency>
 
       <dependency>
@@ -244,6 +257,18 @@
       </dependency>
 
       <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpcore</artifactId>
+        <version>${httpcore.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>${httpclient.version}</version>
+      </dependency>
+
+      <dependency>
         <groupId>org.osgi</groupId>
         <artifactId>org.osgi.service.component.annotations</artifactId>
         <version>${osgi.scr.version}</version>
@@ -277,6 +302,7 @@
 
     </dependencies>
   </dependencyManagement>
+
   <modules>
     <module>fcrepo-api-x-registry</module>
     <module>fcrepo-api-x-model</module>
@@ -284,8 +310,6 @@
     <module>fcrepo-api-x-binding</module>
     <module>fcrepo-api-x-execution</module>
     <module>fcrepo-api-x-jena</module>
-    <module>fcrepo-api-x-integration</module>
-    <module>fcrepo-api-x-karaf</module>
     <module>fcrepo-api-x-ontology</module>
     <module>fcrepo-api-x-test</module>
     <module>fcrepo-api-x-listener</module>
@@ -313,6 +337,13 @@
   </repositories>
 
   <profiles>
+    <profile>
+      <id>osgi</id>
+      <modules>
+        <module>fcrepo-api-x-integration</module>
+        <module>fcrepo-api-x-karaf</module>
+      </modules>
+    </profile>
     <profile>
       <id>POC</id>
       <modules>

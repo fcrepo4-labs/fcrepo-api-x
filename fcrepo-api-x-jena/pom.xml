@@ -17,15 +17,95 @@
         <artifactId>maven-bundle-plugin</artifactId>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.karaf.tooling</groupId>
-        <artifactId>karaf-maven-plugin</artifactId>
-      </plugin>
-
     </plugins>
   </build>
 
+  <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <dependencies>
+
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.jena</groupId>
+          <artifactId>jena-arq</artifactId>
+        </dependency>
+
+      </dependencies>
+    </profile>
+
+    <profile>
+      <id>osgi</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.karaf.tooling</groupId>
+            <artifactId>karaf-maven-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+     
+      <dependencies>
+
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+          <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.jena</groupId>
+          <artifactId>jena-osgi</artifactId>
+        </dependency>
+
+        <dependency>
+          <groupId>com.github.andrewoma.dexx</groupId>
+          <artifactId>collection</artifactId>
+          <version>0.6</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>jcl-over-slf4j</artifactId>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.servicemix.bundles</groupId>
+          <artifactId>org.apache.servicemix.bundles.xmlresolver</artifactId>
+          <version>1.2_5</version>
+        </dependency>
+        
+        <dependency>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
+          <version>1.4.01</version>
+          <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.servicemix.bundles</groupId>
+          <artifactId>org.apache.servicemix.bundles.xerces</artifactId>
+          <version>2.11.0_1</version>
+          <exclusions>
+            <exclusion>
+              <groupId>xml-apis</groupId>
+              <artifactId>xml-apis</artifactId>
+            </exclusion>
+          </exclusions>
+        </dependency>
+      </dependencies>
+    </profile>
+  </profiles>
+
   <dependencies>
+
     <dependency>
       <groupId>org.fcrepo.apix</groupId>
       <artifactId>fcrepo-api-x-model</artifactId>
@@ -45,50 +125,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.jena</groupId>
-      <artifactId>jena-osgi</artifactId>
-    </dependency>
-
-    <!-- For OSGi -->
-    <dependency>
-      <groupId>com.github.andrewoma.dexx</groupId>
-      <artifactId>collection</artifactId>
-      <version>0.6</version>
-    </dependency>
-
-    <!-- For OSGi -->
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jcl-over-slf4j</artifactId>
-    </dependency>
-
-    <!-- for OSGi -->
-    <dependency>
-      <groupId>org.apache.servicemix.bundles</groupId>
-      <artifactId>org.apache.servicemix.bundles.xmlresolver</artifactId>
-      <version>1.2_5</version>
-    </dependency>
-
-    <!-- for OSGi -->
-    <dependency>
-      <groupId>org.apache.servicemix.bundles</groupId>
-      <artifactId>org.apache.servicemix.bundles.xerces</artifactId>
-      <version>2.11.0_1</version>
-      <exclusions>
-        <exclusion>
-          <groupId>xml-apis</groupId>
-          <artifactId>xml-apis</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <scope>test</scope>
@@ -97,13 +133,6 @@
     <dependency>
       <groupId>org.mockito</groupId>
       <artifactId>mockito-all</artifactId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.jena</groupId>
-      <artifactId>jena-core</artifactId>
-      <version>${jena.version}</version>
       <scope>test</scope>
     </dependency>
 

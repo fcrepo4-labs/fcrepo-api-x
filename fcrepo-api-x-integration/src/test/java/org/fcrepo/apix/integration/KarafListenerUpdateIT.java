@@ -46,7 +46,7 @@ import org.osgi.framework.BundleContext;
  * @author apb@jhu.edu
  */
 @RunWith(PaxExam.class)
-public class ListenerUpdateIT implements KarafIT {
+public class KarafListenerUpdateIT implements KarafIT {
 
     @Inject
     public BundleContext cxt;
@@ -56,7 +56,7 @@ public class ListenerUpdateIT implements KarafIT {
 
     @Override
     public String testClassName() {
-        return ListenerUpdateIT.class.getSimpleName();
+        return KarafListenerUpdateIT.class.getSimpleName();
     }
 
     @Override

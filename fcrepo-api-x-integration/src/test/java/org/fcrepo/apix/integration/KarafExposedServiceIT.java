@@ -72,7 +72,7 @@ import org.osgi.framework.BundleContext;
  * @author apb@jhu.edu
  */
 @RunWith(PaxExam.class)
-public class ExposedServiceIT implements KarafIT {
+public class KarafExposedServiceIT implements KarafIT {
 
     final String serviceEndpoint = "http://127.0.0.1:" + System.getProperty("services.dynamic.test.port") +
             "/ExposedServiceIT";
@@ -101,7 +101,7 @@ public class ExposedServiceIT implements KarafIT {
 
     @Override
     public String testClassName() {
-        return ExposedServiceIT.class.getSimpleName();
+        return KarafExposedServiceIT.class.getSimpleName();
     }
 
     @Rule

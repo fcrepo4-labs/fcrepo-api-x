@@ -54,7 +54,7 @@ import org.osgi.framework.BundleContext;
  * @author apb@jhu.edu
  */
 @RunWith(PaxExam.class)
-public class RepositoryExtensionBindingIT implements KarafIT {
+public class KarafRepositoryExtensionBindingIT implements KarafIT {
 
     private static final URI ORE_ONTOLOGY_IRI = URI.create("http://www.openarchives.org/ore/terms/");
 

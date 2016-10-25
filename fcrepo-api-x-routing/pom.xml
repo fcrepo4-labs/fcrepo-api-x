@@ -8,20 +8,89 @@
   </parent>
   <artifactId>fcrepo-api-x-routing</artifactId>
   <packaging>bundle</packaging>
-
   <build>
     <plugins>
+
       <plugin>
         <groupId>org.apache.felix</groupId>
         <artifactId>maven-bundle-plugin</artifactId>
       </plugin>
 
-      <plugin>
-        <groupId>org.apache.karaf.tooling</groupId>
-        <artifactId>karaf-maven-plugin</artifactId>
-      </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>default</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <dependencies>
+
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.camel</groupId>
+          <artifactId>camel-core</artifactId>
+          <version>${camel.version}</version>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.camel</groupId>
+          <artifactId>camel-jetty</artifactId>
+          <version>${camel.version}</version>
+        </dependency>
+
+      </dependencies>
+    </profile>
+
+    <profile>
+      <id>osgi</id>
+
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.karaf.tooling</groupId>
+            <artifactId>karaf-maven-plugin</artifactId>
+          </plugin>
+        </plugins>
+      </build>
+
+      <dependencies>
+
+        <dependency>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+          <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>xml-apis</groupId>
+          <artifactId>xml-apis</artifactId>
+          <version>1.4.01</version>
+          <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.camel</groupId>
+          <artifactId>camel-core</artifactId>
+          <version>${camel.version}</version>
+          <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+          <groupId>org.apache.camel</groupId>
+          <artifactId>camel-jetty</artifactId>
+          <version>${camel.version}</version>
+          <scope>provided</scope>
+        </dependency>
+
+      </dependencies>
+    </profile>
+  </profiles>
 
   <dependencies>
     <dependency>
@@ -37,36 +106,9 @@
     </dependency>
 
     <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-core</artifactId>
-      <version>${camel.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.camel</groupId>
-      <artifactId>camel-jetty</artifactId>
-      <version>${camel.version}</version>
-      <scope>provided</scope>
-    </dependency>
-
-    <dependency>
       <groupId>org.osgi</groupId>
       <artifactId>org.osgi.service.component.annotations</artifactId>
       <scope>provided</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <scope>provided</scope>
-    </dependency>
-    
-    <dependency>
-      <groupId>org.apache.jena</groupId>
-      <artifactId>jena-core</artifactId>
-      <version>${jena.version}</version>
-      <scope>test</scope>
     </dependency>
 
     <dependency>
@@ -80,5 +122,12 @@
       <artifactId>mockito-all</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <scope>test</scope>
+    </dependency>
+
   </dependencies>
 </project>

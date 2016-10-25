@@ -49,7 +49,7 @@ import org.ops4j.pax.exam.util.Filter;
  * @author apb@jhu.edu
  */
 @RunWith(PaxExam.class)
-public class ServiceDocumentIT implements KarafIT {
+public class KarafServiceDocumentIT implements KarafIT {
 
     @Inject
     public ServiceDiscovery discovery;
@@ -69,7 +69,7 @@ public class ServiceDocumentIT implements KarafIT {
 
     @Override
     public String testClassName() {
-        return ServiceDocumentIT.class.getSimpleName();
+        return KarafServiceDocumentIT.class.getSimpleName();
     }
 
     @Override
