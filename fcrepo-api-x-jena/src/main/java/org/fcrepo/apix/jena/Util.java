@@ -303,8 +303,8 @@ public abstract class Util {
             }
 
             @Override
-            public Long length() {
-                return 0l;
+            public String name() {
+                return null;
             }
 
             @Override

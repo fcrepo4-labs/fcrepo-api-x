@@ -189,7 +189,7 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
         }
 
         @Override
-        public Long length() {
+        public String name() {
             return null;
         }
 

@@ -94,8 +94,8 @@ public class HttpRegistry implements Registry {
             }
 
             @Override
-            public Long length() {
-                return mgr.getResponse().getEntity().getContentLength();
+            public String name() {
+                return null;
             }
 
             @Override

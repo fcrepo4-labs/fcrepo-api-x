@@ -47,11 +47,11 @@ public interface WebResource extends AutoCloseable {
     public URI uri();
 
     /**
-     * Size of the resource representation in bytes.
+     * Name (e.g. filename) of the resource.
      *
-     * @return length in bytes, may be null if unknown.
+     * @return name, may be null if unknown.
      */
-    public Long length();
+    public String name();
 
     /**
      * Retrieve a byte stream of the resource.
@@ -84,11 +84,9 @@ public interface WebResource extends AutoCloseable {
      * @param stream Resource bytes.
      * @param contentType MIME type of the underlying stream.
      * @param uri URI if the resource
-     * @param length size in byyes, or null if not known.
-     * @return the newly created WebResource
      */
     public static WebResource of(final InputStream stream, final String contentType, final URI uri,
-            final Long length) {
+            final String name) {
         return new WebResource() {
 
             @Override
@@ -107,8 +105,8 @@ public interface WebResource extends AutoCloseable {
             }
 
             @Override
-            public Long length() {
-                return length;
+            public String name() {
+                return name;
             }
 
             @Override

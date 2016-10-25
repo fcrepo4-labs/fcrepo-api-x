@@ -52,8 +52,8 @@ abstract class WrappingResource implements WebResource {
     }
 
     @Override
-    public Long length() {
-        return delegate.length();
+    public String name() {
+        return delegate.name();
     }
 
     @Override

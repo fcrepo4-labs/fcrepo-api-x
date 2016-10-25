@@ -22,6 +22,7 @@ import static org.fcrepo.apix.jena.Util.objectLiteralsOf;
 import static org.fcrepo.apix.jena.Util.objectResourceOf;
 import static org.fcrepo.apix.jena.Util.objectResourcesOf;
 import static org.fcrepo.apix.jena.Util.parse;
+import static org.fcrepo.apix.jena.Util.subjectOf;
 import static org.fcrepo.apix.jena.Util.subjectsOf;
 import static org.fcrepo.apix.model.Ontologies.RDF_TYPE;
 import static org.fcrepo.apix.model.Ontologies.Apix.CLASS_EXTENSION;
@@ -104,7 +105,8 @@ public class LoaderService {
 
         final byte[] body = toByteArray(resource);
 
-        final Model model = parse(WebResource.of(new ByteArrayInputStream(body), resource.contentType()), "");
+        final Model model = parse(WebResource.of(new ByteArrayInputStream(body), resource.contentType(), resource
+                .uri(), null), resource.uri().toString());
 
         final int extensionCount = subjectsOf(RDF_TYPE, CLASS_EXTENSION, model).size();
 
@@ -123,7 +125,7 @@ public class LoaderService {
                     WebResource.of(
                             new ByteArrayInputStream(body),
                             resource.contentType(),
-                            findMatchingExtension(model), null),
+                            findMatchingExtension(model), extensionName(model)),
                     useBinary(model));
         } else if (definedServiceCount > 0) {
             depositedResource = serviceRegistry.put(
@@ -218,7 +220,9 @@ public class LoaderService {
         try (InputStream template = getClass().getResourceAsStream("/objects/service.ttl")) {
             final String rdf = IOUtils.toString(template, "utf8")
                     .replace("CANONICAL_SERVICE_URI", serviceURI.toString());
-            return serviceRegistry.put(WebResource.of(new ByteArrayInputStream(rdf.getBytes()), "text/turtle"));
+
+            return serviceRegistry.put(WebResource.of(new ByteArrayInputStream(rdf.getBytes()), "text/turtle", null,
+                    toName(serviceURI)));
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
@@ -258,6 +262,24 @@ public class LoaderService {
     // Return true if any blank nodes are present
     private boolean useBinary(final Model model) {
         return !model.listSubjects().filterKeep(r -> r.isAnon()).toList().isEmpty();
+    }
+
+    // Come up with a plausible name for the extension
+    private String extensionName(final Model model) {
+        return toName(subjectOf(RDF_TYPE, CLASS_EXTENSION, model));
+    }
+
+    // Come up with a plausible text name given a uri
+    private String toName(final URI uri) {
+        if (uri.getPath() == null || uri.getPath().equals("")) {
+            return null;
+        }
+
+        if (uri.getFragment() != null && !uri.getFragment().equals("")) {
+            return uri.getPath() + "-" + uri.getFragment();
+        } else {
+            return uri.getPath();
+        }
     }
 
     private byte[] toByteArray(final WebResource resource) {

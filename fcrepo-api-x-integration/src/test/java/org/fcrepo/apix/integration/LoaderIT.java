@@ -62,7 +62,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.FormElement;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -188,7 +187,6 @@ public class LoaderIT extends ServiceBasedTest {
     }
 
     @Test
-    @Ignore
     public void definedServiceTest() throws Exception {
         final String SERVICE_RESPONSE_BODY = "BODY";
 
@@ -358,5 +356,4 @@ public class LoaderIT extends ServiceBasedTest {
                     t -> URI.create(t.getSubject().getURI())));
         }
     }
-
 }
