@@ -45,9 +45,11 @@ import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
+import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.Registry;
 import org.fcrepo.apix.model.components.Routing;
+import org.fcrepo.apix.model.components.ServiceRegistry;
 import org.fcrepo.client.FcrepoResponse;
 
 import org.apache.camel.Exchange;
@@ -95,6 +97,9 @@ public class LoaderIT extends ServiceBasedTest {
     @Inject
     @Filter("(org.fcrepo.apix.registry.role=default)")
     Registry repository;
+
+    @Inject
+    ServiceRegistry serviceRegistry;
 
     @Override
     public String testClassName() {
@@ -219,14 +224,15 @@ public class LoaderIT extends ServiceBasedTest {
     @Test
     public void ontologyEmbeddedExtensionTest() throws Exception {
         final String SERVICE_RESPONSE_BODY = "BODY";
+        final String TEST_TYPE = "test:type";
 
         optionsResponse.set(IOUtils.toString(testResource("objects/options_LoaderIT_ont.ttl").representation(),
                 "utf8"));
         serviceResponse.set(SERVICE_RESPONSE_BODY);
 
         // Now add the extension
-        attempt(10, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue("Location");
-        textPost(LOADER_URI, serviceEndpoint);
+        final String origLocation = attempt(10, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue(
+                "Location");
 
         // Verify that extension works!
 
@@ -247,6 +253,20 @@ public class LoaderIT extends ServiceBasedTest {
                         .getBody(), "utf8"));
         assertEquals(SERVICE_RESPONSE_BODY, body);
 
+        // Now check that we can update it
+
+        // We should be able to re-load it without issue.
+        // First, force an update so that we're not at the whim of the asynchronous updater.
+        update();
+        assertEquals(origLocation, textPost(LOADER_URI, serviceEndpoint).getHeaderValue("Location"));
+
+        // Now update it without issue
+        optionsResponse.set(optionsResponse.get() + triple("", RDF_TYPE, TEST_TYPE));
+        final FcrepoResponse response = textPost(LOADER_URI, serviceEndpoint);
+        assertEquals(origLocation, response.getHeaderValue("Location"));
+
+        // Now assure that our new triple is present in its representation
+        IOUtils.toString(response.getBody(), "utf8").contains(TEST_TYPE);
     }
 
     @Test
@@ -254,6 +274,7 @@ public class LoaderIT extends ServiceBasedTest {
 
         final String TEST_TYPE = "test:type";
         final String SERVICE_CANONICAL = "test:" + name.getMethodName();
+        final URI SERVICE_CANONICAL_URI = URI.create(SERVICE_CANONICAL);
         final String EXPOSED_AT = SERVICE_CANONICAL;
 
         optionsResponse.set(triple("", RDF_TYPE, CLASS_EXTENSION) +
@@ -262,6 +283,10 @@ public class LoaderIT extends ServiceBasedTest {
 
         // Now add the extension twice, making note of its URI
         final String uri = attempt(10, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue("Location");
+        update();
+
+        // First, force an update so that we're not at the whim of the asynchronous updater. Then load the extension
+        // for the second time.
         textPost(LOADER_URI, serviceEndpoint);
 
         // Now alter the content of the available extension doc, the loader should slurp up the
@@ -275,6 +300,11 @@ public class LoaderIT extends ServiceBasedTest {
 
         // Now, verify that the extension doc has our new statement
         IOUtils.toString(response.getBody(), "utf8").contains(TEST_TYPE);
+
+        update();
+
+        // Make sure we only have ONE entry in the service registry for our service
+        assertEquals(1, countServiceRegistryEntries(SERVICE_CANONICAL_URI));
     }
 
     private final FcrepoResponse textPost(final String uri, final String content) throws Exception {
@@ -283,6 +313,14 @@ public class LoaderIT extends ServiceBasedTest {
 
         return client.post(URI.create(uri)).body(new ByteArrayInputStream(body.getBytes()),
                 "text/plain").perform();
+    }
+
+    private long countServiceRegistryEntries(final URI canonicalURI) {
+        return serviceRegistry.list().stream()
+                .map(serviceRegistry::getService)
+                .map(Service::canonicalURI)
+                .filter(u -> canonicalURI.equals(u))
+                .count();
     }
 
     private <T> T attempt(final int times, final Callable<T> it) {

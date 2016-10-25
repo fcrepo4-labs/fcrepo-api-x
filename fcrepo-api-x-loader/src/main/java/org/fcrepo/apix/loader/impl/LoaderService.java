@@ -19,6 +19,7 @@
 package org.fcrepo.apix.loader.impl;
 
 import static org.fcrepo.apix.jena.Util.objectLiteralsOf;
+import static org.fcrepo.apix.jena.Util.objectResourceOf;
 import static org.fcrepo.apix.jena.Util.objectResourcesOf;
 import static org.fcrepo.apix.jena.Util.parse;
 import static org.fcrepo.apix.jena.Util.subjectsOf;
@@ -33,10 +34,8 @@ import static org.fcrepo.apix.model.Ontologies.Service.PROP_CANONICAL;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.net.URI;
-import java.util.AbstractMap.SimpleEntry;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -51,7 +50,8 @@ import org.fcrepo.apix.model.components.ServiceRegistry;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.rdf.model.Model;
-import org.apache.jena.rdf.model.Resource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Service which loads extensions and services based on the contents of the given resource.
@@ -65,6 +65,8 @@ public class LoaderService {
     private ExtensionRegistry extensionRegistry;
 
     private Registry generalRegistry;
+
+    private static final Logger LOG = LoggerFactory.getLogger(LoaderService.class);
 
     /**
      * Set the service registry.
@@ -151,47 +153,53 @@ public class LoaderService {
     // Load an extension resource, then load any services defined or referenced by it if appropriate.
     private Set<URI> loadServices(final URI uri) {
 
-        System.out.println("Loading services from " + uri);
         final Model persistedModel = parse(generalRegistry.get(uri));
 
-        final Collection<URI> definedServices = subjectsOf(RDF_TYPE, CLASS_SERVICE, persistedModel);
+        final Set<URI> defined = new HashSet<>(subjectsOf(RDF_TYPE, CLASS_SERVICE, persistedModel));
 
-        final Set<URI> referencedServices = allReferencedServices(persistedModel);
+        final Set<URI> definedWithExplicitCanonical = new HashSet<>(subjectsOf(PROP_CANONICAL, null, persistedModel));
 
-        System.out.println("Defined services: " + definedServices);
-        System.out.println("Referenced services: " + referencedServices);
+        final Set<URI> referenced = allReferencedServices(persistedModel);
 
-        final Map<URI, URI> canonicalToLocal =
-                persistedModel.listStatements(null, persistedModel.getProperty(PROP_CANONICAL), (Resource) null)
-                        .mapWith(s -> new SimpleEntry<String, String>(
-                                s.getSubject().getURI(),
-                                s.getObject().asResource().getURI()))
-                        .toSet().stream().collect(Collectors.toMap(e -> URI.create(e.getValue()), e -> URI.create(e
-                                .getKey())));
+        final Set<URI> resolvableservices = new HashSet<>();
 
-        final Map<URI, URI> localToCanonical = canonicalToLocal.entrySet().stream().collect(Collectors.toMap(e -> e
-                .getValue(), e -> e.getKey()));
+        final Set<URI> canonicalServices = new HashSet<>();
 
-        // Add a reference to each service defined in this resource to the service registry, if the service is not
-        // already registered
-        definedServices.stream()
-                .filter(s -> !serviceRegistry.contains(localToCanonical.getOrDefault(s, s)))
-                .forEach(serviceRegistry::register);
+        LOG.debug("Defined services are: {}", defined);
+        LOG.debug("Defined with canonical: {}", definedWithExplicitCanonical);
+        LOG.debug("Referenced: {}", referenced);
 
-        System.out.println(canonicalToLocal);
+        // All referenced services that are not otherwise given a canonical URI are canonical.
+        canonicalServices.addAll(
+                referenced.stream().filter(u -> !definedWithExplicitCanonical.contains(u))
+                        .collect(Collectors.toSet()));
 
-        // For any other services referenced but not defined, put a skeletal service description in the registry if
-        // one doesn't exist.
-        referencedServices.stream()
-                .filter(s -> !definedServices.contains(canonicalToLocal.getOrDefault(s, s)))
-                .filter(s -> !serviceRegistry.contains(s))
-                .forEach(s -> canonicalToLocal.putIfAbsent(s, putService(s)));
+        // All explicitly canonical URIs are canonical
+        canonicalServices.addAll(
+                definedWithExplicitCanonical.stream()
+                        .map(URI::toString)
+                        .map(s -> objectResourceOf(s, PROP_CANONICAL, persistedModel))
+                        .collect(Collectors.toSet()));
 
-        final Set<URI> uris = new HashSet<>();
-        uris.addAll(definedServices);
-        uris.addAll(referencedServices);
+        // Defined services without an explicitly canonical URI are canonical
+        canonicalServices.addAll(defined.stream()
+                .filter(u -> !definedWithExplicitCanonical.contains(u))
+                .collect(Collectors.toSet()));
 
-        return uris.stream().map(u -> canonicalToLocal.getOrDefault(u, u)).collect(Collectors.toSet());
+        // Finally, add any canonical services that aren't in our registry.
+        for (final URI canonical : canonicalServices) {
+            if (serviceRegistry.contains(canonical)) {
+                LOG.debug("Service registry contains <{}>, NOT adding", canonical);
+                resolvableservices.add(canonical);
+            } else {
+                LOG.debug("Service registry DOES NOT contain <{}>, adding!", canonical);
+                resolvableservices.add(putService(canonical));
+            }
+        }
+
+        // Return a set of all resolvable URIs to services mentioned in this document.
+        return resolvableservices;
+
     }
 
     private URI addInstance(final URI instanceURI, final Service service) {
@@ -229,6 +237,7 @@ public class LoaderService {
         return new HashSet<>(subjectsOf(RDF_TYPE, CLASS_SERVICE, model));
     }
 
+    // Find an extension in the registry that matches (i.e. "is") the given one
     private URI findMatchingExtension(final Model model) {
         final Collection<URI> exposesServices = objectResourcesOf(null, PROP_EXPOSES_SERVICE, model);
         final Collection<URI> consumesServices = objectResourcesOf(null, PROP_CONSUMES_SERVICE, model);

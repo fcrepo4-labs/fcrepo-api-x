@@ -238,13 +238,9 @@ public class LoaderServiceTest {
                 triple(SERVICE_ENDPOINT, RDF_TYPE, CLASS_EXTENSION) +
                         triple(SERVICE_ENDPOINT, PROP_CONSUMES_SERVICE, SERVICE_CANONICAL)));
 
-        // We do NOT add the service to the service registry, we link to it
-        verify(serviceRegistry, times(0)).put(any(WebResource.class));
-        verify(serviceRegistry).register(LOCALLY_DEFINED_SERVICE_URI);
-
+        verify(serviceRegistry, times(1)).put(any(WebResource.class));
         verify(serviceRegistry).createInstanceRegistry(eq(service));
         verify(serviceInstanceRegistry).addEndpoint(SERVICE_ENDPOINT_URI);
-
         verify(extensionRegistry).put(any(WebResource.class), eq(false));
 
         assertEquals(PERSISTED_EXTENSION_URI, loadResult);

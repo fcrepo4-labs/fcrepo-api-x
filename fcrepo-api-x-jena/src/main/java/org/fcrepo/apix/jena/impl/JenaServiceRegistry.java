@@ -146,7 +146,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     @Override
     public void register(final URI uri) {
         try {
-            System.out.println("\nPATCH: Adding service:\n" + IOUtils.toString(patchAddService(uri), "utf8"));
+            LOG.debug("Registering service {} ", uri);
             this.client.patch(registryContainer).body(patchAddService(uri)).perform().close();
         } catch (final Exception e) {
             throw new RuntimeException(String.format("Could not add <%s> to service registry <%s>", uri,
@@ -260,6 +260,11 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
         return new HashSet<>(canonicalUriMap.values());
     }
 
+    @Override
+    public boolean contains(final URI uri) {
+        return canonicalUriMap.containsKey(uri) || canonicalUriMap.containsValue(uri);
+    }
+
     class ServiceImpl extends WrappingResource implements Service, JenaResource {
 
         final Model model;
@@ -276,8 +281,8 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
                 try {
                     this.uri = subjectOf(RDF_TYPE, CLASS_SERVICE, model);
                 } catch (final ResourceNotFoundException e) {
-                    model.write(System.out, "TTL");
-                    throw new RuntimeException(e);
+                    throw new RuntimeException(
+                            String.format("Error performing sanity check on service impl <%s>", uri), e);
                 }
             } else {
                 this.uri = uri;

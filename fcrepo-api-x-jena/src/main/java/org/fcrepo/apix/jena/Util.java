@@ -250,7 +250,7 @@ public abstract class Util {
      * @return list of subjects
      */
     public static List<URI> subjectsOf(final String p, final String o, final Model model) {
-        return model.listSubjectsWithProperty(model.getProperty(p), model.getResource(o))
+        return model.listSubjectsWithProperty(model.getProperty(p), o != null ? model.getResource(o) : null)
                 .filterKeep(Resource::isURIResource)
                 .mapWith(Resource::getURI)
                 .mapWith(URI::create).toList();
