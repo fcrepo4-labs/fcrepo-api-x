@@ -1,0 +1,15 @@
+@prefix apix:<http://fedora.info/definitions/v4/api-extension#> .
+@prefix owl:<http://www.w3.org/2002/07/owl#> .
+@prefix ebucore:<http://www.ebu.ch/metadata/ontologies/ebucore/ebucore#> .
+@prefix fedora:<http://fedora.info/definitions/v4/repository#> .
+
+<> a apix:Extension;
+    apix:exposesService <http://example.org/LoaderIT/ont>;
+    apix:exposesServiceAt "test:LoaderIT/ont";
+    apix:bindsTo <#class> .
+
+<#class> owl:unionOf (
+        fedora:Binary
+        [ a owl:Restriction; owl:onProperty ebucore:mimeType; owl:hasValue "text/plain" ]
+        [ a owl:Restriction; owl:onProperty ebucore:mimeType; owl:hasValue "text/html" ] ) .
+    

@@ -48,6 +48,18 @@ public interface Registry {
     public URI put(WebResource resource);
 
     /**
+     * Persist the given resource as a a binary.
+     * <p>
+     * implementations may have special processing for binaries.
+     * </p>
+     *
+     * @param resource the resource
+     * @param asBinary true if binary
+     * @return
+     */
+    public URI put(WebResource resource, boolean asBinary);
+
+    /**
      * Delete a resource from the registry.
      *
      * @param uri URI of the resource to delete.

@@ -1,8 +1,0 @@
-@prefix apix:<http://fedora.info/definitions/v4/api-extension#> .
-@prefix owl:<http://www.w3.org/2002/07/owl#> .
-
-<> a apix:Extension;
-    owl:imports </options_ontology.ttl>;
-    apix:exposesService <http://example.org/LoaderIT/ont_ext>;
-    apix:exposesServiceAt "test:LoaderIT/ont_ext";
-    apix:bindsTo <test:LoaderIT#ont_ext> .

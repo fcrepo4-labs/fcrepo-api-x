@@ -118,8 +118,11 @@ public class LoaderService {
         // service registry;
         if (extensionCount == 1) {
             depositedResource = extensionRegistry.put(
-                    WebResource.of(new ByteArrayInputStream(body), resource.contentType(), findMatchingExtension(
-                            model), null));
+                    WebResource.of(
+                            new ByteArrayInputStream(body),
+                            resource.contentType(),
+                            findMatchingExtension(model), null),
+                    useBinary(model));
         } else if (definedServiceCount > 0) {
             depositedResource = serviceRegistry.put(
                     WebResource.of(new ByteArrayInputStream(body), resource.contentType()));
@@ -195,10 +198,8 @@ public class LoaderService {
         ServiceInstanceRegistry instances = null;
         try {
             instances = serviceRegistry.instancesOf(service);
-            System.out.println("Adddding to existing srvice registry " + instances);
         } catch (final ResourceNotFoundException e) {
             instances = serviceRegistry.createInstanceRegistry(service);
-            System.out.println("Created new instance registry " + instances);
         }
 
         return instances.addEndpoint(instanceURI);
@@ -243,6 +244,11 @@ public class LoaderService {
         }
 
         return null;
+    }
+
+    // Return true if any blank nodes are present
+    private boolean useBinary(final Model model) {
+        return !model.listSubjects().filterKeep(r -> r.isAnon()).toList().isEmpty();
     }
 
     private byte[] toByteArray(final WebResource resource) {

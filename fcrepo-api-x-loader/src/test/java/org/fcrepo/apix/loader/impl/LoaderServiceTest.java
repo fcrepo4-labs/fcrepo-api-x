@@ -103,7 +103,7 @@ public class LoaderServiceTest {
         toTest.setServiceRegistry(serviceRegistry);
         toTest.setGeneralRegistry(generalRegistry);
 
-        when(extensionRegistry.put(any(WebResource.class))).thenReturn(PERSISTED_EXTENSION_URI);
+        when(extensionRegistry.put(any(WebResource.class), any(Boolean.class))).thenReturn(PERSISTED_EXTENSION_URI);
 
         when(serviceRegistry.getService(eq(PERSISTED_SERVICE_URI))).thenReturn(service);
         when(serviceRegistry.createInstanceRegistry(eq(service))).thenReturn(serviceInstanceRegistry);
@@ -145,7 +145,7 @@ public class LoaderServiceTest {
         verify(serviceInstanceRegistry).addEndpoint(SERVICE_ENDPOINT_URI);
         verify(serviceRegistry).createInstanceRegistry(eq(service));
         verify(serviceRegistry).put(any(WebResource.class));
-        verify(extensionRegistry).put(any(WebResource.class));
+        verify(extensionRegistry).put(any(WebResource.class), eq(false));
         assertEquals(PERSISTED_EXTENSION_URI, loadResult);
     }
 
@@ -175,7 +175,7 @@ public class LoaderServiceTest {
 
         verify(serviceInstanceRegistry).addEndpoint(SERVICE_ENDPOINT_URI);
         verify(serviceRegistry).createInstanceRegistry(eq(service));
-        verify(extensionRegistry).put(any(WebResource.class));
+        verify(extensionRegistry).put(any(WebResource.class), eq(false));
         assertEquals(PERSISTED_EXTENSION_URI, loadResult);
     }
 
@@ -206,7 +206,7 @@ public class LoaderServiceTest {
 
         verify(serviceRegistry).instancesOf(eq(service));
         verify(serviceInstanceRegistry).addEndpoint(SERVICE_ENDPOINT_URI);
-        verify(extensionRegistry).put(any(WebResource.class));
+        verify(extensionRegistry).put(any(WebResource.class), eq(false));
         assertEquals(PERSISTED_EXTENSION_URI, loadResult);
     }
 
@@ -245,7 +245,7 @@ public class LoaderServiceTest {
         verify(serviceRegistry).createInstanceRegistry(eq(service));
         verify(serviceInstanceRegistry).addEndpoint(SERVICE_ENDPOINT_URI);
 
-        verify(extensionRegistry).put(any(WebResource.class));
+        verify(extensionRegistry).put(any(WebResource.class), eq(false));
 
         assertEquals(PERSISTED_EXTENSION_URI, loadResult);
     }
@@ -285,7 +285,7 @@ public class LoaderServiceTest {
         verify(serviceRegistry).createInstanceRegistry(eq(service));
         verify(serviceInstanceRegistry).addEndpoint(SERVICE_ENDPOINT_URI);
 
-        verify(extensionRegistry).put(any(WebResource.class));
+        verify(extensionRegistry).put(any(WebResource.class), eq(false));
 
         assertEquals(PERSISTED_EXTENSION_URI, loadResult);
     }
@@ -330,7 +330,7 @@ public class LoaderServiceTest {
         verify(serviceRegistry).put(any(WebResource.class));
         assertEquals(PERSISTED_EXTENSION_URI, loadResult);
 
-        verify(extensionRegistry).put(arg.capture());
+        verify(extensionRegistry).put(arg.capture(), eq(false));
         assertEquals(PERSISTED_EXTENSION_URI, arg.getValue().uri());
     }
 }

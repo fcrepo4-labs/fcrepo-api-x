@@ -60,6 +60,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.FormElement;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -79,6 +80,10 @@ public class LoaderIT extends ServiceBasedTest {
             "loader.dynamic.test.port") + "/load";
 
     final URI SERVICE_MINIMAL = URI.create("http://example.org/LoaderIT/minimal");
+
+    final URI SERVICE_FULL = URI.create("http://example.org/LoaderIT/full");
+
+    final URI SERVICE_ONT = URI.create("http://example.org/LoaderIT/ont");
 
     final AtomicReference<Object> optionsResponse = new AtomicReference<>();
 
@@ -142,7 +147,8 @@ public class LoaderIT extends ServiceBasedTest {
 
         final String SERVICE_RESPONSE_BODY = "BODY";
 
-        optionsResponse.set(testResource("objects/options_LoaderIT_minimal.ttl").representation());
+        optionsResponse.set(IOUtils.toString(testResource("objects/options_LoaderIT_minimal.ttl").representation(),
+                "utf8"));
         serviceResponse.set(SERVICE_RESPONSE_BODY);
 
         final Document html = attempt(10, () -> Jsoup.connect(LOADER_URI).method(Method.GET)
@@ -157,14 +163,19 @@ public class LoaderIT extends ServiceBasedTest {
         assertNotNull(response.header("Location"));
 
         // Verify that extension works!
+
+        // Get the intercept/proxy URI for a fedora container
         final URI container = routing.interceptUriFor(objectContainer);
 
+        // Deposit an object into the container
         final URI deposited = client.post(container).slug("LoaderIT_htmlMinimalTest")
                 .body(IOUtils.toInputStream("<> a <test:LoaderIT#minimal> .", "utf8"), "text/turtle")
                 .perform().getLocation();
 
+        // Get the service discovery document
         final URI discoveryDoc = client.options(deposited).perform().getLinkHeaders("service").get(0);
 
+        // Invoke the "minimal" service, and verify that the response body is as expected
         final String body = attempt(10, () -> IOUtils.toString(
                 client.get(serviceEndpoints(discoveryDoc).get(SERVICE_MINIMAL)).perform()
                         .getBody(), "utf8"));
@@ -172,7 +183,69 @@ public class LoaderIT extends ServiceBasedTest {
     }
 
     @Test
+    @Ignore
     public void definedServiceTest() throws Exception {
+        final String SERVICE_RESPONSE_BODY = "BODY";
+
+        optionsResponse.set(IOUtils.toString(testResource("objects/options_LoaderIT_full.ttl").representation(),
+                "utf8"));
+        serviceResponse.set(SERVICE_RESPONSE_BODY);
+
+        // Now add the extension
+        attempt(10, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue("Location");
+        textPost(LOADER_URI, serviceEndpoint);
+
+        // Verify that extension works!
+
+        // Get the intercept/proxy URI for a fedora container
+        final URI container = routing.interceptUriFor(objectContainer);
+
+        // Deposit an object into the container
+        final URI deposited = client.post(container).slug("LoaderIT_definedServiceTest")
+                .body(IOUtils.toInputStream("<> a <test:LoaderIT#full> .", "utf8"), "text/turtle")
+                .perform().getLocation();
+
+        // Get the service discovery document
+        final URI discoveryDoc = client.options(deposited).perform().getLinkHeaders("service").get(0);
+
+        // Invoke the "minimal" service, and verify that the response body is as expected
+        final String body = attempt(10, () -> IOUtils.toString(
+                client.get(serviceEndpoints(discoveryDoc).get(SERVICE_FULL)).perform()
+                        .getBody(), "utf8"));
+        assertEquals(SERVICE_RESPONSE_BODY, body);
+
+    }
+
+    @Test
+    public void ontologyEmbeddedExtensionTest() throws Exception {
+        final String SERVICE_RESPONSE_BODY = "BODY";
+
+        optionsResponse.set(IOUtils.toString(testResource("objects/options_LoaderIT_ont.ttl").representation(),
+                "utf8"));
+        serviceResponse.set(SERVICE_RESPONSE_BODY);
+
+        // Now add the extension
+        attempt(10, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue("Location");
+        textPost(LOADER_URI, serviceEndpoint);
+
+        // Verify that extension works!
+
+        // Get the intercept/proxy URI for a fedora container
+        final URI container = routing.interceptUriFor(objectContainer);
+
+        // Deposit an object into the container, as a text/plain binary
+        final URI deposited = client.post(container).slug("LoaderIT_" + name.getMethodName())
+                .body(IOUtils.toInputStream("THIS IS TEXT", "utf8"), "text/plain")
+                .perform().getLocation();
+
+        // Get the service discovery document
+        final URI discoveryDoc = client.options(deposited).perform().getLinkHeaders("service").get(0);
+
+        // Invoke the "minimal" service, and verify that the response body is as expected
+        final String body = attempt(10, () -> IOUtils.toString(
+                client.get(serviceEndpoints(discoveryDoc).get(SERVICE_ONT)).perform()
+                        .getBody(), "utf8"));
+        assertEquals(SERVICE_RESPONSE_BODY, body);
 
     }
 
@@ -189,7 +262,6 @@ public class LoaderIT extends ServiceBasedTest {
 
         // Now add the extension twice, making note of its URI
         final String uri = attempt(10, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue("Location");
-        textPost(LOADER_URI, serviceEndpoint);
         textPost(LOADER_URI, serviceEndpoint);
 
         // Now alter the content of the available extension doc, the loader should slurp up the

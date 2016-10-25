@@ -181,7 +181,8 @@ public class LdpContainerRegistry implements Registry {
         return put(resource, binary);
     }
 
-    private URI put(final WebResource resource, final boolean asBinary) {
+    @Override
+    public URI put(final WebResource resource, final boolean asBinary) {
         HttpEntityEnclosingRequestBase request = null;
 
         if (resource.uri() == null || !resource.uri().isAbsolute()) {

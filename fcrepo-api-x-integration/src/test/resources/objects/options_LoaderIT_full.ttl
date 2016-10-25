@@ -1,5 +1,7 @@
 @prefix apix:<http://fedora.info/definitions/v4/api-extension#> .
 @prefix svc:<http://fedora.info/definitions/v4/service#> .
+@prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#> .
+@prefix dc:<http://purl.org/dc/elements/1.1/> .
 
 <> a apix:Extension;
     apix:bindsTo <test:LoaderIT#full>;
@@ -7,4 +9,6 @@
     apix:exposesServiceAt "test:LoaderIT/full" .
 
 <#service> a svc:Service;
+    dc:description "A service defintion that says something"@en;
+    rdfs:label "Fully-described service"@en;
     svc:canonical <http://example.org/LoaderIT/full> .

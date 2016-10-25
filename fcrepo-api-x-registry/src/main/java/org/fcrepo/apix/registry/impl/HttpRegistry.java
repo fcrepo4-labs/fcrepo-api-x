@@ -220,6 +220,11 @@ public class HttpRegistry implements Registry {
     }
 
     @Override
+    public URI put(final WebResource resource, final boolean asBinary) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public URI put(final WebResource resource) {
         throw new UnsupportedOperationException();
     }

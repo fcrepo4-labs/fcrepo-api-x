@@ -114,7 +114,7 @@ public abstract class Util {
                 model.getProperty(p),
                 (RDFNode) null)
                 .mapWith(Statement::getObject)
-                .filterKeep(RDFNode::isResource)
+                .filterKeep(RDFNode::isURIResource)
                 .mapWith(RDFNode::asResource)
                 .mapWith(Resource::getURI)
                 .mapWith(URI::create)
@@ -235,6 +235,7 @@ public abstract class Util {
     public static Set<URI> subjectsOf(final Stream<Triple> triples) {
         return triples
                 .map(Triple::getSubject)
+                .filter(n -> !n.isBlank())
                 .map(Node::getURI)
                 .map(URI::create)
                 .collect(Collectors.toSet());
@@ -249,8 +250,10 @@ public abstract class Util {
      * @return list of subjects
      */
     public static List<URI> subjectsOf(final String p, final String o, final Model model) {
-        return model.listSubjectsWithProperty(model.getProperty(p), model.getResource(o)).mapWith(
-                Resource::getURI).mapWith(URI::create).toList();
+        return model.listSubjectsWithProperty(model.getProperty(p), model.getResource(o))
+                .filterKeep(Resource::isURIResource)
+                .mapWith(Resource::getURI)
+                .mapWith(URI::create).toList();
     }
 
     /**
