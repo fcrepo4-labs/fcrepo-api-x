@@ -303,6 +303,7 @@
     <module>fcrepo-api-x-test</module>
     <module>fcrepo-api-x-listener</module>
     <module>fcrepo-api-x-loader</module>
+    <module>fcrepo-api-x-indexing</module>
   </modules>
 
   <licenses>
