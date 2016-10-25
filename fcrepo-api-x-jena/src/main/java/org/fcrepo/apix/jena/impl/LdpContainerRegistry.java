@@ -188,6 +188,9 @@ public class LdpContainerRegistry implements Registry {
             request = new HttpPost(containerId);
         } else {
             request = new HttpPut(resource.uri());
+            if (!asBinary) {
+                request.addHeader("Prefer", "handling=lenient; received=\"minimal\"");
+            }
         }
 
         if (asBinary) {

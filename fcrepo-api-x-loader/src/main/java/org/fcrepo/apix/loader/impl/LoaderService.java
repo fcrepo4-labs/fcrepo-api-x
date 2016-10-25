@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.loader.impl;
 
+import static org.fcrepo.apix.jena.Util.objectLiteralsOf;
 import static org.fcrepo.apix.jena.Util.objectResourcesOf;
 import static org.fcrepo.apix.jena.Util.parse;
 import static org.fcrepo.apix.jena.Util.subjectsOf;
@@ -25,6 +26,7 @@ import static org.fcrepo.apix.model.Ontologies.RDF_TYPE;
 import static org.fcrepo.apix.model.Ontologies.Apix.CLASS_EXTENSION;
 import static org.fcrepo.apix.model.Ontologies.Apix.PROP_CONSUMES_SERVICE;
 import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE;
+import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE_AT;
 import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_CANONICAL;
 
@@ -38,6 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
@@ -51,6 +54,8 @@ import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 
 /**
+ * Service which loads extensions and services based on the contents of the given resource.
+ *
  * @author apb@jhu.edu
  */
 public class LoaderService {
@@ -112,12 +117,17 @@ public class LoaderService {
         // If the document defines an extension, load it as such. Otherwise, add to the
         // service registry;
         if (extensionCount == 1) {
-            System.out.println("Inserting into extension registry");
             depositedResource = extensionRegistry.put(
-                    WebResource.of(new ByteArrayInputStream(body), resource.contentType()));
+                    WebResource.of(new ByteArrayInputStream(body), resource.contentType(), findMatchingExtension(
+                            model), null));
         } else if (definedServiceCount > 0) {
             depositedResource = serviceRegistry.put(
                     WebResource.of(new ByteArrayInputStream(body), resource.contentType()));
+        } else {
+            throw new RuntimeException(String.format(
+                    "Cannot load resource.  Does not describe exactly one extension (%d), " +
+                            "or define any services:\n===\n%s\n===",
+                    extensionCount, new String(body)));
         }
 
         // Now, see if we need to register a service instance.
@@ -126,13 +136,13 @@ public class LoaderService {
         // If there is unambiguously one service, then register our resource URI as an instance of it, and return a
         // URI to the instance, otherwise, just return the extension or service URI as appropriate.
         if (allServices.size() == 1) {
-            System.out.println("All Services " + allServices);
             final Service service = serviceRegistry.getService(allServices.iterator().next());
-            System.out.println("Service is " + service);
-            return addInstance(resource.uri(), service);
+            addInstance(resource.uri(), service);
         } else {
             return depositedResource;
         }
+
+        return depositedResource;
     }
 
     // Load an extension resource, then load any services defined or referenced by it if appropriate.
@@ -216,6 +226,23 @@ public class LoaderService {
 
     private static Set<URI> allDefinedServices(final Model model) {
         return new HashSet<>(subjectsOf(RDF_TYPE, CLASS_SERVICE, model));
+    }
+
+    private URI findMatchingExtension(final Model model) {
+        final Collection<URI> exposesServices = objectResourcesOf(null, PROP_EXPOSES_SERVICE, model);
+        final Collection<URI> consumesServices = objectResourcesOf(null, PROP_CONSUMES_SERVICE, model);
+        final Collection<String> exposesAt = objectLiteralsOf(null, PROP_EXPOSES_SERVICE_AT, model);
+        final boolean isExposing = exposesServices.size() > 0;
+
+        for (final Extension e : extensionRegistry.getExtensions()) {
+            if (isExposing && e.isExposing() && exposesAt.contains(e.exposed().exposedAt().toString())) {
+                return e.uri();
+            } else if (!isExposing && consumesServices.equals(e.intercepted().consumed())) {
+                return e.uri();
+            }
+        }
+
+        return null;
     }
 
     private byte[] toByteArray(final WebResource resource) {

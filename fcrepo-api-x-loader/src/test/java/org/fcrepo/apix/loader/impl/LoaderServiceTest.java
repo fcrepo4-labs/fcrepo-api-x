@@ -18,24 +18,31 @@
 
 package org.fcrepo.apix.loader.impl;
 
+import static org.fcrepo.apix.jena.Util.ltriple;
 import static org.fcrepo.apix.jena.Util.rdfResource;
 import static org.fcrepo.apix.jena.Util.triple;
 import static org.fcrepo.apix.model.Ontologies.RDF_TYPE;
 import static org.fcrepo.apix.model.Ontologies.Apix.CLASS_EXTENSION;
 import static org.fcrepo.apix.model.Ontologies.Apix.PROP_CONSUMES_SERVICE;
+import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE;
+import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE_AT;
 import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_CANONICAL;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.fcrepo.apix.model.Extension;
+import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
 import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
@@ -47,6 +54,7 @@ import org.fcrepo.apix.model.components.ServiceRegistry;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
@@ -138,7 +146,7 @@ public class LoaderServiceTest {
         verify(serviceRegistry).createInstanceRegistry(eq(service));
         verify(serviceRegistry).put(any(WebResource.class));
         verify(extensionRegistry).put(any(WebResource.class));
-        assertEquals(PERSISTED_SERVICE_INSTANCE_URI, loadResult);
+        assertEquals(PERSISTED_EXTENSION_URI, loadResult);
     }
 
     // Service exists in registry, but instance registry is not
@@ -168,7 +176,7 @@ public class LoaderServiceTest {
         verify(serviceInstanceRegistry).addEndpoint(SERVICE_ENDPOINT_URI);
         verify(serviceRegistry).createInstanceRegistry(eq(service));
         verify(extensionRegistry).put(any(WebResource.class));
-        assertEquals(PERSISTED_SERVICE_INSTANCE_URI, loadResult);
+        assertEquals(PERSISTED_EXTENSION_URI, loadResult);
     }
 
     // Service instance and instance registry exists
@@ -199,7 +207,7 @@ public class LoaderServiceTest {
         verify(serviceRegistry).instancesOf(eq(service));
         verify(serviceInstanceRegistry).addEndpoint(SERVICE_ENDPOINT_URI);
         verify(extensionRegistry).put(any(WebResource.class));
-        assertEquals(PERSISTED_SERVICE_INSTANCE_URI, loadResult);
+        assertEquals(PERSISTED_EXTENSION_URI, loadResult);
     }
 
     @Test
@@ -239,7 +247,7 @@ public class LoaderServiceTest {
 
         verify(extensionRegistry).put(any(WebResource.class));
 
-        assertEquals(PERSISTED_SERVICE_INSTANCE_URI, loadResult);
+        assertEquals(PERSISTED_EXTENSION_URI, loadResult);
     }
 
     @Test
@@ -279,6 +287,50 @@ public class LoaderServiceTest {
 
         verify(extensionRegistry).put(any(WebResource.class));
 
-        assertEquals(PERSISTED_SERVICE_INSTANCE_URI, loadResult);
+        assertEquals(PERSISTED_EXTENSION_URI, loadResult);
+    }
+
+    @Test
+    public void duplicateExtensionTest() {
+
+        final URI EXPOSED_AT = URI.create("exposed()");
+
+        final ArgumentCaptor<WebResource> arg = ArgumentCaptor.forClass(WebResource.class);
+
+        when(generalRegistry.get(eq(PERSISTED_EXTENSION_URI))).thenReturn(
+                rdfResource(PERSISTED_EXTENSION,
+                        triple(PERSISTED_EXTENSION, RDF_TYPE, CLASS_EXTENSION) +
+                                ltriple(SERVICE_ENDPOINT, PROP_EXPOSES_SERVICE_AT, EXPOSED_AT.toString()) +
+                                triple(PERSISTED_EXTENSION, PROP_EXPOSES_SERVICE, SERVICE_CANONICAL)));
+
+        // No services in registry
+        when(serviceRegistry.contains(any(URI.class))).thenReturn(false);
+
+        // Our service doesn't pre-exist in the service registry, so we want it "not found"
+        when(serviceRegistry.instancesOf(any(Service.class))).thenAnswer(i -> {
+            throw new ResourceNotFoundException("not found");
+        });
+
+        final Extension existing = mock(Extension.class);
+        final ServiceExposureSpec spec = mock(ServiceExposureSpec.class);
+        when(spec.exposedAt()).thenReturn(EXPOSED_AT);
+        when(existing.uri()).thenReturn(PERSISTED_EXTENSION_URI);
+        when(existing.isExposing()).thenReturn(true);
+        when(existing.exposed()).thenReturn(spec);
+
+        when(extensionRegistry.getExtensions()).thenReturn(Arrays.asList(existing));
+
+        final URI loadResult = toTest.load(rdfResource(SERVICE_ENDPOINT,
+                triple(SERVICE_ENDPOINT, RDF_TYPE, CLASS_EXTENSION) +
+                        ltriple(SERVICE_ENDPOINT, PROP_EXPOSES_SERVICE_AT, EXPOSED_AT.toString()) +
+                        triple(SERVICE_ENDPOINT, PROP_EXPOSES_SERVICE, SERVICE_CANONICAL)));
+
+        verify(serviceInstanceRegistry).addEndpoint(SERVICE_ENDPOINT_URI);
+        verify(serviceRegistry).createInstanceRegistry(eq(service));
+        verify(serviceRegistry).put(any(WebResource.class));
+        assertEquals(PERSISTED_EXTENSION_URI, loadResult);
+
+        verify(extensionRegistry).put(arg.capture());
+        assertEquals(PERSISTED_EXTENSION_URI, arg.getValue().uri());
     }
 }

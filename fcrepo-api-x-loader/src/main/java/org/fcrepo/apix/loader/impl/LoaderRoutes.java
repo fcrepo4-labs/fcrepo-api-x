@@ -30,6 +30,8 @@ import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 
 /**
+ * Routes which provide an HTTP api to the extension loader.
+ *
  * @author apb@jhu.edu
  */
 public class LoaderRoutes extends RouteBuilder {
@@ -37,6 +39,10 @@ public class LoaderRoutes extends RouteBuilder {
     private static final String HEADER_SERVICE_URI = "service.uri";
 
     private static final String ROUTE_LOAD = "direct:load";
+
+    private static final String ROUTE_PREPARE_LOAD = "direct:prepare_load";
+
+    private static final String ROUTE_NO_SERVICE = "direct:no_service";
 
     LoaderService loaderService;
 
@@ -57,7 +63,16 @@ public class LoaderRoutes extends RouteBuilder {
                 .get()
                 .produces("text/html").to("language:simple:resource:classpath:form.html")
 
-                .post().consumes("application/x-www-form-urlencoded").route().to(ROUTE_LOAD);
+                .post().consumes("application/x-www-form-urlencoded, text/plain")
+                .to(ROUTE_PREPARE_LOAD);
+
+        from(ROUTE_PREPARE_LOAD).id("load-prepare")
+                .choice().when(header("Content-Type").isEqualTo("text/plain"))
+                .setHeader(HEADER_SERVICE_URI, bodyAs(String.class))
+                .end()
+
+                .choice().when(header(HEADER_SERVICE_URI).isNull()).to(ROUTE_NO_SERVICE)
+                .otherwise().to(ROUTE_LOAD);
 
         from(ROUTE_LOAD).id("load-service-uri")
                 .removeHeaders("*", HEADER_SERVICE_URI).setBody(constant(null))
@@ -68,6 +83,10 @@ public class LoaderRoutes extends RouteBuilder {
                 .process(DEPOSIT_OBJECTS)
                 .setHeader(HTTP_RESPONSE_CODE, constant(303))
                 .setHeader("Location", constant("http://example.org"));
+
+        from(ROUTE_NO_SERVICE)
+                .setBody(constant("No service URI provided"))
+                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(400));
     }
 
     private final Processor DEPOSIT_OBJECTS = ex -> {
@@ -76,8 +95,6 @@ public class LoaderRoutes extends RouteBuilder {
                 ex.getIn().getBody(InputStream.class),
                 ex.getIn().getHeader("Content-Type", "text/turtle", String.class),
                 URI.create(ex.getIn().getHeader(Exchange.HTTP_URI, String.class)), null));
-
-        System.out.println("LOCATION IS " + location);
 
         ex.getOut().setHeader(HTTP_RESPONSE_CODE, 303);
         ex.getOut().setHeader("Location", location);
