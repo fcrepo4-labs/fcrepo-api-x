@@ -124,14 +124,10 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
                 .map(ontologySvc::parseOntology)
                 .flatMap(o -> ontologySvc.inferClasses(resource.uri(), resource, o).stream())
                 .peek(rdfType -> LOG.debug("Instance {} is of class {}", resource.uri(), rdfType))
-                .peek(rdfType -> System.out.println(String.format("Instance %s is of class %s", resource.uri(),
-                        rdfType)))
                 .collect(Collectors.toSet());
 
         return extensions.stream()
                 .peek(e -> LOG.debug("Extension {} binds to instances of {}", e.uri(), e.bindingClass()))
-                .peek(e -> System.out.println(String.format("Extension %s binds to instances of %s", e.uri(), e
-                        .bindingClass())))
                 .filter(e -> rdfTypes.contains(e.bindingClass()))
                 .peek(e -> LOG.debug("Extension {} bound to instance {} via {}", e.uri(), resource.uri(), e
                         .bindingClass()))

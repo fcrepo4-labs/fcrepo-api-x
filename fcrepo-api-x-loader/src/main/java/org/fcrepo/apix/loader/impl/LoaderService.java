@@ -99,6 +99,7 @@ public class LoaderService {
     /**
      * Load an extension and/or services.
      *
+     * @param resource resource to load
      * @return URI pointing to service instance resource.
      */
     public URI load(final WebResource resource) {

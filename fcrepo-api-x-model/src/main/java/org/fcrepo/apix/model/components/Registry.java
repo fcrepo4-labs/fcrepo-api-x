@@ -55,7 +55,7 @@ public interface Registry {
      *
      * @param resource the resource
      * @param asBinary true if binary
-     * @return
+     * @return URI of persisted resource
      */
     public URI put(WebResource resource, boolean asBinary);
 

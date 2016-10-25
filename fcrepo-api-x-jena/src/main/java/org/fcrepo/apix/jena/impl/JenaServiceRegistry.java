@@ -167,7 +167,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     @Override
     public ServiceInstanceRegistry createInstanceRegistry(final Service service) {
-        System.out.println("POST: Creating service instance registry");
+        LOG.debug("POST: Creating service instance registry");
         try {
             final URI uri = client.post(service.uri()).body(this.getClass().getResourceAsStream(
                     "objects/service-instance-registry.ttl")).perform().getLocation();
@@ -209,7 +209,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
             @Override
             public URI addEndpoint(final URI endpoint) {
-                System.out.println("PATCH: Adding endpoint");
+                LOG.debug("PATCH: Adding endpoint <{}> to <{}>", endpoint, registryURI);
                 try {
                     client.patch(registryURI).body(
                             new ByteArrayInputStream(
