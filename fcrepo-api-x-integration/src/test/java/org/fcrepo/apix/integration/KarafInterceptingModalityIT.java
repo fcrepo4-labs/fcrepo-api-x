@@ -47,7 +47,7 @@ import org.ops4j.pax.exam.junit.PaxExam;
  * @author apb@jhu.edu
  */
 @RunWith(PaxExam.class)
-public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT {
+public class KarafInterceptingModalityIT extends ServiceBasedTest implements KarafIT {
 
     final String TEST_OBJECT_TYPE = "test:InterceptingModalityIT#object";
 
@@ -59,7 +59,7 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
 
     @Override
     public String testClassName() {
-        return InterceptingModalityIT.class.getSimpleName();
+        return KarafInterceptingModalityIT.class.getSimpleName();
     }
 
     @Override
