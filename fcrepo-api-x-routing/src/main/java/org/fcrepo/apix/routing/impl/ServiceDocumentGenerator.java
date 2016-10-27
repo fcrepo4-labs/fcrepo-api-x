@@ -46,9 +46,11 @@ import org.fcrepo.apix.model.components.ServiceDiscovery;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.RDFWriter;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
+import org.apache.jena.util.ResourceUtils;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
@@ -201,6 +203,21 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
 
             // To allow relative URIs in XML, if desired
             writer.setProperty("allowBadURIs", "true");
+
+            if (useRelativeURIs && Lang.NTRIPLES.equals(lang)) {
+
+                final String serviceDocURI = routing.serviceDocFor(URI.create(resourceURI)).toString();
+
+                doc.listSubjects()
+                        .andThen(
+                                doc.listObjects()
+                                        .filterKeep(RDFNode::isURIResource)
+                                        .mapWith(RDFNode::asResource))
+                        .filterKeep(Resource::isURIResource)
+                        .filterKeep(u -> u.getURI().startsWith("#") || u.getURI().equals("")).toSet()
+                        .forEach(r -> ResourceUtils.renameResource(r,
+                                serviceDocURI + r.getURI()));
+            }
 
             writer.write(doc, out, base);
 

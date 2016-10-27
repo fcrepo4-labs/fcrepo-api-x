@@ -28,7 +28,7 @@ import static org.fcrepo.apix.model.Ontologies.Service.PROP_IS_FUNCTION_OF;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_IS_SERVICE_DOCUMENT_FOR;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_IS_SERVICE_INSTANCE_OF;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.when;
 
@@ -46,6 +46,7 @@ import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionBinding;
 import org.fcrepo.apix.model.components.Routing;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
@@ -193,7 +194,33 @@ public class ServiceDocumentGeneratorTest {
                 .mapWith(
                         Resource::getURI).toList();
         assertEquals(1, subjects.size());
-        assertNotEquals(SERVICE_DOC_URI, subjects.get(0));
+
+        assertFalse(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle").representation(),
+                "utf8").contains(SERVICE_DOC_URI));
+
+        toTest.setRelativeURIs(false);
+
+        assertTrue(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle").representation(),
+                "utf8").contains(SERVICE_DOC_URI));
+    }
+
+    // ntriples by definition uses absolute URIs. Verify that this is the case despite "useRelativeURI" setting
+    @Test
+    public void nTriplesTest() throws Exception {
+        final String SERVICE_DOC_URI = "test:/doc";
+        when(routing.serviceDocFor(RESOURCE_URI)).thenReturn(URI.create(SERVICE_DOC_URI));
+
+        toTest.setRelativeURIs(true);
+
+        assertTrue(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, "application/n-triples")
+                .representation(),
+                "utf8").contains(SERVICE_DOC_URI));
+
+        toTest.setRelativeURIs(false);
+
+        assertTrue(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, "application/n-triples")
+                .representation(),
+                "utf8").contains(SERVICE_DOC_URI));
     }
 
     // Verify that each exposing extension results a service instance,
