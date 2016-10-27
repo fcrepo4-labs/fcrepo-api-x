@@ -20,6 +20,8 @@ package org.fcrepo.apix.binding.impl;
 
 import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,6 +31,8 @@ import org.fcrepo.apix.model.components.ExtensionBinding;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.OntologyService;
 import org.fcrepo.apix.model.components.Registry;
+import org.fcrepo.client.FcrepoClient;
+import org.fcrepo.client.FcrepoResponse;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -48,7 +52,12 @@ import org.slf4j.LoggerFactory;
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RuntimeExtensionBinding implements ExtensionBinding {
 
+    private static final URI NON_RDF_SOURCE = URI.create("http://www.w3.org/ns/ldp#NonRDFSource");
+
     private static final Logger LOG = LoggerFactory.getLogger(RuntimeExtensionBinding.class);
+
+    // TODO: Inject this
+    private static final FcrepoClient client = FcrepoClient.client().throwExceptionOnFailure().build();
 
     private ExtensionRegistry extensionRegistry;
 
@@ -128,8 +137,37 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
     /** Just does a dumb dereference and lookup */
     @Override
     public Collection<Extension> getExtensionsFor(final URI resourceURI, final Collection<Extension> from) {
-        try (WebResource resource = registry.get(resourceURI)) {
-            return getExtensionsFor(resource, from);
+
+        if (from.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // Use object contents for reasoning, or if binary the binary's description
+        try (FcrepoResponse head = client.head(resourceURI).perform()) {
+            if (head.getLinkHeaders("type").contains(NON_RDF_SOURCE)) {
+                final List<URI> describedby = head.getLinkHeaders("describedby");
+
+                if (describedby.size() > 1) {
+                    throw new RuntimeException(
+                            String.format("Ambiguous; more than one describes header for <%s>", resourceURI));
+                } else if (describedby.size() == 0) {
+                    LOG.warn("No rdf description for binary <{}>", resourceURI);
+                    return Collections.emptyList();
+                }
+
+                LOG.debug("Using <{}> for inference about binary <{}>", describedby.get(0), resourceURI);
+
+                try (WebResource resource = registry.get(describedby.get(0))) {
+                    return getExtensionsFor(WebResource.of(
+                            resource.representation(),
+                            resource.contentType(),
+                            resourceURI, null), from);
+                }
+            } else {
+                try (WebResource resource = registry.get(resourceURI)) {
+                    return getExtensionsFor(resource, from);
+                }
+            }
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
@@ -138,10 +176,6 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
     /** Just does a dumb dereference and lookup */
     @Override
     public Collection<Extension> getExtensionsFor(final URI resourceURI) {
-        try (WebResource resource = registry.get(resourceURI)) {
-            return getExtensionsFor(resource);
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
-        }
+        return getExtensionsFor(resourceURI, extensionRegistry.getExtensions());
     }
 }

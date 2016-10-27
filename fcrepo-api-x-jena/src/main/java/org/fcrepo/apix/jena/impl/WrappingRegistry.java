@@ -43,6 +43,11 @@ abstract class WrappingRegistry implements Registry {
     }
 
     @Override
+    public URI put(final WebResource resource, final boolean asBinary) {
+        return delegate.put(resource, asBinary);
+    }
+
+    @Override
     public URI put(final WebResource resource) {
         return delegate.put(resource);
     }

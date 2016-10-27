@@ -94,8 +94,8 @@ public class HttpRegistry implements Registry {
             }
 
             @Override
-            public Long length() {
-                return mgr.getResponse().getEntity().getContentLength();
+            public String name() {
+                return null;
             }
 
             @Override
@@ -217,6 +217,11 @@ public class HttpRegistry implements Registry {
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public URI put(final WebResource resource, final boolean asBinary) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

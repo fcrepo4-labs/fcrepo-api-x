@@ -31,6 +31,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import org.fcrepo.apix.model.WebResource;
+import org.fcrepo.apix.model.components.ResourceNotFoundException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.graph.Node;
@@ -62,9 +63,10 @@ public abstract class Util {
      * Parse serialized rdf into a jena Model.
      *
      * @param r resource containing serialized rdf
+     * @param base base URI for the purpose of relative URIs
      * @return The model
      */
-    public static Model parse(final WebResource r) {
+    public static Model parse(final WebResource r, final String base) {
 
         if (r instanceof JenaResource && ((JenaResource) r).model() != null) {
             return ((JenaResource) r).model();
@@ -72,16 +74,30 @@ public abstract class Util {
 
         final Model model =
                 ModelFactory.createDefaultModel();
+        model.setNsPrefix("", "");
 
         final Lang lang = RDFLanguages.contentTypeToLang(r.contentType());
 
         LOG.debug("Parsing rdf from {}", r.uri());
         try (InputStream representation = r.representation()) {
-            RDFDataMgr.read(model, representation, r.uri() != null ? r.uri().toString() : "", lang);
+            RDFDataMgr.read(model, representation, base, lang);
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
         return model;
+    }
+
+    /**
+     * Parse serialized rdf into a jena Model.
+     * <p>
+     * If the resource has a URI, that uri will be used as the base for the purpose of relative URIs.
+     * </p>
+     *
+     * @param r resource containing serialized rdf
+     * @return The model
+     */
+    public static Model parse(final WebResource r) {
+        return parse(r, r.uri() != null ? r.uri().toString() : "");
     }
 
     /**
@@ -94,11 +110,11 @@ public abstract class Util {
      */
     public static List<URI> objectResourcesOf(final String s, final String p, final Model model) {
         return model.listStatements(
-                model.getResource(s),
+                s != null ? model.getResource(s) : null,
                 model.getProperty(p),
                 (RDFNode) null)
                 .mapWith(Statement::getObject)
-                .filterKeep(RDFNode::isResource)
+                .filterKeep(RDFNode::isURIResource)
                 .mapWith(RDFNode::asResource)
                 .mapWith(Resource::getURI)
                 .mapWith(URI::create)
@@ -143,7 +159,8 @@ public abstract class Util {
      * @param s Subject
      * @param p Predicate
      * @param model Model to search in
-     * @return matching object resource, or runtime exception if there is more than one match.
+     * @return matching object resource
+     * @throws ResourceNotFoundException if the number of matching resources is not exactly one.
      */
     public static URI objectResourceOf(final String s, final String p, final Model model) {
         return one(s, p, objectResourcesOf(s, p, model));
@@ -152,7 +169,7 @@ public abstract class Util {
     private static <T> T one(final String s, final String p, final List<T> list) {
 
         if (list.size() > 1) {
-            throw new RuntimeException(String.format(
+            throw new ResourceNotFoundException(String.format(
                     "Expected number of predicates in <%s>, <%s>, ? to be 0 or 1;  encountered  %d", s, p, list
                             .size()));
         }
@@ -218,9 +235,45 @@ public abstract class Util {
     public static Set<URI> subjectsOf(final Stream<Triple> triples) {
         return triples
                 .map(Triple::getSubject)
+                .filter(n -> !n.isBlank())
                 .map(Node::getURI)
                 .map(URI::create)
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * Get all subjects of statements with the given predicate and object.
+     *
+     * @param p predicate URI
+     * @param o object URI
+     * @param model model to search in
+     * @return list of subjects
+     */
+    public static List<URI> subjectsOf(final String p, final String o, final Model model) {
+        return model.listSubjectsWithProperty(model.getProperty(p), o != null ? model.getResource(o) : null)
+                .filterKeep(Resource::isURIResource)
+                .mapWith(Resource::getURI)
+                .mapWith(URI::create).toList();
+    }
+
+    /**
+     * Get the singular subject of a statement with the given predicate and object.
+     *
+     * @param p predicate URI
+     * @param o object URI
+     * @param model model to search in
+     * @return the matching URI
+     * @throws ResourceNotFoundException if there is not exactly one match
+     */
+    public static URI subjectOf(final String p, final String o, final Model model) {
+        final List<URI> subjects = subjectsOf(p, o, model);
+
+        if (subjects.size() != 1) {
+            throw new ResourceNotFoundException(
+                    String.format("Expecting to find exactly one subject of ? <%s> <%s>", p, o));
+        }
+
+        return subjects.get(0);
     }
 
     /**
@@ -250,8 +303,8 @@ public abstract class Util {
             }
 
             @Override
-            public Long length() {
-                return 0l;
+            public String name() {
+                return null;
             }
 
             @Override

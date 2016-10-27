@@ -34,6 +34,12 @@
   <reference id="httpClient" ext:proxy-method="classes"
     interface="org.apache.http.impl.client.CloseableHttpClient" />
 
+  <bean id="fcrepoClientBuilder" class="org.fcrepo.client.FcrepoClient"
+    factory-method="client" />
+
+  <bean id="fcrepoClient" factory-ref="fcrepoClientBuilder"
+    factory-method="build" />
+
   <bean id="ldpExtensionRegistryDelegate" class="org.fcrepo.apix.jena.impl.LdpContainerRegistry"
     init-method="init">
     <property name="registryDelegate" ref="underlyingRegistryDelegate" />
@@ -76,6 +82,8 @@
   </bean>
 
   <bean id="jenaServiceRegistryImpl" class="org.fcrepo.apix.jena.impl.JenaServiceRegistry">
+    <property name="fcrepoClient" ref="fcrepoClient" />
+    <property name="registryContainer" value="${registry.service.ldp.container}" />
     <property name="registryDelegate" ref="ldpServiceRegistryDelegate" />
   </bean>
 

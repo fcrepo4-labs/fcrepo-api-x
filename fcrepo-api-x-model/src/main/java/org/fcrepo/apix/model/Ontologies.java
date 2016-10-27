@@ -49,6 +49,8 @@ public interface Ontologies {
 
         String CLASS_LDP_SERVICE_INSTANCE_REGISTRY = NS + "LdpServiceInstanceRegistry";
 
+        String PROP_CONTAINS_SERVICE = NS + "containsService";
+
         String PROP_IS_FUNCTION_OF = NS + "isFunctionOf";
 
         String PROP_HAS_SERVICE_INSTANCE = NS + "hasServiceInstance";

@@ -63,6 +63,9 @@ public interface KarafIT {
 
     Logger _log = LoggerFactory.getLogger(KarafIT.class);
 
+    String apixBaseURI = String.format("http://localhost:%s", System.getProperty(
+            "apix.dynamic.test.port", "32080"));
+
     String fcrepoBaseURI = String.format("http://localhost:%s/%s/rest/", System.getProperty(
             "fcrepo.dynamic.test.port", "8080"), System.getProperty("fcrepo.cxtPath", "fcrepo"));
 
@@ -129,6 +132,8 @@ public interface KarafIT {
                     "apix.dynamic.test.port")),
             editConfigurationFilePut("etc/system.properties", "fcrepo.dynamic.test.port", System.getProperty(
                     "fcrepo.dynamic.test.port")),
+            editConfigurationFilePut("etc/system.properties", "loader.dynamic.test.port", System.getProperty(
+                    "loader.dynamic.test.port")),
             editConfigurationFilePut("etc/system.properties", "services.dynamic.test.port", System.getProperty(
                     "services.dynamic.test.port")),
             editConfigurationFilePut("etc/system.properties", "fcrepo.dynamic.jms.port", System.getProperty(
@@ -148,7 +153,8 @@ public interface KarafIT {
             deployFile("cfg/org.fcrepo.apix.jena.cfg"),
             deployFile("cfg/org.fcrepo.apix.registry.http.cfg"),
             deployFile("cfg/org.fcrepo.apix.routing.cfg"),
-            deployFile("cfg/org.fcrepo.apix.listener.cfg")
+            deployFile("cfg/org.fcrepo.apix.listener.cfg"),
+            deployFile("cfg/org.fcrepo.apix.loader.cfg")
         };
 
         options.addAll(Arrays.asList(defaultOptions));

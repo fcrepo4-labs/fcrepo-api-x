@@ -33,6 +33,9 @@ import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.Updateable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Analyzes service URIs.
  * <p>
@@ -50,6 +53,8 @@ public class ExposedServiceUriAnalyzer implements Updateable {
     private String fcrepoBaseURI;
 
     private final Map<String, Extension> endpoints = new ConcurrentHashMap<>();
+
+    private static final Logger LOG = LoggerFactory.getLogger(ExposedServiceUriAnalyzer.class);
 
     /**
      * Set the extension registry.
@@ -107,11 +112,19 @@ public class ExposedServiceUriAnalyzer implements Updateable {
      */
     public ServiceExposingBinding match(final URI requestURI) {
 
+        LOG.debug("ANALYZER:  Analyzing URI for exposed extensions {}", requestURI);
+
         if (requestURI.toString().startsWith(exposeBaseURI)) {
             final String rawPath = requestURI.toString().replaceFirst("^" + exposeBaseURI, "");
 
+            LOG.debug("ANALYZER: raw path: {}", rawPath);
+
+            LOG.debug("ANALYZER: candidates: {}", endpoints.keySet());
+
             final List<String> matches = endpoints.keySet().stream().filter(rawPath::contains).collect(Collectors
                     .toList());
+
+            LOG.debug("ANALYZER: matches: {}", matches);
 
             if (matches.isEmpty()) {
                 return null;

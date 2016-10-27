@@ -160,10 +160,12 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
     final Processor GET_INCOMING_ENDPOINTS = (ex -> {
         final URI fedoraResource = append(fcrepoBaseURI, ex.getIn().getHeader(Exchange.HTTP_PATH));
 
-        ex.getIn().setHeader(HEADER_SERVICE_ENDPOINTS,
-                new LinkedList<>(binding.getExtensionsFor(fedoraResource, extensions).stream()
-                        .map(e -> interceptingServiceInstance(e, serviceRegistry))
-                        .collect(Collectors.toList())));
+        if (extensions.size() > 0) {
+            ex.getIn().setHeader(HEADER_SERVICE_ENDPOINTS,
+                    new LinkedList<>(binding.getExtensionsFor(fedoraResource, extensions).stream()
+                            .map(e -> interceptingServiceInstance(e, serviceRegistry))
+                            .collect(Collectors.toList())));
+        }
     });
 
     // Handle the response from an extension invocation for

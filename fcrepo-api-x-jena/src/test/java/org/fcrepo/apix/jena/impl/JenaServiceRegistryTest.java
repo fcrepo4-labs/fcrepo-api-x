@@ -76,7 +76,8 @@ public class JenaServiceRegistryTest {
         final String SERVICE = "http://example.org/service#uri";
         final URI SERVICE_URI = URI.create(SERVICE);
         when(delegate.get(SERVICE_URI)).thenReturn(
-                rdfResource(SERVICE, triple(SERVICE, PROP_CANONICAL, CANONICAL)));
+                rdfResource(SERVICE, triple(SERVICE, RDF_TYPE, CLASS_SERVICE) + triple(SERVICE, PROP_CANONICAL,
+                        CANONICAL)));
 
         assertEquals(CANONICAL, toTest.getService(SERVICE_URI).canonicalURI().toString());
     }
@@ -88,7 +89,8 @@ public class JenaServiceRegistryTest {
         final String SERVICE = "http://example.org/service#uri";
         final URI SERVICE_URI = URI.create(SERVICE);
         when(delegate.get(SERVICE_URI)).thenReturn(
-                rdfResource(SERVICE, triple(SERVICE, "http://example.org/NOT_CANONICAL", CANONICAL)));
+                rdfResource(SERVICE, triple(SERVICE, RDF_TYPE, CLASS_SERVICE) +
+                        triple(SERVICE, "http://example.org/NOT_CANONICAL", CANONICAL)));
 
         assertEquals(SERVICE, toTest.getService(SERVICE_URI).canonicalURI().toString());
     }
@@ -98,6 +100,11 @@ public class JenaServiceRegistryTest {
         final String CANONICAL = "http://example.org/canonical/service";
         final String SERVICE = "http://repository.local/service#uri";
         final URI SERVICE_URI = URI.create(SERVICE);
+        final String REGISTRY_CONTAINER = "http://example.org/container";
+        final URI REGISTRY_CONTAINER_URI = URI.create(REGISTRY_CONTAINER);
+        toTest.setRegistryContainer(REGISTRY_CONTAINER_URI);
+
+        when(delegate.get(REGISTRY_CONTAINER_URI)).thenReturn(rdfResource(REGISTRY_CONTAINER, ""));
         when(delegate.get(SERVICE_URI)).thenReturn(
                 rdfResource(SERVICE, triple(SERVICE, RDF_TYPE, CLASS_SERVICE) +
                         triple(SERVICE, PROP_CANONICAL, CANONICAL)));
@@ -123,7 +130,8 @@ public class JenaServiceRegistryTest {
         final URI SERVICE_URI = URI.create(SERVICE);
 
         final WebResource resource = rdfResource(SERVICE,
-                triple(SERVICE, RDF_TYPE, CLASS_LDP_SERVICE_INSTANCE_REGISTRY) +
+                triple(SERVICE, RDF_TYPE, CLASS_SERVICE) +
+                        triple(SERVICE, RDF_TYPE, CLASS_LDP_SERVICE_INSTANCE_REGISTRY) +
                         triple(SERVICE, PROP_HAS_SERVICE_INSTANCE_REGISTRY, SERVICE) +
                         triple(SERVICE, PROP_HAS_SERVICE_INSTANCE, SERVICE_INSTANCE_1) +
                         triple(SERVICE, PROP_HAS_SERVICE_INSTANCE, SERVICE_INSTANCE_2) +

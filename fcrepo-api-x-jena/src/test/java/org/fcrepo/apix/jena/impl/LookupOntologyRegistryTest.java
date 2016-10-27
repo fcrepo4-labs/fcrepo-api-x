@@ -166,10 +166,10 @@ public class LookupOntologyRegistryTest {
 
         private final URI uri;
 
-        private final Long length;
+        private final String name;
 
         public ReadableResource(final InputStream stream, final String contentType, final URI uri,
-                final Long length) {
+                final String name) {
             try {
                 content = IOUtils.toByteArray(stream);
             } catch (final Exception e) {
@@ -178,7 +178,7 @@ public class LookupOntologyRegistryTest {
 
             this.contentType = contentType;
             this.uri = uri;
-            this.length = length;
+            this.name = name;
 
         }
 
@@ -198,8 +198,8 @@ public class LookupOntologyRegistryTest {
         }
 
         @Override
-        public Long length() {
-            return length;
+        public String name() {
+            return name;
         }
 
         @Override

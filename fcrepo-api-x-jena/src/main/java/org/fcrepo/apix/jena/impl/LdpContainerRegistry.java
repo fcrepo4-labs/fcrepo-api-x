@@ -181,13 +181,17 @@ public class LdpContainerRegistry implements Registry {
         return put(resource, binary);
     }
 
-    private URI put(final WebResource resource, final boolean asBinary) {
+    @Override
+    public URI put(final WebResource resource, final boolean asBinary) {
         HttpEntityEnclosingRequestBase request = null;
 
         if (resource.uri() == null || !resource.uri().isAbsolute()) {
             request = new HttpPost(containerId);
         } else {
             request = new HttpPut(resource.uri());
+            if (!asBinary) {
+                request.addHeader("Prefer", "handling=lenient; received=\"minimal\"");
+            }
         }
 
         if (asBinary) {
@@ -195,8 +199,10 @@ public class LdpContainerRegistry implements Registry {
                     ? "file.bin" : FilenameUtils.getName(resource.uri().getPath())));
         }
 
-        if (resource.uri() != null && !resource.uri().isAbsolute()) {
-            request.addHeader("Slug", resource.uri().toString());
+        if (resource.name() != null) {
+            request.addHeader("Slug", slugText(resource.name()));
+        } else if (resource.uri() != null && !resource.uri().isAbsolute()) {
+            request.addHeader("Slug", slugText(resource.uri().toString()));
         }
 
         if (resource.representation() != null) {
@@ -284,5 +290,11 @@ public class LdpContainerRegistry implements Registry {
     @Override
     public boolean hasInDomain(final URI uri) {
         return uri.toString().startsWith(containerId.toString());
+    }
+
+    private String slugText(final String raw) {
+        return raw.replaceFirst("^/", "")
+                .replaceFirst("/$", "")
+                .replaceAll("[:/?#\\[\\]@#%]", "-");
     }
 }

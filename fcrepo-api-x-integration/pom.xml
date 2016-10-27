@@ -12,6 +12,17 @@
     <fcrepo.cxtPath>fcrepo</fcrepo.cxtPath>
   </properties>
 
+  <profiles>
+    <profile>
+      <id>standard</id>
+      <properties>
+        <fcrepo.dynamic.test.port>8080</fcrepo.dynamic.test.port>
+        <fcrepo.dynamic.jms.port>61616</fcrepo.dynamic.jms.port>
+        <fcrepo.dynamic.stomp.port>61613</fcrepo.dynamic.stomp.port>
+      </properties>
+    </profile>
+  </profiles>
+
   <build>
     <plugins>
       <plugin>
@@ -34,6 +45,7 @@
             <fcrepo.dynamic.test.port>${fcrepo.dynamic.test.port}</fcrepo.dynamic.test.port>
             <fcrepo.cxtPath>${fcrepo.cxtPath}</fcrepo.cxtPath>
             <fcrepo.dynamic.jms.port>${fcrepo.dynamic.jms.port}</fcrepo.dynamic.jms.port>
+            <loader.dynamic.test.port>${loader.dynamic.test.port}</loader.dynamic.test.port>
             <project.basedir>${project.basedir}</project.basedir>
             <services.dynamic.test.port>${services.dynamic.test.port}</services.dynamic.test.port>
           </systemPropertyVariables>
@@ -63,6 +75,7 @@
             <portName>apix.dynamic.test.port</portName>
             <portName>fcrepo.dynamic.test.port</portName>
             <portName>services.dynamic.test.port</portName>
+            <portName>loader.dynamic.test.port</portName>
             <portName>fcrepo.dynamic.jms.port</portName>
             <portName>fcrepo.dynamic.stomp.port</portName>
           </portNames>
@@ -106,6 +119,7 @@
           </deployables>
           <configuration>
             <properties>
+              <!-- <cargo.jvmargs>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005</cargo.jvmargs> -->
               <cargo.servlet.port>${fcrepo.dynamic.test.port}</cargo.servlet.port>
             </properties>
           </configuration>
@@ -198,6 +212,12 @@
       <scope>test</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.jsoup</groupId>
+      <artifactId>jsoup</artifactId>
+      <version>1.9.2</version>
+    </dependency>
+
     <!-- For running a karaf container via pax exam -->
     <dependency>
       <groupId>org.apache.karaf.features</groupId>
@@ -225,7 +245,6 @@
     <dependency>
       <groupId>org.fcrepo.client</groupId>
       <artifactId>fcrepo-java-client</artifactId>
-      <version>0.2.0</version>
     </dependency>
 
     <dependency>

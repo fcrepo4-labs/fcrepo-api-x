@@ -25,6 +25,7 @@
     <docker>false</docker>
     <fcrepo.version>4.6.0</fcrepo.version>
     <fcrepo-build-tools.version>4.4.2</fcrepo-build-tools.version>
+    <fcrepo.client.version>0.2.1</fcrepo.client.version>
     <httpclient.version>4.5.2</httpclient.version>
     <httpcore.version>4.4.5</httpcore.version>
     <jena.version>3.1.0</jena.version>
@@ -164,7 +165,7 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-source-plugin</artifactId>
       </plugin>
-      
+
     </plugins>
 
 
@@ -244,6 +245,18 @@
       </dependency>
 
       <dependency>
+        <groupId>org.fcrepo.client</groupId>
+        <artifactId>fcrepo-java-client</artifactId>
+        <version>${fcrepo.client.version}</version>
+        <exclusions>
+          <exclusion>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        </exclusions>
+      </dependency>
+
+      <dependency>
         <groupId>org.osgi</groupId>
         <artifactId>org.osgi.service.component.annotations</artifactId>
         <version>${osgi.scr.version}</version>
@@ -289,6 +302,7 @@
     <module>fcrepo-api-x-ontology</module>
     <module>fcrepo-api-x-test</module>
     <module>fcrepo-api-x-listener</module>
+    <module>fcrepo-api-x-loader</module>
   </modules>
 
   <licenses>

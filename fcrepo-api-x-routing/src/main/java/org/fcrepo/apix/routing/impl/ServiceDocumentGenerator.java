@@ -67,6 +67,8 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
 
     private boolean useRelativeURIs = false;
 
+    private boolean useInterceptedURIs = false;
+
     /**
      * Set extension binding impl
      *
@@ -88,12 +90,21 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
     }
 
     /**
-     * Specifiy whether the service document should use relative URIs.
+     * Specify whether the service document should use relative URIs.
      *
      * @param relative true if URIs should be relative.
      */
     public void setRelativeURIs(final boolean relative) {
         useRelativeURIs = relative;
+    }
+
+    /**
+     * Specify whether intercept/proxy URI for the resource will be linked.
+     *
+     * @param use whether to use intercept URIs.
+     */
+    public void setInterceptURIs(final boolean use) {
+        this.useInterceptedURIs = use;
     }
 
     @Override
@@ -115,6 +126,8 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
 
         final String resourceURI;
 
+        final String proxyURI;
+
         final Resource self;
 
         final Resource services;
@@ -127,6 +140,7 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
 
         ServiceDocumentImpl(final URI uri, final Lang rdfLang) {
             this.resourceURI = uri.toString();
+            this.proxyURI = useInterceptedURIs ? routing.interceptUriFor(uri).toString() : uri.toString();
             this.lang = rdfLang;
             this.base = useRelativeURIs ? "" : routing.serviceDocFor(uri).toString();
             self = doc.getResource(base);
@@ -134,7 +148,7 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
             services = doc.createResource(base + "#services");
 
             self.addProperty(doc.getProperty(RDF_TYPE), doc.getResource(CLASS_SERVICE_DOCUMENT));
-            self.addProperty(doc.getProperty(PROP_IS_SERVICE_DOCUMENT_FOR), doc.getResource(resourceURI));
+            self.addProperty(doc.getProperty(PROP_IS_SERVICE_DOCUMENT_FOR), doc.getResource(proxyURI));
             self.addProperty(doc.getProperty(ORE_DESCRIBES), services);
         }
 
@@ -144,7 +158,7 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
 
             serviceInstance.addProperty(doc.getProperty(RDF_TYPE), doc.getResource(CLASS_SERVICE_INSTANCE));
             serviceInstance.addProperty(doc.getProperty(PROP_SERVICE_INSTANCE_EXPOSED_BY),
-                    doc.getResource(resourceURI));
+                    doc.getResource(proxyURI));
 
             serviceInstance.addProperty(doc.getProperty(PROP_IS_SERVICE_INSTANCE_OF),
                     doc.getResource(spec.exposedService().toString()));
@@ -154,7 +168,7 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
 
             if (RESOURCE.equals(spec.scope())) {
                 serviceInstance.addProperty(doc.getProperty(PROP_IS_FUNCTION_OF),
-                        doc.getProperty(resourceURI));
+                        doc.getProperty(proxyURI));
             }
 
         }
@@ -175,7 +189,7 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
         }
 
         @Override
-        public Long length() {
+        public String name() {
             return null;
         }
 

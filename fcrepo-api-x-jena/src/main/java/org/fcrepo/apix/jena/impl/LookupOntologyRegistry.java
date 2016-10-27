@@ -95,6 +95,11 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
     }
 
     @Override
+    public URI put(final WebResource ontologyResource, final boolean asBinary) {
+        return index(registry.put(ontologyResource, asBinary));
+    }
+
+    @Override
     public URI put(final WebResource ontologyResource, final URI ontologyIRI) {
         final Model model = parse(ontologyResource);
         model.add(model.getResource(ontologyIRI.toString()), model.getProperty(RDF_TYPE), model.getResource(
@@ -103,7 +108,7 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
         model.write(out, RDFLanguages.contentTypeToLang(ontologyResource.contentType()).getName());
 
         return put(WebResource.of(new ByteArrayInputStream(out.toByteArray()), ontologyResource.contentType(),
-                ontologyResource.uri(), ontologyResource.length()));
+                ontologyResource.uri(), ontologyResource.name()));
     }
 
     @Override

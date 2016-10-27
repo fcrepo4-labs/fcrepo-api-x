@@ -36,6 +36,24 @@ public interface ServiceRegistry extends Registry {
     ServiceInstanceRegistry instancesOf(Service service);
 
     /**
+     * Create a new service instance registry.
+     *
+     * @param service The service for which to register instances.
+     * @return new service instance registry
+     */
+    ServiceInstanceRegistry createInstanceRegistry(Service service);
+
+    /**
+     * Register the given uri as a service.
+     * <p>
+     * This does not deposit content in the registry, only references a web resource as a service.
+     * </p>
+     *
+     * @param uri URI to the service resource.
+     */
+    public void register(URI uri);
+
+    /**
      * Retrieve an abstract representation of a service.
      *
      * @param uri URI of the service
