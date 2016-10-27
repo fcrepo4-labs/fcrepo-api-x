@@ -94,5 +94,13 @@
       <type>xml</type>
     </dependency>
 
+    <dependency>
+      <groupId>org.fcrepo.apix</groupId>
+      <artifactId>fcrepo-api-x-indexing</artifactId>
+      <version>${project.version}</version>
+      <classifier>features</classifier>
+      <type>xml</type>
+    </dependency>
+
   </dependencies>
 </project>

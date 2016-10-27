@@ -224,11 +224,25 @@ public class RoutingImpl extends RouteBuilder {
 
     });
 
+    @SuppressWarnings("unchecked")
     final Processor ADD_SERVICE_HEADER = (ex -> {
 
-        ex.getIn().setHeader("Link",
-                String.format("<%s>; rel=\"service\"", routing.serviceDocFor(
-                        ex.getIn().getHeader(Exchange.HTTP_PATH, String.class))));
+        // Get all link headers, accounting for the fact that there may be zero, one, or multiple
+        // (in the message, that means null, string, or list)
+        final Set<String> rawLinkHeaders = new HashSet<>();
+
+        final Object linkHeader = ex.getIn().getHeader("Link");
+
+        if (linkHeader instanceof Collection) {
+            rawLinkHeaders.addAll((Collection<String>) linkHeader);
+        } else if (linkHeader instanceof String) {
+            rawLinkHeaders.add((String) linkHeader);
+        }
+
+        rawLinkHeaders.add(String.format("<%s>; rel=\"service\"", routing.serviceDocFor(
+                ex.getIn().getHeader(Exchange.HTTP_PATH, String.class))));
+
+        ex.getIn().setHeader("Link", rawLinkHeaders);
     });
 
     private static <T> T exactlyOne(final Collection<T> of, final String errMsg) {

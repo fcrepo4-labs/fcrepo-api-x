@@ -183,7 +183,7 @@ public interface KarafIT {
 
     public default Option deployFile(String path) {
         try {
-            return replaceConfigurationFile("deploy/" + new File(path).getName(),
+            return replaceConfigurationFile("etc/" + new File(path).getName(),
                     new File("target/test-classes", path));
         } catch (final Exception e) {
             throw new RuntimeException(e);
