@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+  xmlns:ext="http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0"
+  xmlns:camel="http://camel.apache.org/schema/blueprint"
+  xsi:schemaLocation="
+       http://www.osgi.org/xmlns/blueprint/v1.0.0 https://osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+       http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0 http://aries.apache.org/schemas/blueprint-ext/blueprint-ext.xsd
+       http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0  http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
+       http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+
+  <cm:property-placeholder id="properties"
+    persistent-id="org.fcrepo.apix.indexing"
+    update-strategy="reload">
+
+    <cm:default-properties>
+      <cm:property name="error.maxRedeliveries" value="10" />
+      <cm:property name="apix.baseUrl" value="http://localhost:8080/fcrepo/rest" />
+      <cm:property name="service.index.stream" value="broker:topic:fedora" />
+      <cm:property name="service.reindex.stream" value="broker:queue:service.reindex" />
+      <cm:property name="triplestore.baseUrl"
+        value="http://localhost:8080/fuseki/test/update" />
+      <cm:property name="reindixing.service.uri" value="http://localhost:9090/reindexing" />
+      <cm:property name="ldp.path.extension.container"
+        value="/extensions" />
+      <cm:property name="triplestore.namedGraph" value="" />
+    </cm:default-properties>
+
+  </cm:property-placeholder>
+
+  <bean id="indexerRoutes" class="org.fcrepo.apix.indexing.impl.ServiceIndexingRoutes">
+    <property name="extensionContainer" value="${ldp.path.extension.container}" />
+    <property name="reindexStream" value="${service.reindex.stream}" />
+  </bean>
+
+  <reference id="broker" interface="org.apache.camel.Component"
+    filter="(osgi.jndi.service.name=fcrepo/Broker)" />
+
+  <camelContext id="FcrepoTriplestoreIndexer"
+    xmlns="http://camel.apache.org/schema/blueprint">
+    <routeBuilder ref="indexerRoutes" />
+  </camelContext>
+
+
+
+</blueprint>

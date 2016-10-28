@@ -82,7 +82,6 @@ public abstract class ServiceBasedTest implements KarafIT {
                 .artifactId("fcrepo-api-x-test")
                 .versionAsInProject();
         return Arrays.asList(mavenBundle(testBundle));
-        // return Arrays.asList(features(camelRepo, "camel-test"));
     }
 
     @Before
