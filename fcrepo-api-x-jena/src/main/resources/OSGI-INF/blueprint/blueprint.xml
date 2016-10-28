@@ -25,6 +25,7 @@
       <cm:property name="registry.ontology.content" value="null" />
       <cm:property name="registry.service.content"
         value="classpath:/objects/service-registry.ttl" />
+      <cm:property name="registry.ontology.index" value="true" />
     </cm:default-properties>
   </cm:property-placeholder>
 
@@ -79,6 +80,7 @@
   <bean id="jenaOntologyRegistryImpl" class="org.fcrepo.apix.jena.impl.LookupOntologyRegistry"
     init-method="init">
     <property name="registryDelegate" ref="ldpOntologyServiceRegistryDelegate" />
+    <property name="indexIRIs" value="${registry.ontology.index}" />
   </bean>
 
   <bean id="jenaServiceRegistryImpl" class="org.fcrepo.apix.jena.impl.JenaServiceRegistry">

@@ -51,8 +51,8 @@ import org.slf4j.LoggerFactory;
  * have the same ontology IRI in more than one entry in the registry.
  * </p>
  * <p>
- * This indexes all ontologies upon initialization, and maintains the index in response to {@link #put(WebResource)}
- * or {@link #put(WebResource, URI)}.
+ * This indexes all ontologies upon initialization (if {@link #isIndexIRIs()} is {@code true}), and maintains the
+ * index in response to {@link #put(WebResource)} or {@link #put(WebResource, URI)}.
  * </p>
  * <p>
  * For ontology registries backed by an LDP container in the repository, this class may be used by an asynchronous
@@ -71,6 +71,8 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
     private final Map<URI, URI> ontologyIRIsToLocation = new ConcurrentHashMap<>();
 
     private Registry registry;
+
+    private boolean indexIRIs = true;
 
     private static final Logger LOG = LoggerFactory.getLogger(LookupOntologyRegistry.class);
 
@@ -127,8 +129,39 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
         update();
     }
 
-    /** Try infinitely to read contents of registry in order to index ontologyIRIs */
+    /**
+     * Obtains the flag indicating whether or not an index of Ontology IRIs to location URIs is to be initialized upon
+     * {@link #init() initialization}.
+     *
+     * @return a flag indicating whether or not {@link #init()} should create an index
+     */
+    public boolean isIndexIRIs() {
+        return indexIRIs;
+    }
+
+    /**
+     * Sets the flag indicating whether or not an index of Ontology IRIs to location URIs is to be initialized upon
+     * {@link #init() initialization}.
+     *
+     * @param indexIRIs a flag indicating whether or not {@link #init()} should create an index
+     */
+    public void setIndexIRIs(final boolean indexIRIs) {
+        this.indexIRIs = indexIRIs;
+    }
+
+    /**
+     * If {@link #isIndexIRIs()} is {@code true}, attempt to read contents of registry in order to index ontologyIRIs.
+     * This method will block until the ontology registry becomes available.
+     * <p>
+     * Essentially wraps a call to {@link #update()} with guards to disable indexing altogether, or to naively retry
+     * until the ontology registry becomes available.
+     * </p>
+     */
     public void init() {
+
+        if (!indexIRIs) {
+            return;
+        }
 
         for (boolean indexed = false; !indexed;) {
             try {

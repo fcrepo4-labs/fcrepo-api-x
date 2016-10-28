@@ -108,19 +108,24 @@ public class LdpContainerRegistry implements Registry {
      */
     public void init() {
 
+        if (!create) {
+            return;
+        }
+
         boolean found = false;
 
         while (!found) {
             try {
                 found = exists(containerId);
 
-                if (create && !found) {
+                if (!found) {
                     put(WebResource.of(initialContent(), "text/turtle",
                             containerId, null), false);
                     found = true;
                 }
             } catch (final Exception e) {
-                LOG.info("Failed initializing underlying container, re-trying..", e.getMessage());
+                LOG.warn("Failed initializing underlying container ('" + containerId + "'), re-trying ...",
+                        e.getMessage());
                 try {
                     Thread.sleep(1000);
                 } catch (final InterruptedException i) {

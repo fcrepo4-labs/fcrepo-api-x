@@ -21,6 +21,8 @@ package org.fcrepo.apix.jena.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
+
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayInputStream;
@@ -156,6 +158,17 @@ public class LookupOntologyRegistryTest {
         toTest.setRegistryDelegate(delegate);
 
         initializing.get(2, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testNoIndexIRIs() throws Exception {
+        final LookupOntologyRegistry toTest = new LookupOntologyRegistry();
+
+        toTest.setRegistryDelegate(delegate);
+        toTest.setIndexIRIs(false);
+        toTest.init();
+
+        verifyZeroInteractions(delegate);
     }
 
     private class ReadableResource implements WebResource {
