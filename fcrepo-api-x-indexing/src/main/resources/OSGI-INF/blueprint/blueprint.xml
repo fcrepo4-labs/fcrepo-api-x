@@ -21,7 +21,7 @@
       <cm:property name="service.reindex.stream" value="broker:queue:service.reindex" />
       <cm:property name="triplestore.baseUrl"
         value="http://localhost:8080/fuseki/test/update" />
-      <cm:property name="reindixing.service.uri" value="http://localhost:9090/reindexing" />
+      <cm:property name="reindexing.service.uri" value="http://localhost:9090/reindexing" />
       <cm:property name="ldp.path.extension.container"
         value="/extensions" />
       <cm:property name="triplestore.namedGraph" value="" />
