@@ -18,17 +18,22 @@
 
 package org.fcrepo.apix.integration;
 
+import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
 
 import org.fcrepo.apix.model.components.Routing;
 
+import org.apache.camel.Exchange;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -80,17 +85,38 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
 
     @Test
     public void smokeTest() throws Exception {
+        final BlockingQueue<String> sparqlUpdate = new LinkedBlockingQueue<>();
+
+        final BlockingQueue<String> reindexCommands = new LinkedBlockingQueue<>();
+
         onServiceRequest(ex -> {
-            System.out.println("\n<===");
-            ex.getIn().getHeaders().entrySet().forEach(System.out::println);
-            System.out.println("====>");
+
+            switch (ex.getIn().getHeader(Exchange.HTTP_PATH, String.class)) {
+            case "/fuseki":
+                sparqlUpdate.put(ex.getIn().getHeader("update", String.class));
+                break;
+            case "/reindexing":
+                reindexCommands.put(ex.getIn().getBody(String.class));
+                break;
+            default:
+                fail("Unexpected http request");
+            }
         });
 
+        // Add an object
         final URI OBJECT = client.post(routing.interceptUriFor(objectContainer)).perform().getLocation();
 
-        System.out.println("Object is " + OBJECT);
+        // Wait for the update
+        while (!(sparqlUpdate.poll(60, TimeUnit.SECONDS)).contains(OBJECT.toString())) {
+            // Never reached, will throw an NPE if not update not found
+        }
 
-        Thread.sleep(5000);
+        // Update the extension container
+        reindexCommands.clear();
+        client.post(routing.interceptUriFor(extensionContainer)).perform().getLocation();
+
+        // Poll for reindex. If we don't get it, we get an NPE
+        reindexCommands.poll(60, TimeUnit.SECONDS);
 
     }
 

@@ -82,16 +82,12 @@ public class ServiceIndexingRoutes extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        System.out.println("CONFIGURING");
-
         from("{{service.index.stream}}")
                 .routeId("index-services")
 
-                .process(e -> System.out.println("INDEX"))
-
                 .choice()
                 .when(e -> e.getIn().getHeader(IDENTIFIER, String.class).startsWith(extensionContainer))
-                .to(ROUTE_TRIGGER_REINDEX)
+                .enrich(ROUTE_TRIGGER_REINDEX, (i, o) -> i)
                 .end()
 
                 .choice()
@@ -118,7 +114,6 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .removeHeaders("CamelHttp*")
                 .setHeader(Exchange.HTTP_URI, bodyAs(URI.class))
                 .setBody(constant(null))
-                .process(e -> System.out.println("MAKING REQUEST TO " + e.getIn().getHeader(Exchange.HTTP_URI)))
                 .to("jetty:http://localhost")
                 .removeHeaders("CamelHttp*")
                 .setHeader(FCREPO_NAMED_GRAPH, simple("{{triplestore.namedGraph}}"))
@@ -132,6 +127,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .log(LoggingLevel.INFO, LOG,
                         "Triggering reindex due update to extension ${headers[org.fcrepo.jms.identifier]}")
                 .setBody(constant("CamelFcrepoReindexingRecipients=" + reindexStream))
+                .removeHeader("CamelHttp*")
                 .setHeader(Exchange.HTTP_METHOD, constant("POST"))
                 .to("jetty:{{reindixing.service.uri}}");
     }
