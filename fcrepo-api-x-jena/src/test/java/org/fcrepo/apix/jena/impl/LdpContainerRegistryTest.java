@@ -175,13 +175,11 @@ public class LdpContainerRegistryTest {
     public void noCreateTest() throws Exception {
         final LdpContainerRegistry toTest = new LdpContainerRegistry();
 
-        when(client.execute(isA(HttpHead.class))).thenReturn(headResponse);
-        when(headStatus.getStatusCode()).thenReturn(HttpStatus.SC_OK);
-
         toTest.setCreateContainer(false);
         toTest.setHttpClient(client);
         toTest.init();
 
+        verify(client, never()).execute(isA(HttpHead.class));
         verify(client, never()).execute(isA(HttpPut.class));
     }
 
