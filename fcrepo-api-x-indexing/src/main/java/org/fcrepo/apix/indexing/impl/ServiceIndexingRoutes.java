@@ -129,7 +129,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .setBody(constant("CamelFcrepoReindexingRecipients=" + reindexStream))
                 .removeHeader("CamelHttp*")
                 .setHeader(Exchange.HTTP_METHOD, constant("POST"))
-                .to("jetty:{{reindixing.service.uri}}");
+                .to("jetty:{{reindexing.service.uri}}");
     }
 
     @SuppressWarnings("unchecked")
