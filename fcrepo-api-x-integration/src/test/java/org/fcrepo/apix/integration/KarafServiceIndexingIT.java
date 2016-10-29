@@ -18,6 +18,8 @@
 
 package org.fcrepo.apix.integration;
 
+import static org.fcrepo.apix.integration.KarafIT.attempt;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
@@ -104,12 +106,16 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
         });
 
         // Add an object
-        final URI OBJECT = client.post(routing.interceptUriFor(objectContainer)).perform().getLocation();
-
-        // Wait for the update
-        while (!(sparqlUpdate.poll(60, TimeUnit.SECONDS)).contains(OBJECT.toString())) {
-            // Never reached, will throw an NPE if not update not found
-        }
+        assertTrue(attempt(3, () -> {
+            final URI OBJECT = client.post(routing.interceptUriFor(objectContainer)).perform().getLocation();
+            String sparql;
+            while ((sparql = sparqlUpdate.poll(30, TimeUnit.SECONDS)) != null) {
+                if (sparql.contains(OBJECT.toString())) {
+                    break;
+                }
+            }
+            return sparql.contains(OBJECT.toString());
+        }));
 
         // Update the extension container
         reindexCommands.clear();
