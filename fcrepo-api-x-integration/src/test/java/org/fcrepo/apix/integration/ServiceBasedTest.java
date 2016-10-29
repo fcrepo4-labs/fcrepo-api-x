@@ -44,6 +44,7 @@ import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
+import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -58,6 +59,7 @@ public abstract class ServiceBasedTest implements KarafIT {
             "/TestService";
 
     @Inject
+    @Filter(("id=testContext"))
     private CamelContext cxt;
 
     @Inject

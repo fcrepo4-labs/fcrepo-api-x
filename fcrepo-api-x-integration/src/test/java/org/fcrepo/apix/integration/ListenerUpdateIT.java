@@ -18,12 +18,16 @@
 
 package org.fcrepo.apix.integration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.fcrepo.apix.integration.KarafIT.attempt;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.ops4j.pax.exam.CoreOptions.maven;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -37,7 +41,9 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
 import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.options.MavenUrlReference;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -69,6 +75,17 @@ public class ListenerUpdateIT implements KarafIT {
         KarafIT.createContainers();
     }
 
+    @Override
+    public List<Option> additionalKarafConfig() {
+        final MavenUrlReference apixRepo =
+                maven().groupId("org.fcrepo.apix")
+                        .artifactId("fcrepo-api-x-karaf").versionAsInProject()
+                        .classifier("features").type("xml");
+
+        return Arrays.asList(
+                features(apixRepo, "fcrepo-api-x-listener"));
+    }
+
     // Verify that we can add an Updateable service,
     // and that it updates itself when a new object is deposited into the repo
     @Test
@@ -89,14 +106,19 @@ public class ListenerUpdateIT implements KarafIT {
             }
         }, new Hashtable<>());
 
-        final URI OBJECT = client.post(objectContainer).perform().getLocation();
+        assertTrue(attempt(3, () -> {
+            final URI OBJECT = client.post(objectContainer).perform().getLocation();
+            URI uri;
+            while ((uri = objects.poll(30, TimeUnit.SECONDS)) != null) {
 
-        URI uri;
-        while (!OBJECT.equals(uri = objects.poll(60, TimeUnit.SECONDS))) {
-            assertNotNull("Our object did not update", uri);
-        }
+                // Skip over objects in the queue we don't care about
+                if (uri.equals(OBJECT)) {
+                    break;
+                }
+            }
+            return uri.equals(OBJECT);
+        }));
 
-        assertEquals(OBJECT, uri);
     }
 
 }

@@ -34,6 +34,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.client.FcrepoClient;
@@ -123,7 +124,13 @@ public interface KarafIT {
 
             keepRuntimeFolder(),
 
-            features(apixRepo, "fcrepo-api-x"),
+            features(apixRepo, "fcrepo-api-x-model"),
+            features(apixRepo, "fcrepo-api-x-registry"),
+            features(apixRepo, "fcrepo-api-x-jena"),
+            features(apixRepo, "fcrepo-api-x-binding"),
+            features(apixRepo, "fcrepo-api-x-execution"),
+            features(apixRepo, "fcrepo-api-x-routing"),
+            features(apixRepo, "fcrepo-api-x-ontology"),
 
             // We need to tell Karaf to set any system properties we need.
             // This code is run prior to executing Karaf, the tests themselves are run in Karaf, in a separate
@@ -216,6 +223,26 @@ public interface KarafIT {
                         .perform()) {
             return response.getLocation();
         }
+    }
+
+    public static <T> T attempt(final int times, final Callable<T> it) {
+
+        Exception caught = null;
+
+        for (int tries = 0; tries < times; tries++) {
+            try {
+                return it.call();
+            } catch (final Exception e) {
+                caught = e;
+                try {
+                    Thread.sleep(1000);
+                } catch (final InterruptedException i) {
+                    Thread.currentThread().interrupt();
+                    return null;
+                }
+            }
+        }
+        throw new RuntimeException("Failed executing task", caught);
     }
 
     /**

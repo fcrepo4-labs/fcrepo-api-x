@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.integration;
 
+import static org.fcrepo.apix.integration.KarafIT.attempt;
 import static org.fcrepo.apix.jena.Util.ltriple;
 import static org.fcrepo.apix.jena.Util.parse;
 import static org.fcrepo.apix.jena.Util.query;
@@ -33,13 +34,14 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
+import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 
 import java.io.ByteArrayInputStream;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -69,6 +71,7 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
+import org.ops4j.pax.exam.options.MavenUrlReference;
 import org.ops4j.pax.exam.util.Filter;
 
 /**
@@ -127,7 +130,12 @@ public class LoaderIT extends ServiceBasedTest {
                 .artifactId("jsoup")
                 .versionAsInProject();
 
-        options.add(mavenBundle(jsoup));
+        final MavenUrlReference apixRepo =
+                maven().groupId("org.fcrepo.apix")
+                        .artifactId("fcrepo-api-x-karaf").versionAsInProject()
+                        .classifier("features").type("xml");
+
+        options.addAll(Arrays.asList(mavenBundle(jsoup), features(apixRepo, "fcrepo-api-x-loader")));
 
         return options;
     }
@@ -155,12 +163,13 @@ public class LoaderIT extends ServiceBasedTest {
                 "utf8"));
         serviceResponse.set(SERVICE_RESPONSE_BODY);
 
-        final Document html = attempt(10, () -> Jsoup.connect(LOADER_URI).method(Method.GET)
+        final Document html = attempt(60, () -> Jsoup.connect(LOADER_URI).method(Method.GET).timeout(1000)
                 .execute().parse());
         final FormElement form = ((FormElement) html.getElementById("uriForm"));
         form.getElementById("uri").val(serviceEndpoint);
 
         final Response response = form.submit().ignoreHttpErrors(true).followRedirects(false).execute();
+        update();
 
         assertEquals("OPTIONS", requestToService.getHeader(Exchange.HTTP_METHOD));
         assertEquals(303, response.statusCode());
@@ -195,8 +204,8 @@ public class LoaderIT extends ServiceBasedTest {
         serviceResponse.set(SERVICE_RESPONSE_BODY);
 
         // Now add the extension
-        attempt(10, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue("Location");
-        textPost(LOADER_URI, serviceEndpoint);
+        attempt(60, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue("Location");
+        update();
 
         // Verify that extension works!
 
@@ -229,8 +238,9 @@ public class LoaderIT extends ServiceBasedTest {
         serviceResponse.set(SERVICE_RESPONSE_BODY);
 
         // Now add the extension
-        final String origLocation = attempt(10, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue(
+        final String origLocation = attempt(60, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue(
                 "Location");
+        update();
 
         // Verify that extension works!
 
@@ -254,8 +264,6 @@ public class LoaderIT extends ServiceBasedTest {
         // Now check that we can update it
 
         // We should be able to re-load it without issue.
-        // First, force an update so that we're not at the whim of the asynchronous updater.
-        update();
         assertEquals(origLocation, textPost(LOADER_URI, serviceEndpoint).getHeaderValue("Location"));
 
         // Now update it without issue
@@ -280,11 +288,12 @@ public class LoaderIT extends ServiceBasedTest {
                 triple("", PROP_EXPOSES_SERVICE, SERVICE_CANONICAL));
 
         // Now add the extension twice, making note of its URI
-        final String uri = attempt(10, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue("Location");
+        final String uri = attempt(60, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue("Location");
         update();
 
         // First, force an update so that we're not at the whim of the asynchronous updater. Then load the extension
         // for the second time.
+        update();
         textPost(LOADER_URI, serviceEndpoint);
 
         // Now alter the content of the available extension doc, the loader should slurp up the
@@ -319,26 +328,6 @@ public class LoaderIT extends ServiceBasedTest {
                 .map(Service::canonicalURI)
                 .filter(u -> canonicalURI.equals(u))
                 .count();
-    }
-
-    private <T> T attempt(final int times, final Callable<T> it) {
-
-        Exception caught = null;
-
-        for (int tries = 0; tries < times; tries++) {
-            try {
-                return it.call();
-            } catch (final Exception e) {
-                caught = e;
-                try {
-                    Thread.sleep(1000);
-                } catch (final InterruptedException i) {
-                    Thread.currentThread().interrupt();
-                    return null;
-                }
-            }
-        }
-        throw new RuntimeException("Failed executing task", caught);
     }
 
     private Map<URI, URI> serviceEndpoints(final URI discoveryDoc) throws Exception {
