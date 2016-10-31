@@ -31,6 +31,13 @@
       <version>${project.version}</version>
     </dependency>
 
+    <!-- For OSGi -->
+    <dependency>
+      <groupId>com.github.andrewoma.dexx</groupId>
+      <artifactId>collection</artifactId>
+      <version>${dexx-collection.version}</version>
+    </dependency>
+
     <dependency>
       <groupId>org.fcrepo.camel</groupId>
       <artifactId>fcrepo-camel</artifactId>
