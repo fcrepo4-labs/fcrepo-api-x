@@ -128,17 +128,17 @@ public class RoutingImpl extends RouteBuilder {
 
         // It would be nice to use the rest DSL to do the service doc, if that is at all possible
 
-        from("jetty:http://{{apix.host}}:{{apix.port}}/{{apix.discoveryPath}}?matchOnUriPrefix=true")
+        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.discoveryPath}}?matchOnUriPrefix=true")
                 .process(WRITE_SERVICE_DOC);
 
-        from("jetty:http://{{apix.host}}:{{apix.port}}/{{apix.exposePath}}?matchOnUriPrefix=true")
+        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.exposePath}}?matchOnUriPrefix=true")
                 .routeId("endpoint-expose").routeDescription("Endpoint for exposed service mediation")
                 .process(ANALYZE_URI)
                 .choice()
                 .when(header(EXPOSING_EXTENSION).isNull()).to(EXTENSION_NOT_FOUND)
                 .otherwise().to(EXECUTION_EXPOSE_MODALITY);
 
-        from("jetty:http://{{apix.host}}:{{apix.port}}/{{apix.interceptPath}}?matchOnUriPrefix=true")
+        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.interceptPath}}?matchOnUriPrefix=true")
                 .routeId("endpoint-intercept").routeDescription("Endpoint for intercept/proxy to Fedora")
                 .to(ROUTE_INTERCEPT_INCOMING)
                 .choice().when(e -> !e.getIn().getHeaders().containsKey(
