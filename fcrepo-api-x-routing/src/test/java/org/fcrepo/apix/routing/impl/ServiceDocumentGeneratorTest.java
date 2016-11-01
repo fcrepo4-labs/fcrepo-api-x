@@ -283,6 +283,15 @@ public class ServiceDocumentGeneratorTest {
 
     }
 
+    // Verify that a reasonable default content type is chosen
+    @Test
+    public void defaultContentTypeTest() throws Exception {
+        final WebResource serviceDoc = toTest.getServiceDocumentFor(RESOURCE_URI, "not/supported");
+
+        assertEquals("text/turtle", serviceDoc.contentType());
+
+    }
+
     // Verify that nothing fails if all registries are empty.
     @Test
     public void emptyRegistriesTest() {

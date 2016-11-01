@@ -18,7 +18,6 @@
 
 package org.fcrepo.apix.routing.impl;
 
-import static org.apache.jena.riot.RDFLanguages.contentTypeToLang;
 import static org.fcrepo.apix.model.Extension.Scope.RESOURCE;
 import static org.fcrepo.apix.model.Ontologies.ORE_AGGREGATES;
 import static org.fcrepo.apix.model.Ontologies.ORE_DESCRIBES;
@@ -35,7 +34,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
@@ -50,6 +53,7 @@ import org.apache.jena.rdf.model.RDFNode;
 import org.apache.jena.rdf.model.RDFWriter;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFLanguages;
 import org.apache.jena.util.ResourceUtils;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
@@ -110,7 +114,7 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
     }
 
     @Override
-    public WebResource getServiceDocumentFor(final URI resource, final String contentType) {
+    public WebResource getServiceDocumentFor(final URI resource, final String... contentType) {
 
         try {
             final ServiceDocumentImpl doc = new ServiceDocumentImpl(resource, pickMediaType(contentType));
@@ -225,8 +229,16 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
         }
     }
 
-    private static Lang pickMediaType(final String type) {
+    private static Lang pickMediaType(final String... type) {
+        System.out.println(type);
 
-        return type != null ? contentTypeToLang(type) : Lang.TURTLE;
+        final List<Lang> langs = Arrays.stream(type)
+                .map(t -> "text/*".equals(t) ? "text/turtle" : t)
+                .map(t -> "*/*".equals(t) ? "text/turtle" : t)
+                .map(RDFLanguages::contentTypeToLang)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        return langs.isEmpty() ? Lang.TURTLE : langs.get(0);
     }
 }
