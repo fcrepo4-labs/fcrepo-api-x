@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.fcrepo.camel.processor.SparqlUpdateProcessor;
 import org.fcrepo.client.FcrepoLink;
 
 import org.apache.camel.Exchange;

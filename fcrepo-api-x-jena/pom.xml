@@ -58,7 +58,7 @@
     <dependency>
       <groupId>com.github.andrewoma.dexx</groupId>
       <artifactId>collection</artifactId>
-      <version>0.6</version>
+      <version>${dexx-collection.version}</version>
     </dependency>
 
     <!-- For OSGi -->
