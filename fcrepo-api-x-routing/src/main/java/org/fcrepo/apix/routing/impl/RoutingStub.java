@@ -148,7 +148,10 @@ public class RoutingStub implements Routing {
         return append(baseURI(), interceptPath, resourcePath(resource));
     }
 
-    private URI baseURI() {
+    URI baseURI() {
+        if (port == 80) {
+            return URI.create(String.format("http://%s/", host));
+        }
         return URI.create(String.format("http://%s:%s/", host, port));
     }
 
