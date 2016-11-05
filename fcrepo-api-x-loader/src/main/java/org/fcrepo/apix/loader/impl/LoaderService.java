@@ -195,7 +195,7 @@ public class LoaderService {
                 LOG.debug("Service registry contains <{}>, NOT adding", canonical);
                 resolvableservices.add(canonical);
             } else {
-                LOG.debug("Service registry DOES NOT contain <{}>, adding!", canonical);
+                LOG.info("Service registry does not contain <{}>, adding!", canonical);
                 resolvableservices.add(putService(canonical));
             }
         }
@@ -213,6 +213,7 @@ public class LoaderService {
             instances = serviceRegistry.createInstanceRegistry(service);
         }
 
+        LOG.info("Adding endpoint <{}> as instance of <{}>", instanceURI, service.canonicalURI());
         return instances.addEndpoint(instanceURI);
     }
 

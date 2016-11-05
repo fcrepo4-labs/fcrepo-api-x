@@ -230,7 +230,6 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
     }
 
     private static Lang pickMediaType(final String... type) {
-        System.out.println(type);
 
         final List<Lang> langs = Arrays.stream(type)
                 .map(t -> "text/*".equals(t) ? "text/turtle" : t)

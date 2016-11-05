@@ -31,6 +31,7 @@ import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.ResourceNotFoundException;
+import org.fcrepo.apix.model.components.Routing;
 import org.fcrepo.apix.model.components.Updateable;
 
 import org.slf4j.Logger;
@@ -48,7 +49,9 @@ public class ExposedServiceUriAnalyzer implements Updateable {
 
     private ExtensionRegistry extensions;
 
-    private String exposeBaseURI;
+    private Routing routing;
+
+    private String exposePath;
 
     private String fcrepoBaseURI;
 
@@ -77,10 +80,19 @@ public class ExposedServiceUriAnalyzer implements Updateable {
     /**
      * Set the API-X expose base URI.
      *
-     * @param baseuri the base URI for service exposure.
+     * @param path service exposure path
      */
-    public void setExposeBaseURI(final URI baseuri) {
-        this.exposeBaseURI = baseuri.toString();
+    public void setExposePath(final String path) {
+        this.exposePath = segment(path);
+    }
+
+    /**
+     * Set the routing component.
+     *
+     * @param routing The routing component
+     */
+    public void setRouting(final Routing routing) {
+        this.routing = routing;
     }
 
     @Override
@@ -114,8 +126,10 @@ public class ExposedServiceUriAnalyzer implements Updateable {
 
         LOG.debug("ANALYZER:  Analyzing URI for exposed extensions {}", requestURI);
 
-        if (requestURI.toString().startsWith(exposeBaseURI)) {
-            final String rawPath = requestURI.toString().replaceFirst("^" + exposeBaseURI, "");
+        final String requestPath = segment(requestURI.getPath());
+
+        if (requestPath.startsWith(exposePath)) {
+            final String rawPath = requestPath.replaceFirst("^" + exposePath + "/", "");
 
             LOG.debug("ANALYZER: raw path: {}", rawPath);
 
@@ -140,9 +154,7 @@ public class ExposedServiceUriAnalyzer implements Updateable {
                     ? rawPath.substring(0, rawPath.indexOf(exposeSegment) - 1)
                     : null;
 
-            final URI exposedServiceURI = Scope.RESOURCE.equals(extension.exposed().scope())
-                    ? append(exposeBaseURI, resourcePath, exposeSegment)
-                    : URI.create(String.format("%s/%s", segment(exposeBaseURI), exposeSegment));
+            final URI exposedServiceURI = routing.endpointFor(extension.exposed(), resourcePath);
 
             return new ServiceExposingBinding(
                     extension,

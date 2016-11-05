@@ -39,13 +39,22 @@ public interface Routing {
     public static final String HTTP_HEADER_REPOSITORY_ROOT_URI = "Apix-Ldp-Root";
 
     /**
-     * /** Get the endpoint for the service exposed by the given extension on the given resource.
+     * Get the endpoint for the service exposed by the given extension on the given resource.
      *
      * @param spec specification for exposing a service
      * @param onResource the resource on which the service is exposed.
      * @return URI of exposed service, null if not applicable.
      */
     public URI endpointFor(ServiceExposureSpec spec, URI onResource);
+
+    /**
+     * Get the endpoint for the service exposed by the given extension on the given resource path.
+     *
+     * @param spec specification for exposing a service
+     * @param path path of the resource on which the service is exposed.
+     * @return URI of exposed service, null if not applicable.
+     */
+    public URI endpointFor(ServiceExposureSpec spec, String path);
 
     /**
      * Get the endpoint for the service doc of a given resource.

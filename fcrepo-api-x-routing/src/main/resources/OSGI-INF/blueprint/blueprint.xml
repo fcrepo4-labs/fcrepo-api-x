@@ -46,8 +46,8 @@
   <bean id="exposedServiceUriAnalyzer" class="org.fcrepo.apix.routing.impl.ExposedServiceUriAnalyzer">
     <property name="extensionRegistry" ref="extensionRegistry" />
     <property name="fcrepoBaseURI" value="${fcrepo.baseURI}" />
-    <property name="exposeBaseURI"
-      value="http://${apix.host}:${apix.port}/${apix.exposePath}" />
+    <property name="exposePath" value="${apix.exposePath}" />
+    <property name="routing" ref="routingStub" />
   </bean>
 
   <bean id="routingImpl" class="org.fcrepo.apix.routing.impl.RoutingImpl">

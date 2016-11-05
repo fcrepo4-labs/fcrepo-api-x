@@ -106,17 +106,22 @@ public class RoutingStub implements Routing {
     }
 
     @Override
-    public URI endpointFor(final ServiceExposureSpec spec, final URI onResource) {
+    public URI endpointFor(final ServiceExposureSpec spec, final String path) {
         switch (spec.scope()) {
         case EXTERNAL:
             return spec.exposedAt();
         case REPOSITORY:
             return append(baseURI(), exposePath, "", spec.exposedAt().getPath());
         case RESOURCE:
-            return append(baseURI(), exposePath, resourcePath(onResource), spec.exposedAt());
+            return append(baseURI(), exposePath, path, spec.exposedAt());
         default:
             throw new RuntimeException("Unknown service exposure scope " + spec.scope());
         }
+    }
+
+    @Override
+    public URI endpointFor(final ServiceExposureSpec spec, final URI onResource) {
+        return endpointFor(spec, resourcePath(onResource));
     }
 
     @Override

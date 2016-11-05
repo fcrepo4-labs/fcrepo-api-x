@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.routing.impl;
 
+import static org.fcrepo.apix.routing.Util.append;
 import static org.fcrepo.apix.routing.Util.segment;
 import static org.fcrepo.apix.routing.Util.terminal;
 import static org.junit.Assert.assertEquals;
@@ -25,6 +26,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
@@ -35,6 +37,7 @@ import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
+import org.fcrepo.apix.model.components.Routing;
 import org.fcrepo.apix.routing.impl.ExposedServiceUriAnalyzer.ServiceExposingBinding;
 
 import org.junit.Before;
@@ -48,6 +51,9 @@ import org.mockito.runners.MockitoJUnitRunner;
  */
 @RunWith(MockitoJUnitRunner.class)
 public class ExposedServiceUriAnalyzerTest {
+
+    @Mock
+    Routing routing;
 
     @Mock
     ExtensionRegistry extensisons;
@@ -86,14 +92,31 @@ public class ExposedServiceUriAnalyzerTest {
 
         toTest = new ExposedServiceUriAnalyzer();
         toTest.setExtensionRegistry(extensisons);
-        toTest.setExposeBaseURI(exposureBaseURI);
+        toTest.setExposePath("/services");
         toTest.setFcrepoBaseURI(fcrepoBaseURI);
+        toTest.setRouting(routing);
 
         when(extensisons.getExtension(extension1URI)).thenReturn(extension1);
         when(extension1.isExposing()).thenReturn(true);
         when(extension1.exposed()).thenReturn(extension1Spec);
         when(extension1Spec.exposedAt()).thenReturn(extension1ExposedAt);
         when(extension1Spec.scope()).thenReturn(Scope.RESOURCE);
+
+        when(routing.endpointFor(any(ServiceExposureSpec.class), any(String.class))).thenAnswer(i -> {
+            final ServiceExposureSpec spec = i.getArgumentAt(0, ServiceExposureSpec.class);
+            final String path = i.getArgumentAt(1, String.class);
+
+            switch (spec.scope()) {
+            case EXTERNAL:
+                return spec.exposedAt();
+            case REPOSITORY:
+                return append(exposureBaseURI, "", spec.exposedAt().getPath());
+            case RESOURCE:
+                return append(exposureBaseURI, path, spec.exposedAt());
+            default:
+                throw new RuntimeException("Unknown service exposure scope " + spec.scope());
+            }
+        });
 
         extensionURIs.add(extension1URI);
         when(extensisons.list()).thenReturn(extensionURIs);

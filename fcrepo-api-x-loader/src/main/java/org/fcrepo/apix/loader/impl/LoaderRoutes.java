@@ -81,8 +81,7 @@ public class LoaderRoutes extends RouteBuilder {
                 .setHeader("Accept", constant("text/turtle"))
                 .to("jetty:http://localhost")
                 .process(DEPOSIT_OBJECTS)
-                .setHeader(HTTP_RESPONSE_CODE, constant(303))
-                .setHeader("Location", constant("http://example.org"));
+                .setHeader(HTTP_RESPONSE_CODE, constant(303));
 
         from(ROUTE_NO_SERVICE)
                 .setBody(constant("No service URI provided"))
