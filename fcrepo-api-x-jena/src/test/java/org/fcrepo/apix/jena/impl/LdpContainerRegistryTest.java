@@ -35,6 +35,7 @@ import java.util.List;
 
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.Registry;
+import org.fcrepo.apix.test.SynchronousInitializer;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.http.Header;
@@ -64,6 +65,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class LdpContainerRegistryTest {
 
+    LdpContainerRegistry toTest;
+
     @Captor
     ArgumentCaptor<HttpUriRequest> requestCaptor;
 
@@ -90,6 +93,9 @@ public class LdpContainerRegistryTest {
 
     @Before
     public void setUp() throws Exception {
+        toTest = new LdpContainerRegistry();
+        toTest.setInitializer(new SynchronousInitializer());
+
         when(entityResponse.getStatusLine()).thenReturn(entityStatus);
         when(headResponse.getStatusLine()).thenReturn(headStatus);
 
@@ -101,7 +107,6 @@ public class LdpContainerRegistryTest {
     @Test
     public void createTest() throws Exception {
         final URI containerURI = URI.create("test:Container");
-        final LdpContainerRegistry toTest = new LdpContainerRegistry();
         toTest.setContainer(containerURI);
 
         when(entityStatus.getStatusCode()).thenReturn(HttpStatus.SC_CREATED);
@@ -127,7 +132,6 @@ public class LdpContainerRegistryTest {
     @Test
     public void createWithInitialContentTest() throws Exception {
         final URI containerURI = URI.create("test:Container");
-        final LdpContainerRegistry toTest = new LdpContainerRegistry();
         toTest.setContainer(containerURI);
 
         when(entityStatus.getStatusCode()).thenReturn(HttpStatus.SC_CREATED);
@@ -157,7 +161,6 @@ public class LdpContainerRegistryTest {
     @Test
     public void dontCreateIfExistsTest() throws Exception {
         final URI containerURI = URI.create("test:Container");
-        final LdpContainerRegistry toTest = new LdpContainerRegistry();
         toTest.setContainer(containerURI);
 
         when(headStatus.getStatusCode()).thenReturn(HttpStatus.SC_OK);
@@ -173,7 +176,6 @@ public class LdpContainerRegistryTest {
 
     @Test
     public void noCreateTest() throws Exception {
-        final LdpContainerRegistry toTest = new LdpContainerRegistry();
 
         toTest.setCreateContainer(false);
         toTest.setHttpClient(client);
@@ -188,7 +190,6 @@ public class LdpContainerRegistryTest {
         final URI member1 = URI.create("test:member1");
         final URI member2 = URI.create("test:member2");
         final URI containerURI = URI.create("test:Container");
-        final LdpContainerRegistry toTest = new LdpContainerRegistry();
         toTest.setContainer(containerURI);
         toTest.setRegistryDelegate(registryDelegate);
 
@@ -207,7 +208,6 @@ public class LdpContainerRegistryTest {
 
     @Test
     public void domainTest() {
-        final LdpContainerRegistry toTest = new LdpContainerRegistry();
         final String CONTAINER = "http://example.org/container";
         toTest.setContainer(URI.create(CONTAINER));
 

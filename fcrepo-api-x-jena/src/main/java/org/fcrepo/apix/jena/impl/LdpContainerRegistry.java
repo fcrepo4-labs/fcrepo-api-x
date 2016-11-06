@@ -28,6 +28,8 @@ import java.util.Collection;
 
 import org.fcrepo.apix.jena.Util;
 import org.fcrepo.apix.model.WebResource;
+import org.fcrepo.apix.model.components.Initializer;
+import org.fcrepo.apix.model.components.Initializer.Initialization;
 import org.fcrepo.apix.model.components.Registry;
 
 import org.apache.commons.io.FilenameUtils;
@@ -77,6 +79,10 @@ public class LdpContainerRegistry implements Registry {
 
     private URI containerContent;
 
+    private Initialization init = Initialization.NONE;
+
+    private Initializer initializer;
+
     private static final Logger LOG = LoggerFactory.getLogger(LdpContainerRegistry.class);
 
     /**
@@ -101,38 +107,46 @@ public class LdpContainerRegistry implements Registry {
     }
 
     /**
+     * Set the initializer.
+     *
+     * @param initializer the initializer
+     */
+    @Reference
+    public void setInitializer(final Initializer initializer) {
+        this.initializer = initializer;
+    }
+
+    /** Cancel the container creation, if it's running. */
+    public void shutdown() {
+        init.cancel();
+    }
+
+    /**
      * Create the container if it doesn't exist.
-     * <p>
-     * TODO: make this more robust. What if the repository is not accessible at initialization time?
-     * </p>
      */
     public void init() {
 
-        if (!create) {
-            return;
-        }
+        init = initializer.initialize(() -> {
 
-        boolean found = false;
+            if (!create) {
+                return;
+            }
 
-        while (!found) {
-            try {
+            boolean found = false;
+
+            while (!found) {
+                LOG.info("Looking for container {}", containerId);
                 found = exists(containerId);
 
                 if (!found) {
-                    put(WebResource.of(initialContent(), "text/turtle",
+                    LOG.info("Container {} does not exist, adding", containerId);
+                    final URI added = put(WebResource.of(initialContent(), "text/turtle",
                             containerId, null), false);
+                    LOG.info("Added container {} as <{}>", containerId, added);
                     found = true;
                 }
-            } catch (final Exception e) {
-                LOG.warn("Failed initializing underlying container ('" + containerId + "'), re-trying ...",
-                        e.getMessage());
-                try {
-                    Thread.sleep(1000);
-                } catch (final InterruptedException i) {
-                    Thread.currentThread().interrupt();
-                }
             }
-        }
+        });
     }
 
     /**
@@ -178,6 +192,7 @@ public class LdpContainerRegistry implements Registry {
 
     @Override
     public WebResource get(final URI id) {
+        init.await();
         return delegate.get(id);
     }
 
@@ -188,6 +203,7 @@ public class LdpContainerRegistry implements Registry {
 
     @Override
     public URI put(final WebResource resource, final boolean asBinary) {
+        init.await();
         HttpEntityEnclosingRequestBase request = null;
 
         if (resource.uri() == null || !resource.uri().isAbsolute()) {
@@ -243,6 +259,7 @@ public class LdpContainerRegistry implements Registry {
 
     @Override
     public Collection<URI> list() {
+        init.await();
         try {
             final Model model = Util.parse(delegate.get(containerId));
 
@@ -257,6 +274,7 @@ public class LdpContainerRegistry implements Registry {
 
     @Override
     public void delete(final URI uri) {
+        init.await();
         try (CloseableHttpResponse response = client.execute(new HttpDelete(uri))) {
             final StatusLine status = response.getStatusLine();
             if (status.getStatusCode() != HttpStatus.SC_NO_CONTENT && status.getStatusCode() != HttpStatus.SC_OK) {
@@ -267,14 +285,17 @@ public class LdpContainerRegistry implements Registry {
         }
     }
 
-    private boolean exists(final URI uri) throws IOException {
+    private boolean exists(final URI uri) {
         try (CloseableHttpResponse response = client.execute(new HttpHead(uri))) {
             return response.getStatusLine().getStatusCode() == HttpStatus.SC_OK;
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
     @Override
     public boolean contains(final URI id) {
+        init.await();
         return list().contains(id);
     }
 
@@ -302,4 +323,5 @@ public class LdpContainerRegistry implements Registry {
                 .replaceFirst("/$", "")
                 .replaceAll("[:/?#\\[\\]@#%]", "-");
     }
+
 }
