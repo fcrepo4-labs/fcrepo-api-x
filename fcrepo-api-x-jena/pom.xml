@@ -113,6 +113,13 @@
     </dependency>
 
     <dependency>
+      <groupId>org.fcrepo.apix</groupId>
+      <artifactId>fcrepo-api-x-test</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-simple</artifactId>
       <scope>test</scope>

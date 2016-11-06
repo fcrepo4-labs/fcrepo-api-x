@@ -32,6 +32,8 @@ import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 import org.fcrepo.apix.model.WebResource;
+import org.fcrepo.apix.model.components.Initializer;
+import org.fcrepo.apix.model.components.Initializer.Initialization;
 import org.fcrepo.apix.model.components.OntologyRegistry;
 import org.fcrepo.apix.model.components.Registry;
 import org.fcrepo.apix.model.components.Updateable;
@@ -74,6 +76,10 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
 
     private boolean indexIRIs = true;
 
+    private Initializer initializer;
+
+    private Initialization init = Initialization.NONE;
+
     private static final Logger LOG = LoggerFactory.getLogger(LookupOntologyRegistry.class);
 
     /**
@@ -86,23 +92,37 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
         this.registry = delegate;
     }
 
+    /**
+     * Set the initializer service.
+     *
+     * @param initializer The initializer.
+     */
+    @Reference
+    public void setInitializer(final Initializer initializer) {
+        this.initializer = initializer;
+    }
+
     @Override
     public WebResource get(final URI id) {
+        init.await();
         return registry.get(ontologyIRIsToLocation.getOrDefault(id, id));
     }
 
     @Override
     public URI put(final WebResource ontologyResource) {
+        init.await();
         return index(registry.put(ontologyResource));
     }
 
     @Override
     public URI put(final WebResource ontologyResource, final boolean asBinary) {
+        init.await();
         return index(registry.put(ontologyResource, asBinary));
     }
 
     @Override
     public URI put(final WebResource ontologyResource, final URI ontologyIRI) {
+        init.await();
         final Model model = parse(ontologyResource);
         model.add(model.getResource(ontologyIRI.toString()), model.getProperty(RDF_TYPE), model.getResource(
                 OWL_ONTOLOGY));
@@ -125,6 +145,7 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
 
     @Override
     public void delete(final URI uri) {
+        init.await();
         registry.delete(uri);
         update();
     }
@@ -159,24 +180,22 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
      */
     public void init() {
 
-        if (!indexIRIs) {
-            return;
-        }
+        init = initializer.initialize(() -> {
+            if (!indexIRIs) {
+                return;
+            }
 
-        for (boolean indexed = false; !indexed;) {
-            try {
+            for (boolean indexed = false; !indexed;) {
+                LOG.info("Indexing ontologies...");
                 update();
                 indexed = true;
-            } catch (final Exception e) {
-                LOG.warn("Indexing existing ontologies failed, retrying: ", e);
-                try {
-                    Thread.sleep(1000);
-                } catch (final InterruptedException i) {
-                    Thread.currentThread().interrupt();
-                    return;
-                }
             }
-        }
+        });
+    }
+
+    /** shut down */
+    public void shutdown() {
+        init.cancel();
     }
 
     private URI index(final URI ontologyLocation) {
@@ -219,6 +238,7 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
 
     @Override
     public boolean contains(final URI id) {
+        init.await();
         return ontologyIRIsToLocation.containsKey(id) || registry.contains(id);
     }
 

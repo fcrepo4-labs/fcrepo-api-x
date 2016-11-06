@@ -30,6 +30,8 @@ import java.util.stream.Collectors;
 import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
+import org.fcrepo.apix.model.components.Initializer;
+import org.fcrepo.apix.model.components.Initializer.Initialization;
 import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.Routing;
 import org.fcrepo.apix.model.components.Updateable;
@@ -54,6 +56,10 @@ public class ExposedServiceUriAnalyzer implements Updateable {
     private String exposePath;
 
     private String fcrepoBaseURI;
+
+    private Initializer initializer;
+
+    private Initialization init = Initialization.NONE;
 
     private final Map<String, Extension> endpoints = new ConcurrentHashMap<>();
 
@@ -95,6 +101,27 @@ public class ExposedServiceUriAnalyzer implements Updateable {
         this.routing = routing;
     }
 
+    /**
+     * Set the initializer.
+     *
+     * @param initializer the initializer.
+     */
+    public void setInitializer(final Initializer initializer) {
+        this.initializer = initializer;
+    }
+
+    /** Initialize */
+    public void init() {
+        init = initializer.initialize(() -> {
+            update();
+        });
+    }
+
+    /** Shutdown */
+    public void shutdown() {
+        init.cancel();
+    }
+
     @Override
     public void update() {
         final Map<String, Extension> exts = extensions.list().stream()
@@ -123,6 +150,7 @@ public class ExposedServiceUriAnalyzer implements Updateable {
      * @return Service exposing extension binding
      */
     public ServiceExposingBinding match(final URI requestURI) {
+        init.await();
 
         LOG.debug("ANALYZER:  Analyzing URI for exposed extensions {}", requestURI);
 

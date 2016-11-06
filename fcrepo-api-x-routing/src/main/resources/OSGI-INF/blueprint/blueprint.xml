@@ -34,6 +34,8 @@
   <reference id="serviceRegistry"
     interface="org.fcrepo.apix.model.components.ServiceRegistry" />
 
+  <reference id="initializer" interface="org.fcrepo.apix.model.components.Initializer" />
+
   <bean id="routingStub" class="org.fcrepo.apix.routing.impl.RoutingStub">
     <property name="host" value="${apix.host}" />
     <property name="port" value="${apix.port}" />
@@ -43,11 +45,13 @@
     <property name="fcrepoBaseURI" value="${fcrepo.baseURI}" />
   </bean>
 
-  <bean id="exposedServiceUriAnalyzer" class="org.fcrepo.apix.routing.impl.ExposedServiceUriAnalyzer">
+  <bean id="exposedServiceUriAnalyzer" class="org.fcrepo.apix.routing.impl.ExposedServiceUriAnalyzer"
+    init-method="init" destroy-method="shutdown">
     <property name="extensionRegistry" ref="extensionRegistry" />
     <property name="fcrepoBaseURI" value="${fcrepo.baseURI}" />
     <property name="exposePath" value="${apix.exposePath}" />
     <property name="routing" ref="routingStub" />
+    <property name="initializer" ref="initializer" />
   </bean>
 
   <bean id="routingImpl" class="org.fcrepo.apix.routing.impl.RoutingImpl">
