@@ -13,11 +13,11 @@
     update-strategy="reload">
     <cm:default-properties>
       <cm:property name="registry.extension.ldp.container"
-        value="http://localhost:8080/fcrepo/apix/extensions" />
+        value="http://localhost:8080/fcrepo/rest/apix/extensions" />
       <cm:property name="registry.ontology.ldp.container"
-        value="http://localhost:8080/fcrepo/apix/ontologies" />
+        value="http://localhost:8080/fcrepo/rest/apix/ontologies" />
       <cm:property name="registry.service.ldp.container"
-        value="http://localhost:8080/fcrepo/apix/services" />
+        value="http://localhost:8080/fcrepo/rest/apix/services" />
       <cm:property name="registry.ontology.create" value="true" />
       <cm:property name="registry.extension.create" value="true" />
       <cm:property name="registry.service.create" value="true" />
@@ -35,6 +35,8 @@
   <reference id="httpClient" ext:proxy-method="classes"
     interface="org.apache.http.impl.client.CloseableHttpClient" />
 
+  <bean id="initMgr" class="org.fcrepo.apix.jena.impl.InitMgr" />
+
   <bean id="fcrepoClientBuilder" class="org.fcrepo.client.FcrepoClient"
     factory-method="client" />
 
@@ -42,31 +44,34 @@
     factory-method="build" />
 
   <bean id="ldpExtensionRegistryDelegate" class="org.fcrepo.apix.jena.impl.LdpContainerRegistry"
-    init-method="init">
+    init-method="init" destroy-method="shutdown">
     <property name="registryDelegate" ref="underlyingRegistryDelegate" />
     <property name="httpClient" ref="httpClient" />
     <property name="container" value="${registry.extension.ldp.container}" />
     <property name="createContainer" value="${registry.extension.create}" />
     <property name="containerContent" value="${registry.extension.content}" />
+    <property name="initializer" ref="initMgr" />
   </bean>
 
   <bean id="ldpOntologyServiceRegistryDelegate" class="org.fcrepo.apix.jena.impl.LdpContainerRegistry"
-    init-method="init">
+    init-method="init" destroy-method="shutdown">
     <property name="registryDelegate" ref="underlyingRegistryDelegate" />
     <property name="httpClient" ref="httpClient" />
     <property name="container" value="${registry.ontology.ldp.container}" />
     <property name="binary" value="true" />
     <property name="createContainer" value="${registry.ontology.create}" />
     <property name="containerContent" value="${registry.ontology.content}" />
+    <property name="initializer" ref="initMgr" />
   </bean>
 
   <bean id="ldpServiceRegistryDelegate" class="org.fcrepo.apix.jena.impl.LdpContainerRegistry"
-    init-method="init">
+    init-method="init" destroy-method="shutdown">
     <property name="registryDelegate" ref="underlyingRegistryDelegate" />
     <property name="httpClient" ref="httpClient" />
     <property name="container" value="${registry.service.ldp.container}" />
     <property name="createContainer" value="${registry.service.create}" />
     <property name="containerContent" value="${registry.service.content}" />
+    <property name="initializer" ref="initMgr" />
   </bean>
 
   <bean id="jenaExtensionRegistryImpl" class="org.fcrepo.apix.jena.impl.JenaExtensionRegistry">
@@ -78,15 +83,18 @@
   </bean>
 
   <bean id="jenaOntologyRegistryImpl" class="org.fcrepo.apix.jena.impl.LookupOntologyRegistry"
-    init-method="init">
+    init-method="init" destroy-method="shutdown">
     <property name="registryDelegate" ref="ldpOntologyServiceRegistryDelegate" />
     <property name="indexIRIs" value="${registry.ontology.index}" />
+    <property name="initializer" ref="initMgr" />
   </bean>
 
-  <bean id="jenaServiceRegistryImpl" class="org.fcrepo.apix.jena.impl.JenaServiceRegistry">
+  <bean id="jenaServiceRegistryImpl" class="org.fcrepo.apix.jena.impl.JenaServiceRegistry"
+    init-method="init" destroy-method="shutdown">
     <property name="fcrepoClient" ref="fcrepoClient" />
     <property name="registryContainer" value="${registry.service.ldp.container}" />
     <property name="registryDelegate" ref="ldpServiceRegistryDelegate" />
+    <property name="initializer" ref="initMgr" />
   </bean>
 
   <service id="jenaOntologyRegistry"
@@ -106,5 +114,8 @@
 
   <service id="jenaOntologyRegistryUpdater" interface="org.fcrepo.apix.model.components.Updateable"
     ref="jenaOntologyRegistryImpl" />
+
+  <service id="jenaInitializer" interface="org.fcrepo.apix.model.components.Initializer"
+    ref="initMgr" />
 
 </blueprint>

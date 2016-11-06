@@ -19,9 +19,7 @@
 package org.fcrepo.apix.jena.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.mockito.Matchers.any;
-
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -30,14 +28,13 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.Registry;
+import org.fcrepo.apix.test.SynchronousInitializer;
 
 import org.apache.commons.io.IOUtils;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -53,14 +50,20 @@ import org.mockito.stubbing.Answer;
 @RunWith(MockitoJUnitRunner.class)
 public class LookupOntologyRegistryTest {
 
+    LookupOntologyRegistry toTest = new LookupOntologyRegistry();
+
     @Mock
     Registry delegate;
+
+    @Before
+    public void setUp() {
+        toTest.setInitializer(new SynchronousInitializer());
+    }
 
     // After PUTting an ontology in the registry, verify that we can retrieve it by
     // its location URI and ontology IRI.
     @Test
     public void putAndLookupByIRITest() {
-        final LookupOntologyRegistry toTest = new LookupOntologyRegistry();
 
         final URI ontologyLocationURI = URI.create("http://example.org/location");
         final URI ontologyIRI = URI.create("http://example.org/test#Ontology");
@@ -84,7 +87,6 @@ public class LookupOntologyRegistryTest {
     // Verify that persisting an ontology whilst explicitly providing an ontology IRI works
     @Test
     public void explicitIRITest() {
-        final LookupOntologyRegistry toTest = new LookupOntologyRegistry();
 
         final URI ontologyLocationURI = URI.create("http://example.org/location");
         final URI ontologyIRI = URI.create("http://example.org/test#OntologyNoIRI");
@@ -117,7 +119,6 @@ public class LookupOntologyRegistryTest {
     // Verifies that init() populates the registry, and we can lookup by IRI
     @Test
     public void initializePopulateTest() {
-        final LookupOntologyRegistry toTest = new LookupOntologyRegistry();
 
         final URI ontologyLocationURI = URI.create("http://example.org/location");
         final URI ontologyIRI = URI.create("http://example.org/test#Ontology");
@@ -136,33 +137,8 @@ public class LookupOntologyRegistryTest {
         assertEquals(toTest.get(ontologyIRI), toTest.get(ontologyLocationURI));
     }
 
-    // Verifies that init() retries until it succeeds.
-    @Test
-    public void initRetryTest() throws Exception {
-
-        final LookupOntologyRegistry toTest = new LookupOntologyRegistry();
-
-        // init() will fail will a NullPointerException until we populate it with a registry;
-        final Future<?> initializing = Executors.newSingleThreadExecutor().submit(new Runnable() {
-
-            @Override
-            public void run() {
-                toTest.init();
-            }
-        });
-
-        assertFalse(initializing.isDone());
-
-        when(delegate.list()).thenReturn(new ArrayList<>());
-
-        toTest.setRegistryDelegate(delegate);
-
-        initializing.get(2, TimeUnit.SECONDS);
-    }
-
     @Test
     public void testNoIndexIRIs() throws Exception {
-        final LookupOntologyRegistry toTest = new LookupOntologyRegistry();
 
         toTest.setRegistryDelegate(delegate);
         toTest.setIndexIRIs(false);

@@ -51,6 +51,8 @@ import org.fcrepo.apix.jena.JenaResource;
 import org.fcrepo.apix.jena.Util;
 import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.ServiceInstance;
+import org.fcrepo.apix.model.components.Initializer;
+import org.fcrepo.apix.model.components.Initializer.Initialization;
 import org.fcrepo.apix.model.components.Registry;
 import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.ServiceInstanceRegistry;
@@ -76,6 +78,10 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     private FcrepoClient client;
 
+    private Initializer initializer;
+
+    private Initialization init = Initialization.NONE;
+
     private static final Logger LOG = LoggerFactory.getLogger(JenaServiceRegistry.class);
 
     /**
@@ -96,6 +102,11 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
         registryContainer = container;
     }
 
+    /** Set the initializer. */
+    public void setInitializer(final Initializer initializer) {
+        this.initializer = initializer;
+    }
+
     @Override
     public void setRegistryDelegate(final Registry delegate) {
         super.setRegistryDelegate(delegate);
@@ -103,6 +114,18 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     // Index mapping canonical URI to resource URI
     private final ConcurrentHashMap<URI, URI> canonicalUriMap = new ConcurrentHashMap<>();
+
+    /** Initial update and re-indexing. */
+    public void init() {
+        init = initializer.initialize(() -> {
+            update();
+        });
+    }
+
+    /** Shutdown */
+    public void shutdown() {
+        init.cancel();
+    }
 
     @Override
     public void update() {
@@ -137,14 +160,16 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     @Override
     public void update(final URI uri) {
-        if (hasInDomain(uri)) {
-            // TODO: This can be optimized more
+        if (hasInDomain(uri) && uri.getFragment() == null) {
+            // TODO: This can be optimized more. Right now, it re-scans all services,
+            // but at least filters out obvious redundancies (hash URIs) or inapplicable resources
             update();
         }
     }
 
     @Override
     public void register(final URI uri) {
+        init.await();
         try {
             LOG.debug("Registering service {} ", uri);
             this.client.patch(registryContainer).body(patchAddService(uri)).perform().close();
@@ -157,6 +182,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     }
 
     private InputStream patchAddService(final URI service) {
+        init.await();
         try {
             return IOUtils.toInputStream(String.format(
                     "INSERT {<> <%s> <%s> .} WHERE {}", PROP_CONTAINS_SERVICE, service), "utf8");
@@ -167,6 +193,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     @Override
     public ServiceInstanceRegistry createInstanceRegistry(final Service service) {
+        init.await();
         LOG.debug("POST: Creating service instance registry");
         try {
             final URI uri = client.post(service.uri()).body(this.getClass().getResourceAsStream(
@@ -186,7 +213,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     @Override
     public ServiceInstanceRegistry instancesOf(final Service service) {
-
+        init.await();
         final URI registryURI = objectResourceOf(service.uri().toString(), PROP_HAS_SERVICE_INSTANCE_REGISTRY, parse(
                 service));
 
@@ -252,16 +279,19 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     @Override
     public Service getService(final URI uri) {
+        init.await();
         return new ServiceImpl(uri);
     }
 
     @Override
     public Collection<URI> list() {
+        init.await();
         return new HashSet<>(canonicalUriMap.values());
     }
 
     @Override
     public boolean contains(final URI uri) {
+        init.await();
         return canonicalUriMap.containsKey(uri) || canonicalUriMap.containsValue(uri);
     }
 
@@ -333,6 +363,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     @Override
     public boolean hasInDomain(final URI uri) {
+        init.await();
         return delegate.hasInDomain(uri) || canonicalUriMap.values().contains(uri);
     }
 

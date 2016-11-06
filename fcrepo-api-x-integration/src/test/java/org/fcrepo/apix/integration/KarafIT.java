@@ -260,11 +260,10 @@ public interface KarafIT {
                 serviceContainer,
                 ontologyContainer)) {
             // Add the container, if it doesn't exist.
-            boolean initialized = false;
 
-            while (!initialized) {
+            attempt(60, () -> {
                 try (FcrepoResponse head = client.head(container).perform()) {
-                    initialized = true;
+                    return true;
                 } catch (final FcrepoOperationFailedException e) {
                     if (e.getStatusCode() == HttpStatus.SC_NOT_FOUND) {
                         try (FcrepoResponse response = client.put(container)
@@ -281,7 +280,8 @@ public interface KarafIT {
                         }
                     }
                 }
-            }
+                return true;
+            });
         }
     }
 }
