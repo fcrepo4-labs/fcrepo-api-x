@@ -148,6 +148,7 @@ public class ExposedServiceUriAnalyzer implements Updateable {
                     extension,
                     resourcePath != null ? append(fcrepoBaseURI, resourcePath) : null,
                     exposedServiceURI,
+                    resourcePath,
                     requestURI.toString().replace(exposedServiceURI.toString(), ""));
 
         } else {
@@ -166,6 +167,8 @@ public class ExposedServiceUriAnalyzer implements Updateable {
 
         public String additionalPath;
 
+        public String resourcePath;
+
         /**
          * Create a concrete binding
          *
@@ -175,11 +178,13 @@ public class ExposedServiceUriAnalyzer implements Updateable {
          * @param additionalPath Additional path segments from request.
          */
         public ServiceExposingBinding(final Extension extension, final URI resource, final URI exposed,
+                final String resourcePath,
                 final String additionalPath) {
             this.extension = extension;
             this.repositoryResourceURI = resource;
             this.baseURI = exposed;
             this.additionalPath = additionalPath;
+            this.resourcePath = resourcePath;
         }
 
         /**

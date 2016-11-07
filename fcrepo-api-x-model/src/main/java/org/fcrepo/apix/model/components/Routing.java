@@ -32,6 +32,9 @@ public interface Routing {
     /** Fedora repository resource relevant to a resource-scoped exposed service */
     public static final String HTTP_HEADER_REPOSITORY_RESOURCE_URI = "Apix-Ldp-Resource";
 
+    /** Fedora repository resource path relevant to a resource-scoped exposed service */
+    public static final String HTTP_HEADER_REPOSITORY_RESOURCE_PATH = "Apix-Ldp-Resource-Path";
+
     /** Repository or resource-scoped exposed service URI */
     public static final String HTTP_HEADER_EXPOSED_SERVICE_URI = "Apix-Exposed-Uri";
 
