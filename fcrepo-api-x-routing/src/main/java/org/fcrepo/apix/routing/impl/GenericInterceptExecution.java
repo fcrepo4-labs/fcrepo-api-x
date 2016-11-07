@@ -75,7 +75,7 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
 
     private ServiceRegistry serviceRegistry;
 
-    private URI fcrepoBaseURI;
+    private URI proxyURI;
 
     /**
      * Set the extension binding.
@@ -109,8 +109,8 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
      *
      * @param uri the base URI.
      */
-    public void setFcrepoBaseURI(final URI uri) {
-        this.fcrepoBaseURI = uri;
+    public void setProxyURI(final URI uri) {
+        this.proxyURI = uri;
     }
 
     private final Collection<Extension> extensions = new ConcurrentHashSet<>();
@@ -158,7 +158,7 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
     }
 
     final Processor GET_INCOMING_ENDPOINTS = (ex -> {
-        final URI fedoraResource = append(fcrepoBaseURI, ex.getIn().getHeader(Exchange.HTTP_PATH));
+        final URI fedoraResource = append(proxyURI, ex.getIn().getHeader(Exchange.HTTP_PATH));
 
         if (extensions.size() > 0) {
             ex.getIn().setHeader(HEADER_SERVICE_ENDPOINTS,

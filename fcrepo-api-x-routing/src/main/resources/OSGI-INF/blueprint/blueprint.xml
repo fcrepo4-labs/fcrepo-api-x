@@ -19,6 +19,8 @@
       <cm:property name="apix.discoveryPath" value="discovery" />
       <cm:property name="apix.exposePath" value="services" />
       <cm:property name="apix.interceptPath" value="fcrepo/rest" />
+      <cm:property name="apix.proxyPath" value="fcrepo" />
+      <cm:property name="fcrepo.proxyURI" value="http://localhost:8080/fcrepo" />
       <cm:property name="fcrepo.baseURI" value="http://localhost:8080/fcrepo/rest" />
       <cm:property name="discovery.relativeURIs" value="true" />
       <cm:property name="discovery.interceptURIs" value="true" />
@@ -60,10 +62,12 @@
     <property name="serviceRegistry" ref="serviceRegistry" />
     <property name="exposedServiceURIAnalyzer" ref="exposedServiceUriAnalyzer" />
     <property name="routing" ref="routingStub" />
+    <property name="interceptPath" value="${apix.interceptPath}" />
+    <property name="proxyPath" value="${apix.proxyPath}" />
   </bean>
 
   <bean id="interceptImpl" class="org.fcrepo.apix.routing.impl.GenericInterceptExecution">
-    <property name="fcrepoBaseURI" value="${fcrepo.baseURI}" />
+    <property name="proxyURI" value="${fcrepo.proxyURI}" />
     <property name="extensionBinding" ref="extensionBinding" />
     <property name="serviceRegistry" ref="serviceRegistry" />
     <property name="extensionRegistry" ref="extensionRegistry" />
