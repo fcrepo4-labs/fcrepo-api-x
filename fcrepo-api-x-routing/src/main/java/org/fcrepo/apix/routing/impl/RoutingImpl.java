@@ -22,6 +22,7 @@ import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_EXPOSED_SERVI
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_RESOURCE_URI;
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_ROOT_URI;
 import static org.fcrepo.apix.routing.Util.append;
+import static org.fcrepo.apix.routing.Util.segment;
 import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.HEADER_INVOKE_STATUS;
 import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.ROUTE_INTERCEPT_INCOMING;
 import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.ROUTE_INTERCEPT_OUTGOING;
@@ -45,6 +46,7 @@ import org.fcrepo.apix.model.components.ServiceRegistry;
 import org.fcrepo.apix.routing.impl.ExposedServiceUriAnalyzer.ServiceExposingBinding;
 
 import org.apache.camel.Exchange;
+import org.apache.camel.Predicate;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.commons.io.IOUtils;
@@ -68,6 +70,8 @@ public class RoutingImpl extends RouteBuilder {
 
     public static final String EXTENSION_NOT_FOUND = "direct:extension_not_found";
 
+    public static final String ROUTE_INTERCEPT = "direct:intercept";
+
     public static final String BINDING = "CamelApixServiceExposureBinding";
 
     private ExposedServiceUriAnalyzer analyzer;
@@ -77,6 +81,10 @@ public class RoutingImpl extends RouteBuilder {
     private ServiceRegistry serviceRegistry;
 
     private Routing routing;
+
+    private String interceptPath;
+
+    private String proxyPath;
 
     /**
      * Set Fedora's baseURI.
@@ -123,8 +131,30 @@ public class RoutingImpl extends RouteBuilder {
         this.routing = routing;
     }
 
+    /**
+     * Set the intercept path.
+     *
+     * @param path The intercept path.
+     */
+    public void setInterceptPath(final String path) {
+        this.interceptPath = path;
+    }
+
+    /**
+     * Set the proxy path.
+     *
+     * @param path The intercept path.
+     */
+    public void setProxyPath(final String path) {
+        this.proxyPath = path;
+    }
+
+    private String interceptBase;
+
     @Override
     public void configure() throws Exception {
+
+        interceptBase = segment(interceptPath.replaceFirst("^" + proxyPath, ""));
 
         // It would be nice to use the rest DSL to do the service doc, if that is at all possible
 
@@ -138,13 +168,24 @@ public class RoutingImpl extends RouteBuilder {
                 .when(header(EXPOSING_EXTENSION).isNull()).to(EXTENSION_NOT_FOUND)
                 .otherwise().to(EXECUTION_EXPOSE_MODALITY);
 
-        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.interceptPath}}?matchOnUriPrefix=true")
-                .routeId("endpoint-intercept").routeDescription("Endpoint for intercept/proxy to Fedora")
+        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.proxyPath}}?matchOnUriPrefix=true")
+                .routeId("endpoint-proxy").routeDescription("Endpoint for proxy to Fedora")
+
+                .choice()
+                .when(IN_INTERCEPT_PATH).to(ROUTE_INTERCEPT)
+                .otherwise().to("jetty:{{fcrepo.proxyURI}}" +
+                        "?bridgeEndpoint=true" +
+                        "&throwExceptionOnFailure=false" +
+                        "&disableStreamCache=true" +
+                        "&preserveHostHeader=true");
+
+        from(ROUTE_INTERCEPT)
+                .routeId("execute-intercept").routeDescription("Endpoint for intercept to Fedora")
                 .to(ROUTE_INTERCEPT_INCOMING)
                 .choice().when(e -> !e.getIn().getHeaders().containsKey(
                         HEADER_INVOKE_STATUS) || e.getIn().getHeader(
                                 HEADER_INVOKE_STATUS, Integer.class) < 300)
-                .to("jetty:" + fcrepoBaseURI +
+                .to("jetty:{{fcrepo.proxyURI}}" +
                         "?bridgeEndpoint=true" +
                         "&throwExceptionOnFailure=false" +
                         "&disableStreamCache=true" +
@@ -168,6 +209,10 @@ public class RoutingImpl extends RouteBuilder {
 
     }
 
+    final Predicate IN_INTERCEPT_PATH = ex -> {
+        return segment(ex.getIn().getHeader(Exchange.HTTP_PATH, String.class)).startsWith(interceptBase);
+    };
+
     final Processor ANALYZE_URI = (ex -> {
         final ServiceExposingBinding binding = analyzer.match(
                 URI.create(ex.getIn().getHeader(Exchange.HTTP_URL, String.class)));
@@ -190,7 +235,8 @@ public class RoutingImpl extends RouteBuilder {
 
     final Processor WRITE_SERVICE_DOC = (ex -> {
         final String accept = ex.getIn().getHeader("Accept", "text/turtle", String.class).split("\\s*,\\s*")[0];
-        final URI resource = append(fcrepoBaseURI, ex.getIn().getHeader(Exchange.HTTP_PATH));
+        final URI resource = fcrepoResourceFromPath(ex.getIn().getHeader(Exchange.HTTP_PATH,
+                String.class));
 
         try (WebResource serviceDoc = serviceDiscovery.getServiceDocumentFor(resource, accept)) {
             ex.getOut().setBody(IOUtils.toByteArray(serviceDoc.representation()));
@@ -240,10 +286,20 @@ public class RoutingImpl extends RouteBuilder {
         }
 
         rawLinkHeaders.add(String.format("<%s>; rel=\"service\"", routing.serviceDocFor(
-                ex.getIn().getHeader(Exchange.HTTP_PATH, String.class))));
+                fcrepoResourceFromPath(ex.getIn().getHeader(Exchange.HTTP_PATH, String.class)))));
 
         ex.getIn().setHeader("Link", rawLinkHeaders);
     });
+
+    // Converts an http path to a repository resource path
+    private URI fcrepoResourceFromPath(final String proxied) {
+        final String resourcePath = segment(proxied.replaceFirst(interceptBase, ""));
+        if (resourcePath.equals("")) {
+            return URI.create(segment(fcrepoBaseURI.toString()) + "/");
+        } else {
+            return append(fcrepoBaseURI, resourcePath);
+        }
+    }
 
     private static <T> T exactlyOne(final Collection<T> of, final String errMsg) {
         if (of.size() != 1) {
