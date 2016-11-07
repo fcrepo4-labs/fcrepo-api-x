@@ -36,6 +36,11 @@
       <groupId>org.fcrepo.client</groupId>
       <artifactId>fcrepo-java-client</artifactId>
     </dependency>
+    
+    <dependency>
+      <groupId>commons-io</groupId>
+      <artifactId>commons-io</artifactId>
+    </dependency>
 
     <dependency>
       <groupId>org.slf4j</groupId>

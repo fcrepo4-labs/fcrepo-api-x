@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.loader.impl;
 
+import static org.apache.camel.Exchange.CONTENT_TYPE;
 import static org.apache.camel.Exchange.HTTP_RESPONSE_CODE;
 
 import java.io.InputStream;
@@ -44,6 +45,8 @@ public class LoaderRoutes extends RouteBuilder {
 
     private static final String ROUTE_NO_SERVICE = "direct:no_service";
 
+    private static final String ROUTE_OPTIONS = "direct:options";
+
     LoaderService loaderService;
 
     /**
@@ -57,14 +60,26 @@ public class LoaderRoutes extends RouteBuilder {
 
     @Override
     public void configure() throws Exception {
-        restConfiguration().component("jetty").host("0.0.0.0").port("{{loader.port}}");
 
-        rest("/load")
-                .get()
-                .produces("text/html").to("language:simple:resource:classpath:form.html")
+        from("jetty:http://0.0.0.0:{{loader.port}}/load" +
+                "?matchOnUriPrefix=true&sendServerVersion=false&httpMethodRestrict=GET,OPTIONS,POST")
+                        .id("loader-http")
+                        .choice()
 
-                .post().consumes("application/x-www-form-urlencoded, text/plain")
-                .to(ROUTE_PREPARE_LOAD);
+                        .when(header(Exchange.HTTP_METHOD).isEqualTo("GET"))
+                        .setHeader("Content-Type", constant("text/html"))
+                        .to("language:simple:resource:classpath:form.html")
+
+                        .when(header(Exchange.HTTP_METHOD).isEqualTo("POST"))
+                        .to(ROUTE_PREPARE_LOAD)
+
+                        .otherwise().to(ROUTE_OPTIONS);
+
+        from(ROUTE_OPTIONS).id("respond-options")
+                .setHeader(CONTENT_TYPE).constant("text/turtle")
+                .setHeader("Allow").constant("GET,OPTIONS,POST")
+                .setHeader("Accept-Post").constant("application/x-www-form-urlencoded,text/plain")
+                .to("language:simple:resource:classpath:options.ttl");
 
         from(ROUTE_PREPARE_LOAD).id("load-prepare")
                 .choice().when(header("Content-Type").isEqualTo("text/plain"))

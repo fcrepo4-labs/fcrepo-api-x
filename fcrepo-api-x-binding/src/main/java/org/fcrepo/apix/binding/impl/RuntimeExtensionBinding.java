@@ -18,6 +18,9 @@
 
 package org.fcrepo.apix.binding.impl;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,6 +37,7 @@ import org.fcrepo.apix.model.components.Registry;
 import org.fcrepo.client.FcrepoClient;
 import org.fcrepo.client.FcrepoResponse;
 
+import org.apache.commons.io.IOUtils;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
@@ -118,20 +122,32 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
     public Collection<Extension> getExtensionsFor(final WebResource resource,
             final Collection<Extension> extensions) {
 
-        final Set<URI> rdfTypes = extensions.stream()
-                .map(Extension::getResource)
-                .peek(r -> LOG.debug("Examinining the ontology closure of extension {}", r.uri()))
-                .map(ontologySvc::parseOntology)
-                .flatMap(o -> ontologySvc.inferClasses(resource.uri(), resource, o).stream())
-                .peek(rdfType -> LOG.debug("Instance {} is of class {}", resource.uri(), rdfType))
-                .collect(Collectors.toSet());
+        try (final InputStream resourceContent = resource.representation()) {
 
-        return extensions.stream()
-                .peek(e -> LOG.debug("Extension {} binds to instances of {}", e.uri(), e.bindingClass()))
-                .filter(e -> rdfTypes.contains(e.bindingClass()))
-                .peek(e -> LOG.debug("Extension {} bound to instance {} via {}", e.uri(), resource.uri(), e
-                        .bindingClass()))
-                .collect(Collectors.toList());
+            final byte[] content = IOUtils.toByteArray(resourceContent);
+
+            final Set<URI> rdfTypes = extensions.stream()
+                    .map(Extension::getResource)
+                    .peek(r -> LOG.debug("Examinining the ontology closure of extension {}", r.uri()))
+                    .map(ontologySvc::parseOntology)
+                    .flatMap(o -> ontologySvc.inferClasses(resource.uri(), cached(resource, content), o).stream())
+                    .peek(rdfType -> LOG.debug("Instance {} is of class {}", resource.uri(), rdfType))
+                    .collect(Collectors.toSet());
+
+            return extensions.stream()
+                    .peek(e -> LOG.debug("Extension {} binds to instances of {}", e.uri(), e.bindingClass()))
+                    .filter(e -> rdfTypes.contains(e.bindingClass()))
+                    .peek(e -> LOG.debug("Extension {} bound to instance {} via {}", e.uri(), resource.uri(), e
+                            .bindingClass()))
+                    .collect(Collectors.toList());
+        } catch (final IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private WebResource cached(final WebResource initial, final byte[] content) {
+        return WebResource.of(new ByteArrayInputStream(content), initial.contentType(), initial.uri(), initial
+                .name());
     }
 
     /** Just does a dumb dereference and lookup */
