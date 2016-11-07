@@ -37,7 +37,26 @@
     <property name="loaderService" ref="loaderService" />
   </bean>
 
-  <camel:camelContext id="apix-loader">
-    <camel:routeBuilder ref="loaderRoutes" />
-  </camel:camelContext>
+
+  <camelContext id="apix-loader"
+    xmlns="http://camel.apache.org/schema/blueprint">
+    <routeBuilder ref="loaderRoutes" />
+    
+    <!-- Self-register the loader service as an extension -->
+    <route id="load-extension">
+      <from uri="timer:register?repeatCount=1" />
+      <onException>
+        <exception>java.lang.Exception</exception>
+        <redeliveryPolicy maximumRedeliveries="10" logRetryAttempted="true" retryAttemptedLogLevel="INFO"/>
+      </onException>
+      <setHeader headerName="Content-Type">
+        <constant>text/plain</constant>
+      </setHeader>
+      <setBody>
+        <simple>http://localhost:{{loader.port}}/load</simple>
+      </setBody>
+      <to
+        uri="jetty:http://localhost:{{loader.port}}/load?okStatusCodeRange=200-399" />
+    </route>
+  </camelContext>
 </blueprint>

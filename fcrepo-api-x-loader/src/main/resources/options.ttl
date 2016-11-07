@@ -1,0 +1,10 @@
+@prefix apix:<http://fedora.info/definitions/v4/api-extension#> .
+@prefix fedora:<http://fedora.info/definitions/v4/repository#> .
+@prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#> .
+
+<> a apix:Extension;
+    rdfs:label "Extension loader service";
+    rdfs:comment "A service that automates loading and registration of extensions and services";
+    apix:exposesService apix:LoaderService;
+    apix:exposesServiceAt "/apix:load";
+    apix:bindsTo fedora:RepositoryRoot .
