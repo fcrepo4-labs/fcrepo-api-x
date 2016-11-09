@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.net.URI;
 
 import org.fcrepo.apix.model.WebResource;
+import org.fcrepo.apix.model.components.Routing;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
@@ -47,6 +48,10 @@ public class LoaderRoutes extends RouteBuilder {
 
     private static final String ROUTE_OPTIONS = "direct:options";
 
+    private boolean useInterceptURIs;
+
+    private Routing routing;
+
     LoaderService loaderService;
 
     /**
@@ -56,6 +61,24 @@ public class LoaderRoutes extends RouteBuilder {
      */
     public void setLoaderService(final LoaderService svc) {
         this.loaderService = svc;
+    }
+
+    /**
+     * Use intercept URIs in returned 303.
+     *
+     * @param intercept Whether to use intercept URIs.
+     */
+    public void setUseInterceptURIs(final boolean intercept) {
+        this.useInterceptURIs = intercept;
+    }
+
+    /**
+     * Set the routing component.
+     *
+     * @param routing Routing component.
+     */
+    public void setRouting(final Routing routing) {
+        this.routing = routing;
     }
 
     @Override
@@ -111,7 +134,12 @@ public class LoaderRoutes extends RouteBuilder {
                 URI.create(ex.getIn().getHeader(Exchange.HTTP_URI, String.class)), null));
 
         ex.getOut().setHeader(HTTP_RESPONSE_CODE, 303);
-        ex.getOut().setHeader("Location", location);
+
+        if (useInterceptURIs) {
+            ex.getOut().setHeader("Location", routing.interceptUriFor(location));
+        } else {
+            ex.getOut().setHeader("Location", location);
+        }
     };
 
 }
