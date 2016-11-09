@@ -15,6 +15,9 @@
     <cm:default-properties>
       <cm:property name="loader.host" value="0.0.0.0" />
       <cm:property name="loader.port" value="32080" />
+      <cm:property name="extension.load" value="true" />
+      <cm:property name="extension.load.maximumRediveries"
+        value="60" />
     </cm:default-properties>
   </cm:property-placeholder>
 
@@ -41,22 +44,31 @@
   <camelContext id="apix-loader"
     xmlns="http://camel.apache.org/schema/blueprint">
     <routeBuilder ref="loaderRoutes" />
-    
+
     <!-- Self-register the loader service as an extension -->
     <route id="load-extension">
       <from uri="timer:register?repeatCount=1" />
       <onException>
         <exception>java.lang.Exception</exception>
-        <redeliveryPolicy maximumRedeliveries="10" logRetryAttempted="true" retryAttemptedLogLevel="INFO"/>
+        <redeliveryPolicy maximumRedeliveries="{{extension.load.maximumRediveries}}"
+          logRetryAttempted="true" retryAttemptedLogLevel="INFO" />
       </onException>
       <setHeader headerName="Content-Type">
         <constant>text/plain</constant>
       </setHeader>
+      <setHeader headerName="CamelHttpMethod">
+        <constant>POST</constant>
+      </setHeader>
       <setBody>
         <simple>http://localhost:{{loader.port}}/load</simple>
       </setBody>
-      <to
-        uri="jetty:http://localhost:{{loader.port}}/load?okStatusCodeRange=200-399" />
+      <choice>
+        <when>
+          <simple>{{extension.load}}</simple>
+          <to
+            uri="jetty:http://localhost:{{loader.port}}/load?okStatusCodeRange=200-399" />
+        </when>
+      </choice>
     </route>
   </camelContext>
 </blueprint>

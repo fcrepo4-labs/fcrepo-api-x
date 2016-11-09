@@ -15,7 +15,7 @@
     <cm:default-properties>
       <cm:property name="input.uri" value="activemq:topic:fedora" />
       <cm:property name="broker.uri" value="tcp://localhost:61616" />
-      <cm:property name="fcrepo.BaseURI" value="http://localhost:8080/fcrepo/rest" />
+      <cm:property name="fcrepo.baseURI" value="http://localhost:8080/fcrepo/rest" />
     </cm:default-properties>
   </cm:property-placeholder>
 
