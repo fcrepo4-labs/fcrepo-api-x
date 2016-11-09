@@ -30,6 +30,7 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.replaceCo
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -204,10 +205,19 @@ public interface KarafIT {
      * @return the resulting WebResource
      */
     public default WebResource testResource(String path) {
+        return testResource(path, "text/turtle");
+    }
 
+    /**
+     * Get a test resource from test-classes
+     *
+     * @param path the resource path relative to {@link #testResources}
+     * @return the resulting WebResource
+     */
+    public default WebResource testResource(String path, String contentType) {
         final File file = new File(testResources, path);
         try {
-            return WebResource.of(new FileInputStream(file), "text/turtle", URI.create(FilenameUtils.getBaseName(
+            return WebResource.of(new FileInputStream(file), contentType, URI.create(FilenameUtils.getBaseName(
                     path)), null);
         } catch (final Exception e) {
             throw new RuntimeException(e);
@@ -221,6 +231,34 @@ public interface KarafIT {
                         .body(object.representation(), object.contentType())
                         .slug(String.format("%s_%s", testMethodName(), getBaseName(filePath)))
                         .perform()) {
+            return response.getLocation();
+        }
+    }
+
+    public default URI postFromTestResource(final String filePath, final URI intoContainer, final String contentType)
+            throws Exception {
+        return postFromTestResource(filePath, intoContainer, contentType,
+                String.format("%s_%s", testMethodName(), getBaseName(filePath)));
+    }
+
+    public default URI postFromTestResource(final String filePath, final URI intoContainer,
+                                            final String contentType, final String slug) throws Exception {
+        try (final WebResource object = testResource(filePath, contentType);
+             final FcrepoResponse response = client.post(intoContainer)
+                     .body(object.representation(), object.contentType())
+                     .slug(slug)
+                     .perform()) {
+            return response.getLocation();
+        }
+    }
+
+    public default URI postFromStream(final InputStream in, final URI intoContainer, final String contentType,
+                                      final String slug) throws Exception {
+        try (final WebResource object = WebResource.of(in, contentType);
+             final FcrepoResponse response = client.post(intoContainer)
+                     .body(object.representation(), object.contentType())
+                     .slug(slug)
+                     .perform()) {
             return response.getLocation();
         }
     }

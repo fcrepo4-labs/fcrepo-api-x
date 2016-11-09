@@ -63,6 +63,8 @@ public class RoutingImpl extends RouteBuilder {
 
     private URI fcrepoBaseURI;
 
+    private URI fcrepoProxyURI;
+
     public static final String EXECUTION_EXPOSE_MODALITY = "direct:execute_expose";
 
     public static final String EXPOSING_EXTENSION = "CamelApixExposingExtension";
@@ -94,6 +96,14 @@ public class RoutingImpl extends RouteBuilder {
      */
     public void setFcrepoBaseURI(final URI uri) {
         this.fcrepoBaseURI = uri;
+    }
+
+    /**
+     * Fedora's proxyURI
+     * @param fcrepoProxyURI
+     */
+    public void setFcrepoProxyURI(final URI fcrepoProxyURI) {
+        this.fcrepoProxyURI = fcrepoProxyURI;
     }
 
     /**
@@ -186,7 +196,7 @@ public class RoutingImpl extends RouteBuilder {
                 .choice().when(e -> !e.getIn().getHeaders().containsKey(
                         HEADER_INVOKE_STATUS) || e.getIn().getHeader(
                                 HEADER_INVOKE_STATUS, Integer.class) < 300)
-                .to("jetty:{{fcrepo.proxyURI}}" +
+                .to("http4:" + stripHttpScheme(fcrepoProxyURI) +
                         "?bridgeEndpoint=true" +
                         "&throwExceptionOnFailure=false" +
                         "&disableStreamCache=true" +
@@ -301,6 +311,17 @@ public class RoutingImpl extends RouteBuilder {
         } else {
             return append(fcrepoBaseURI, resourcePath);
         }
+    }
+
+    private static String stripHttpScheme(URI uri) {
+        if (uri.getScheme().startsWith("http")) {
+            return uri.toString().substring("http://".length());
+        }
+
+        if (uri.getScheme().startsWith("https")) {
+            return uri.toString().substring("https://".length());
+        }
+        return uri.toString();
     }
 
     private static <T> T exactlyOne(final Collection<T> of, final String errMsg) {

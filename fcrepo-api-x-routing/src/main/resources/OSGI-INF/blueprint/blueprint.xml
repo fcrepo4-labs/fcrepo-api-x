@@ -58,6 +58,7 @@
 
   <bean id="routingImpl" class="org.fcrepo.apix.routing.impl.RoutingImpl">
     <property name="fcrepoBaseURI" value="${fcrepo.baseURI}" />
+    <property name="fcrepoProxyURI" value="${fcrepo.proxyURI}" />
     <property name="serviceDiscovery" ref="serviceDiscoveryImpl" />
     <property name="serviceRegistry" ref="serviceRegistry" />
     <property name="exposedServiceURIAnalyzer" ref="exposedServiceUriAnalyzer" />
@@ -92,8 +93,15 @@
   <service id="interceptUpdate" interface="org.fcrepo.apix.model.components.Updateable"
     ref="interceptImpl" />
 
-  <camel:camelContext>
+  <camel:camelContext id="apix-core">
     <camel:routeBuilder ref="routingImpl" />
     <camel:routeBuilder ref="interceptImpl" />
   </camel:camelContext>
+
+  <service interface="org.apache.camel.CamelContext" ref="apix-core">
+    <service-properties>
+      <entry key="role" value="routing-context"/>
+    </service-properties>
+  </service>
+
 </blueprint>
