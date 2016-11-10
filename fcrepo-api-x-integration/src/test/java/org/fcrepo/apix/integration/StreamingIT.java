@@ -127,7 +127,7 @@ public class StreamingIT implements KarafIT {
         }
 
         // Create the binary resource if it doesn't already exist
-        URI expectedBinaryResource = appendToPath(binaryContainer, "large-binary");
+        final URI expectedBinaryResource = appendToPath(binaryContainer, "large-binary");
         if (!resourceExists(expectedBinaryResource)) {
             LOG.warn("Expected resource did not exist {}", expectedBinaryResource);
             try {
@@ -177,7 +177,7 @@ public class StreamingIT implements KarafIT {
     public void testRetrieveLargeBinaryFromFedora() throws Exception {
 
         // Record 'true' if the intercepting route is triggered
-        AtomicBoolean intercepted = new AtomicBoolean(false);
+        final AtomicBoolean intercepted = new AtomicBoolean(false);
         ctx.getRouteDefinition(INTERCEPT_ROUTE_ID).adviceWith((ModelCamelContext) ctx, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
@@ -185,9 +185,9 @@ public class StreamingIT implements KarafIT {
             }
         });
 
-        long expectedSize = (2 * 1024 * 1024) + 1;
-        long actualSize;
-        String actualDigest;
+        final long expectedSize = (2 * 1024 * 1024) + 1;
+        final long actualSize;
+        final String actualDigest;
 
         try (FcrepoResponse r = client.get(binaryResource).perform();
              DigestInputStream body = new DigestInputStream(r.getBody(), sha1)) {
@@ -214,7 +214,7 @@ public class StreamingIT implements KarafIT {
     public void testRetrieveLargeBinaryFromApix() throws Exception {
 
         // Record 'true' if the intercepting route is triggered
-        AtomicBoolean intercepted = new AtomicBoolean(false);
+        final AtomicBoolean intercepted = new AtomicBoolean(false);
         ctx.getRouteDefinition(INTERCEPT_ROUTE_ID).adviceWith((ModelCamelContext) ctx, new AdviceWithRouteBuilder() {
             @Override
             public void configure() throws Exception {
@@ -222,9 +222,9 @@ public class StreamingIT implements KarafIT {
             }
         });
 
-        long expectedSize = (2 * 1024 * 1024) + 1;
-        long actualSize;
-        String actualDigest;
+        final long expectedSize = (2 * 1024 * 1024) + 1;
+        final long actualSize;
+        final String actualDigest;
 
         final URI proxiedResource = proxied(binaryResource);
         try (FcrepoResponse r = KarafIT.attempt(30, () -> client.get(proxiedResource).perform());
@@ -249,7 +249,7 @@ public class StreamingIT implements KarafIT {
      * @return true if the resource exists, false otherwise
      * @throws IOException if there is an error determining whether the resource exists
      */
-    private boolean resourceExists(URI resource) throws IOException {
+    private boolean resourceExists(final URI resource) throws IOException {
         try (FcrepoResponse r = client.head(resource).perform()) {
             if (r.getStatusCode() == 200) {
                 return true;
@@ -269,8 +269,8 @@ public class StreamingIT implements KarafIT {
      * @return the number of bytes read
      * @throws IOException
      */
-    private static long drain(InputStream in) throws IOException {
-        byte[] buf = new byte[1024 * 128];
+    private static long drain(final InputStream in) throws IOException {
+        final byte[] buf = new byte[1024 * 128];
         long size = 0;
 
         for (int i = in.read(buf, 0, buf.length); i > -1; i = in.read(buf, 0, i)) {
@@ -286,8 +286,8 @@ public class StreamingIT implements KarafIT {
      * @param digest a byte array containing a message digest
      * @return a hexadecimal string representation of the message digest
      */
-    private static String asHex(byte[] digest) {
-        StringBuilder buf = new StringBuilder();
+    private static String asHex(final byte[] digest) {
+        final StringBuilder buf = new StringBuilder();
         for (int i = 0; i < digest.length; i++) {
             buf.append(
                     String.format("%02x", Byte.toUnsignedInt(digest[i])));
@@ -304,7 +304,7 @@ public class StreamingIT implements KarafIT {
      * @return an equivalent URI targeting the proxied Fedora resource
      * @throws URISyntaxException
      */
-    private static URI proxied(URI toProxy) throws URISyntaxException {
+    private static URI proxied(final URI toProxy) throws URISyntaxException {
         if (isProxied(toProxy)) {
             return toProxy;
         }
@@ -319,7 +319,7 @@ public class StreamingIT implements KarafIT {
      * @return a new URI with a path component ending with {@code toAppend}
      * @throws URISyntaxException
      */
-    private static URI appendToPath(URI uri, String toAppend) throws URISyntaxException {
+    private static URI appendToPath(final URI uri, final String toAppend) throws URISyntaxException {
         return new URI(uri.getScheme(),
                 uri.getUserInfo(),
                 uri.getHost(),

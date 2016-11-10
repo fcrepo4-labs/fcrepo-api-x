@@ -100,6 +100,7 @@ public class RoutingImpl extends RouteBuilder {
 
     /**
      * Fedora's proxyURI
+     * 
      * @param fcrepoProxyURI
      */
     public void setFcrepoProxyURI(final URI fcrepoProxyURI) {
@@ -313,7 +314,7 @@ public class RoutingImpl extends RouteBuilder {
         }
     }
 
-    private static String stripHttpScheme(URI uri) {
+    private static String stripHttpScheme(final URI uri) {
         if (uri.getScheme().startsWith("http")) {
             return uri.toString().substring("http://".length());
         }
