@@ -38,6 +38,9 @@
 
   <reference id="initializer" interface="org.fcrepo.apix.model.components.Initializer" />
 
+  <bean id="http" class="org.apache.camel.component.http4.HttpComponent" />
+  <bean id="https" class="org.apache.camel.component.http4.HttpComponent" />
+
   <bean id="routingStub" class="org.fcrepo.apix.routing.impl.RoutingStub">
     <property name="host" value="${apix.host}" />
     <property name="port" value="${apix.port}" />
@@ -58,7 +61,6 @@
 
   <bean id="routingImpl" class="org.fcrepo.apix.routing.impl.RoutingImpl">
     <property name="fcrepoBaseURI" value="${fcrepo.baseURI}" />
-    <property name="fcrepoProxyURI" value="${fcrepo.proxyURI}" />
     <property name="serviceDiscovery" ref="serviceDiscoveryImpl" />
     <property name="serviceRegistry" ref="serviceRegistry" />
     <property name="exposedServiceURIAnalyzer" ref="exposedServiceUriAnalyzer" />
@@ -100,7 +102,7 @@
 
   <service interface="org.apache.camel.CamelContext" ref="apix-core">
     <service-properties>
-      <entry key="role" value="routing-context"/>
+      <entry key="role" value="routing-context" />
     </service-properties>
   </service>
 

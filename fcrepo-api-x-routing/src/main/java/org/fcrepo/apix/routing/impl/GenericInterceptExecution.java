@@ -154,7 +154,7 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
                 .process(e -> e.getIn().setHeader(
                         Exchange.HTTP_URI,
                         e.getIn().getHeader(HEADER_SERVICE_ENDPOINTS, Queue.class).remove()))
-                .to("jetty://localhost?throwExceptionOnFailure=false");
+                .to("http://localhost?throwExceptionOnFailure=false");
     }
 
     final Processor GET_INCOMING_ENDPOINTS = (ex -> {

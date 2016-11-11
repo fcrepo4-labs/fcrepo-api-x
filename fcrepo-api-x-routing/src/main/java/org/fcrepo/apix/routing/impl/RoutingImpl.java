@@ -63,8 +63,6 @@ public class RoutingImpl extends RouteBuilder {
 
     private URI fcrepoBaseURI;
 
-    private URI fcrepoProxyURI;
-
     public static final String EXECUTION_EXPOSE_MODALITY = "direct:execute_expose";
 
     public static final String EXPOSING_EXTENSION = "CamelApixExposingExtension";
@@ -96,15 +94,6 @@ public class RoutingImpl extends RouteBuilder {
      */
     public void setFcrepoBaseURI(final URI uri) {
         this.fcrepoBaseURI = uri;
-    }
-
-    /**
-     * Fedora's proxyURI
-     * 
-     * @param fcrepoProxyURI
-     */
-    public void setFcrepoProxyURI(final URI fcrepoProxyURI) {
-        this.fcrepoProxyURI = fcrepoProxyURI;
     }
 
     /**
@@ -173,23 +162,28 @@ public class RoutingImpl extends RouteBuilder {
         from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.discoveryPath}}?matchOnUriPrefix=true")
                 .process(WRITE_SERVICE_DOC);
 
-        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.exposePath}}?matchOnUriPrefix=true")
-                .routeId("endpoint-expose").routeDescription("Endpoint for exposed service mediation")
-                .process(ANALYZE_URI)
-                .choice()
-                .when(header(EXPOSING_EXTENSION).isNull()).to(EXTENSION_NOT_FOUND)
-                .otherwise().to(EXECUTION_EXPOSE_MODALITY);
+        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.exposePath}}" +
+                "?matchOnUriPrefix=true" +
+                "&bridgeEndpoint=true" +
+                "&disableStreamCache=true")
+                        .routeId("endpoint-expose").routeDescription("Endpoint for exposed service mediation")
+                        .process(ANALYZE_URI)
+                        .choice()
+                        .when(header(EXPOSING_EXTENSION).isNull()).to(EXTENSION_NOT_FOUND)
+                        .otherwise().to(EXECUTION_EXPOSE_MODALITY);
 
-        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.proxyPath}}?matchOnUriPrefix=true")
-                .routeId("endpoint-proxy").routeDescription("Endpoint for proxy to Fedora")
+        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.proxyPath}}?" +
+                "matchOnUriPrefix=true" +
+                "&bridgeEndpoint=true" +
+                "&disableStreamCache=true")
+                        .routeId("endpoint-proxy").routeDescription("Endpoint for proxy to Fedora")
 
-                .choice()
-                .when(IN_INTERCEPT_PATH).to(ROUTE_INTERCEPT)
-                .otherwise().to("jetty:{{fcrepo.proxyURI}}" +
-                        "?bridgeEndpoint=true" +
-                        "&throwExceptionOnFailure=false" +
-                        "&disableStreamCache=true" +
-                        "&preserveHostHeader=true");
+                        .choice()
+                        .when(IN_INTERCEPT_PATH).to(ROUTE_INTERCEPT)
+                        .otherwise().to("{{fcrepo.proxyURI}}" +
+                                "?bridgeEndpoint=true" +
+                                "&throwExceptionOnFailure=false" +
+                                "&preserveHostHeader=true");
 
         from(ROUTE_INTERCEPT)
                 .routeId("execute-intercept").routeDescription("Endpoint for intercept to Fedora")
@@ -197,10 +191,9 @@ public class RoutingImpl extends RouteBuilder {
                 .choice().when(e -> !e.getIn().getHeaders().containsKey(
                         HEADER_INVOKE_STATUS) || e.getIn().getHeader(
                                 HEADER_INVOKE_STATUS, Integer.class) < 300)
-                .to("http4:" + stripHttpScheme(fcrepoProxyURI) +
+                .to("{{fcrepo.proxyURI}}" +
                         "?bridgeEndpoint=true" +
                         "&throwExceptionOnFailure=false" +
-                        "&disableStreamCache=true" +
                         "&preserveHostHeader=true")
                 .process(ADD_SERVICE_HEADER)
                 .to(ROUTE_INTERCEPT_OUTGOING);
@@ -214,9 +207,9 @@ public class RoutingImpl extends RouteBuilder {
                 .process(SELECT_SERVICE_INSTANCE)
                 .setHeader(Exchange.HTTP_PATH).simple("${in.header." + BINDING + ".additionalPath}")
                 .recipientList(simple(
-                        "jetty://${in.header." + SERVICE_INSTANCE_URI + "}" +
+                        "${in.header." + SERVICE_INSTANCE_URI + "}" +
                                 "?bridgeEndpoint=true" +
-                                "&preserveHostHeader=true" + "" +
+                                "&preserveHostHeader=true" +
                                 "&throwExceptionOnFailure=false"));
 
     }
@@ -312,17 +305,6 @@ public class RoutingImpl extends RouteBuilder {
         } else {
             return append(fcrepoBaseURI, resourcePath);
         }
-    }
-
-    private static String stripHttpScheme(final URI uri) {
-        if (uri.getScheme().startsWith("http")) {
-            return uri.toString().substring("http://".length());
-        }
-
-        if (uri.getScheme().startsWith("https")) {
-            return uri.toString().substring("https://".length());
-        }
-        return uri.toString();
     }
 
     private static <T> T exactlyOne(final Collection<T> of, final String errMsg) {
