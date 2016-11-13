@@ -144,14 +144,19 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         onServiceRequest(ex -> {
             if (MODALITY_INTERCEPT_INCOMING.equals(ex.getIn().getHeader(HTTP_HEADER_MODALITY))) {
                 ex.getOut().setHeader("foo", "bar");
+                ex.getOut().setBody(ex.getIn().getBody());
+            } else {
+                ex.setOut(ex.getIn());
             }
         });
 
         final URI object = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
                 objectContainer_intercept);
 
-        final FcrepoResponse response = client.get(object).accept("application/n-triples").perform();
-        assertTrue(IOUtils.toString(response.getBody(), "UTF-8").contains(TEST_OBJECT_TYPE));
+        try (final FcrepoResponse response = client.get(object).accept("application/n-triples").perform()) {
+            final String body = IOUtils.toString(response.getBody(), "UTF-8");
+            assertTrue(body.contains(TEST_OBJECT_TYPE));
+        }
     }
 
     @Test
@@ -167,6 +172,9 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         onServiceRequest(ex -> {
             if (MODALITY_INTERCEPT_INCOMING.equals(ex.getIn().getHeader(HTTP_HEADER_MODALITY))) {
                 ex.getOut().setBody(String.format("<> a <%s> .", TYPE));
+                ex.getOut().setHeaders(ex.getIn().getHeaders());
+            } else {
+                ex.setOut(ex.getIn());
             }
         });
 
@@ -192,6 +200,7 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
 
         // Give our request a specific body
         onServiceRequest(ex -> {
+            ex.setOut(ex.getIn());
             if (MODALITY_INTERCEPT_OUTGOING.equals(ex.getIn().getHeader(HTTP_HEADER_MODALITY))) {
                 ex.getOut().setHeader(TEST_HEADER, TEST_HEADER_VALUE);
             }
@@ -240,6 +249,7 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
 
         // Give our request a specific body
         onServiceRequest(ex -> {
+            ex.setOut(ex.getIn());
             if (MODALITY_INTERCEPT_OUTGOING.equals(ex.getIn().getHeader(HTTP_HEADER_MODALITY))) {
                 ex.getOut().setHeader(Exchange.HTTP_RESPONSE_CODE, 418);
             }
@@ -248,14 +258,10 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         final URI object = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
                 objectContainer_intercept);
 
-        final FcrepoResponse response = client.get(object).accept("application/n-triples").perform();
-
-        // Response code should be Fedora's 200
-        assertEquals(200, response.getStatusCode());
-
-        // Body should be returned as normal
-        assertTrue(IOUtils.toString(response.getBody(), "UTF-8").contains(TEST_OBJECT_TYPE));
-
+        try {
+            client.get(object).accept("application/n-triples").perform();
+        } catch (final FcrepoOperationFailedException e) {
+            assertEquals(418, e.getStatusCode());
+        }
     }
-
 }

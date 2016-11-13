@@ -144,6 +144,7 @@ public class LoaderIT extends ServiceBasedTest {
     public void setUp() {
 
         onServiceRequest(ex -> {
+            ex.setOut(ex.getIn());
             if ("OPTIONS".equals(ex.getIn().getHeader(Exchange.HTTP_METHOD))) {
                 ex.getOut().setBody(optionsResponse.get());
             } else if ("GET".equals(ex.getIn().getHeader(Exchange.HTTP_METHOD))) {

@@ -55,11 +55,17 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
 
     public static final String ROUTE_INTERCEPT_OUTGOING = "direct:intercept_outgoing";
 
+    public static final String ROUTE_PERFORM_INCOMING = "direct:perform_incoming";
+
+    public static final String ROUTE_PERFORM_OUTGOING = "direct:perform_outgoing";
+
     public static final String ROUTE_INVOKE_SERVICE = "direct:intercept_invoke";
 
     public static final String HEADER_INVOKE_STATUS = "CamelApixInvokeStatusCode";
 
     public static final String HEADER_SERVICE_ENDPOINTS = "CamelApixServiceEndpoints";
+
+    public static final String HEADER_SERVICE_ENDPOINTS_OUTGOING = "CamelApixServiceEndpointsOutgoing";
 
     public static final String HTTP_HEADER_MODALITY = "Apix-Modality";
 
@@ -138,33 +144,53 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
     @Override
     public void configure() throws Exception {
 
-        from(ROUTE_INTERCEPT_INCOMING).id("intercept-incoming").process(GET_INCOMING_ENDPOINTS)
-                .loopDoWhile(simple("${in.headers.CamelApixServiceEndpoints.size} > 0"))
+        from(ROUTE_INTERCEPT_INCOMING).id("intercept-incoming").process(GET_ENDPOINTS)
                 .setHeader(HTTP_HEADER_MODALITY).constant(MODALITY_INTERCEPT_INCOMING)
-                .enrich(ROUTE_INVOKE_SERVICE, INCOMING_HANDLE_RESPONSE)
+                .setHeader(Exchange.HTTP_RESPONSE_CODE).constant(200)
+                .to(ROUTE_PERFORM_INCOMING);
+
+        from(ROUTE_PERFORM_INCOMING)
+                .choice().when(simple("${in.headers.CamelApixServiceEndpoints.size} > 0"))
+                .to(ROUTE_INVOKE_SERVICE)
+                .choice().when(simple("${in.header.CamelhttpResponseCode} range '200..299'"))
+                .to(ROUTE_PERFORM_INCOMING)
                 .end();
 
-        from(ROUTE_INTERCEPT_OUTGOING).id("intercept-outgoing").process(GET_INCOMING_ENDPOINTS)
-                .loopDoWhile(simple("${in.headers.CamelApixServiceEndpoints.size} > 0"))
+        from(ROUTE_INTERCEPT_OUTGOING).id("intercept-outgoing")
                 .setHeader(HTTP_HEADER_MODALITY).constant(MODALITY_INTERCEPT_OUTGOING)
-                .enrich(ROUTE_INVOKE_SERVICE, OUTGOING_HANDLE_RESPONSE)
+                .setHeader(HEADER_SERVICE_ENDPOINTS).header(HEADER_SERVICE_ENDPOINTS_OUTGOING)
+                .setHeader(Exchange.HTTP_METHOD).constant("POST")
+                .to(ROUTE_PERFORM_OUTGOING);
+
+        from(ROUTE_PERFORM_OUTGOING)
+                .choice().when(simple("${in.headers.CamelApixServiceEndpoints.size} > 0"))
+                .to(ROUTE_INVOKE_SERVICE)
+                .choice().when(simple("${in.header.CamelhttpResponseCode} range '200..299'"))
+                .to(ROUTE_PERFORM_OUTGOING)
                 .end();
 
         from(ROUTE_INVOKE_SERVICE).id("intercept-invoke")
                 .process(e -> e.getIn().setHeader(
                         Exchange.HTTP_URI,
                         e.getIn().getHeader(HEADER_SERVICE_ENDPOINTS, Queue.class).remove()))
-                .to("http://localhost?throwExceptionOnFailure=false");
+                .to("http://localhost?throwExceptionOnFailure=false" +
+                        "&disableStreamCache=true" +
+                        "&preserveHostHeader=true");
     }
 
-    final Processor GET_INCOMING_ENDPOINTS = (ex -> {
+    final Processor GET_ENDPOINTS = (ex -> {
         final URI fedoraResource = append(proxyURI, ex.getIn().getHeader(Exchange.HTTP_PATH));
 
         if (extensions.size() > 0) {
-            ex.getIn().setHeader(HEADER_SERVICE_ENDPOINTS,
-                    new LinkedList<>(binding.getExtensionsFor(fedoraResource, extensions).stream()
+            final List<URI> exts =
+                    binding.getExtensionsFor(fedoraResource, extensions)
+                            .stream()
                             .map(e -> interceptingServiceInstance(e, serviceRegistry))
-                            .collect(Collectors.toList())));
+                            .collect(Collectors.toList());
+
+            ex.getIn().setHeader(HEADER_SERVICE_ENDPOINTS, new LinkedList<>(exts));
+            ex.getIn().setHeader(HEADER_SERVICE_ENDPOINTS_OUTGOING, new LinkedList<>(exts));
+
         }
     });
 

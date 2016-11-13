@@ -135,11 +135,12 @@ public abstract class ServiceBasedTest implements KarafIT {
                 from("jetty:" + serviceEndpoint +
                         "?matchOnUriPrefix=true")
                                 .process(ex -> {
-                                    ex.getOut().copyFrom(responseFromService);
                                     requestToService.copyFrom(ex.getIn());
 
                                     if (processFromTest != null) {
                                         processFromTest.process(ex);
+                                    } else {
+                                        ex.getOut().copyFrom(responseFromService);
                                     }
 
                                 });
