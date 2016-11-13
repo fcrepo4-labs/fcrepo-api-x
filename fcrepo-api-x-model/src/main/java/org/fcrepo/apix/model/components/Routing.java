@@ -32,6 +32,9 @@ public interface Routing {
     /** Fedora repository resource relevant to a resource-scoped exposed service */
     public static final String HTTP_HEADER_REPOSITORY_RESOURCE_URI = "Apix-Ldp-Resource";
 
+    /** API-X proxied repository resource relevant to a resource-scoped exposed service */
+    public static final String HTTP_HEADER_APIX_RESOURCE_URI = "Apix-Resource";
+
     /** Fedora repository resource path relevant to a resource-scoped exposed service */
     public static final String HTTP_HEADER_REPOSITORY_RESOURCE_PATH = "Apix-Ldp-Resource-Path";
 
@@ -40,6 +43,9 @@ public interface Routing {
 
     /** Repository root (baseURI) */
     public static final String HTTP_HEADER_REPOSITORY_ROOT_URI = "Apix-Ldp-Root";
+
+    /** API-X proxied repository root (baseURI) */
+    public static final String HTTP_HEADER_APIX_ROOT_URI = "Apix-Root";
 
     /**
      * Get the endpoint for the service exposed by the given extension on the given resource.

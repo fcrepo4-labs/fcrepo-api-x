@@ -18,6 +18,8 @@
 
 package org.fcrepo.apix.routing.impl;
 
+import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_APIX_RESOURCE_URI;
+import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_APIX_ROOT_URI;
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_EXPOSED_SERVICE_URI;
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_RESOURCE_PATH;
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_RESOURCE_URI;
@@ -228,10 +230,15 @@ public class RoutingImpl extends RouteBuilder {
 
         // resource URI is only conveyed for resource-scope services
         if (Scope.RESOURCE.equals(binding.extension.exposed().scope())) {
+
+            ex.getIn().setHeader(HTTP_HEADER_APIX_RESOURCE_URI, routing.interceptUriFor(
+                    binding.repositoryResourceURI));
             ex.getIn().setHeader(HTTP_HEADER_REPOSITORY_RESOURCE_URI, binding.repositoryResourceURI);
             ex.getIn().setHeader(HTTP_HEADER_REPOSITORY_RESOURCE_PATH, "/" + binding.resourcePath);
         } else {
             ex.getIn().setHeader(HTTP_HEADER_REPOSITORY_ROOT_URI, fcrepoBaseURI);
+            ex.getIn().setHeader(HTTP_HEADER_APIX_ROOT_URI, routing.interceptUriFor(fcrepoBaseURI));
+
         }
     });
 
