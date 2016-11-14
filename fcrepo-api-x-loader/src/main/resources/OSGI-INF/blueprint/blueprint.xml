@@ -18,6 +18,7 @@
       <cm:property name="extension.load" value="true" />
       <cm:property name="extension.load.maximumRediveries"
         value="60" />
+      <cm:property name="useInterceptURIs" value="true" />
     </cm:default-properties>
   </cm:property-placeholder>
 
@@ -30,6 +31,8 @@
   <reference id="generalRegistry" filter="(org.fcrepo.apix.registry.role=default)"
     interface="org.fcrepo.apix.model.components.Registry" />
 
+  <reference id="routing" interface="org.fcrepo.apix.model.components.Routing" />
+
   <bean id="loaderService" class="org.fcrepo.apix.loader.impl.LoaderService">
     <property name="extensionRegistry" ref="extensionRegistry" />
     <property name="serviceRegistry" ref="serviceRegistry" />
@@ -38,6 +41,8 @@
 
   <bean id="loaderRoutes" class="org.fcrepo.apix.loader.impl.LoaderRoutes">
     <property name="loaderService" ref="loaderService" />
+    <property name="routing" ref="routing" />
+    <property name="useInterceptURIs" value="${useInterceptURIs}" />
   </bean>
 
 
