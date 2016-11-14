@@ -5,6 +5,7 @@
   <feature name="fcrepo-api-x-routing" description="fcrepo-api-x-routing"
     version="${project.version}">
     <feature version="${camel.version}">camel-blueprint</feature>
-    <feature version="${camel.version}">camel-jetty</feature>  
+    <feature version="${camel.version}">camel-jetty</feature>
+    <feature version="${camel.version}">camel-http4</feature>
   </feature>
 </features>

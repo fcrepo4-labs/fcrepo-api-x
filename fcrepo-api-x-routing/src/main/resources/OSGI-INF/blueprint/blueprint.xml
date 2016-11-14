@@ -38,6 +38,9 @@
 
   <reference id="initializer" interface="org.fcrepo.apix.model.components.Initializer" />
 
+  <bean id="http" class="org.apache.camel.component.http4.HttpComponent" />
+  <bean id="https" class="org.apache.camel.component.http4.HttpComponent" />
+
   <bean id="routingStub" class="org.fcrepo.apix.routing.impl.RoutingStub">
     <property name="host" value="${apix.host}" />
     <property name="port" value="${apix.port}" />
@@ -92,8 +95,15 @@
   <service id="interceptUpdate" interface="org.fcrepo.apix.model.components.Updateable"
     ref="interceptImpl" />
 
-  <camel:camelContext>
+  <camel:camelContext id="apix-core">
     <camel:routeBuilder ref="routingImpl" />
     <camel:routeBuilder ref="interceptImpl" />
   </camel:camelContext>
+
+  <service interface="org.apache.camel.CamelContext" ref="apix-core">
+    <service-properties>
+      <entry key="role" value="routing-context" />
+    </service-properties>
+  </service>
+
 </blueprint>

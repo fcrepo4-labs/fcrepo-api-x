@@ -24,7 +24,6 @@ import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_RE
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_ROOT_URI;
 import static org.fcrepo.apix.routing.Util.append;
 import static org.fcrepo.apix.routing.Util.segment;
-import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.HEADER_INVOKE_STATUS;
 import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.ROUTE_INTERCEPT_INCOMING;
 import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.ROUTE_INTERCEPT_OUTGOING;
 
@@ -72,6 +71,8 @@ public class RoutingImpl extends RouteBuilder {
     public static final String EXTENSION_NOT_FOUND = "direct:extension_not_found";
 
     public static final String ROUTE_INTERCEPT = "direct:intercept";
+
+    public static final String ROUTE_TO_FEDORA = "direct:fcrepo";
 
     public static final String BINDING = "CamelApixServiceExposureBinding";
 
@@ -162,37 +163,45 @@ public class RoutingImpl extends RouteBuilder {
         from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.discoveryPath}}?matchOnUriPrefix=true")
                 .process(WRITE_SERVICE_DOC);
 
-        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.exposePath}}?matchOnUriPrefix=true")
-                .routeId("endpoint-expose").routeDescription("Endpoint for exposed service mediation")
-                .process(ANALYZE_URI)
-                .choice()
-                .when(header(EXPOSING_EXTENSION).isNull()).to(EXTENSION_NOT_FOUND)
-                .otherwise().to(EXECUTION_EXPOSE_MODALITY);
+        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.exposePath}}" +
+                "?matchOnUriPrefix=true" +
+                "&bridgeEndpoint=true" +
+                "&disableStreamCache=true")
+                        .routeId("endpoint-expose").routeDescription("Endpoint for exposed service mediation")
+                        .process(ANALYZE_URI)
+                        .choice()
+                        .when(header(EXPOSING_EXTENSION).isNull()).to(EXTENSION_NOT_FOUND)
+                        .otherwise().to(EXECUTION_EXPOSE_MODALITY);
 
-        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.proxyPath}}?matchOnUriPrefix=true")
-                .routeId("endpoint-proxy").routeDescription("Endpoint for proxy to Fedora")
+        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.proxyPath}}?" +
+                "matchOnUriPrefix=true" +
+                "&bridgeEndpoint=true" +
+                "&disableStreamCache=true")
+                        .routeId("endpoint-proxy").routeDescription("Endpoint for proxy to Fedora")
 
-                .choice()
-                .when(IN_INTERCEPT_PATH).to(ROUTE_INTERCEPT)
-                .otherwise().to("jetty:{{fcrepo.proxyURI}}" +
-                        "?bridgeEndpoint=true" +
-                        "&throwExceptionOnFailure=false" +
-                        "&disableStreamCache=true" +
-                        "&preserveHostHeader=true");
+                        .choice()
+                        .when(IN_INTERCEPT_PATH).to(ROUTE_INTERCEPT)
+                        .otherwise().to("{{fcrepo.proxyURI}}" +
+                                "?bridgeEndpoint=true" +
+                                "&disableStreamCache=true" +
+                                "&throwExceptionOnFailure=false" +
+                                "&preserveHostHeader=true");
 
         from(ROUTE_INTERCEPT)
                 .routeId("execute-intercept").routeDescription("Endpoint for intercept to Fedora")
                 .to(ROUTE_INTERCEPT_INCOMING)
-                .choice().when(e -> !e.getIn().getHeaders().containsKey(
-                        HEADER_INVOKE_STATUS) || e.getIn().getHeader(
-                                HEADER_INVOKE_STATUS, Integer.class) < 300)
-                .to("jetty:{{fcrepo.proxyURI}}" +
+                .choice().when(simple("${in.header.CamelhttpResponseCode} range '200..299'"))
+                .to(ROUTE_TO_FEDORA);
+
+        from(ROUTE_TO_FEDORA)
+                .to("{{fcrepo.proxyURI}}" +
                         "?bridgeEndpoint=true" +
                         "&throwExceptionOnFailure=false" +
                         "&disableStreamCache=true" +
-                        "&preserveHostHeader=true")
+                        "&preserveHostHeader=true").end()
                 .process(ADD_SERVICE_HEADER)
-                .to(ROUTE_INTERCEPT_OUTGOING);
+                .choice().when(simple("${in.header.CamelhttpResponseCode} range '200..299'"))
+                .to(ROUTE_INTERCEPT_OUTGOING).end();
 
         from(EXTENSION_NOT_FOUND).id("not-found-extension").routeDescription("Extension not found")
                 .process(e -> e.getOut().setHeader(Exchange.HTTP_RESPONSE_CODE, 404));
@@ -202,11 +211,11 @@ public class RoutingImpl extends RouteBuilder {
                 .routeDescription("Proxies an exposed service to a service instance")
                 .process(SELECT_SERVICE_INSTANCE)
                 .setHeader(Exchange.HTTP_PATH).simple("${in.header." + BINDING + ".additionalPath}")
-                .recipientList(simple(
-                        "jetty://${in.header." + SERVICE_INSTANCE_URI + "}" +
-                                "?bridgeEndpoint=true" +
-                                "&preserveHostHeader=true" + "" +
-                                "&throwExceptionOnFailure=false"));
+                .setHeader(Exchange.HTTP_URI).header(SERVICE_INSTANCE_URI)
+                .to("http://localhost" +
+                        "?preserveHostHeader=true" +
+                        "&disableStreamCache=true" +
+                        "&throwExceptionOnFailure=false");
 
     }
 
