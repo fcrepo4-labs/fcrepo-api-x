@@ -52,6 +52,9 @@ import org.apache.camel.Predicate;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.commons.io.IOUtils;
+import org.apache.http.client.ClientProtocolException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Stub/placeholder Routing implementation that does nothing.
@@ -76,6 +79,8 @@ public class RoutingImpl extends RouteBuilder {
 
     public static final String ROUTE_TO_FEDORA = "direct:fcrepo";
 
+    public static final String ROUTE_HTTP_ERROR = "direct:http_error";
+
     public static final String BINDING = "CamelApixServiceExposureBinding";
 
     private ExposedServiceUriAnalyzer analyzer;
@@ -89,6 +94,8 @@ public class RoutingImpl extends RouteBuilder {
     private String interceptPath;
 
     private String proxyPath;
+
+    private static final Logger LOG = LoggerFactory.getLogger(RoutingImpl.class);
 
     /**
      * Set Fedora's baseURI.
@@ -183,11 +190,18 @@ public class RoutingImpl extends RouteBuilder {
 
                         .choice()
                         .when(IN_INTERCEPT_PATH).to(ROUTE_INTERCEPT)
-                        .otherwise().to("{{fcrepo.proxyURI}}" +
+                        .otherwise().doTry()
+                        .to("{{fcrepo.proxyURI}}" +
                                 "?bridgeEndpoint=true" +
                                 "&disableStreamCache=true" +
                                 "&throwExceptionOnFailure=false" +
-                                "&preserveHostHeader=true");
+                                "&preserveHostHeader=true")
+                        .doCatch(ClientProtocolException.class).to(ROUTE_HTTP_ERROR);
+
+        from("direct:http_error").routeId("http-error")
+                .process(e -> LOG.warn("HTTP Error proxying to {}", e.getIn().getHeader(Exchange.HTTP_PATH)))
+                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(500))
+                .setBody(simple("HTTP error proxying to resource ${in.header.CamelHttpPath}"));
 
         from(ROUTE_INTERCEPT)
                 .routeId("execute-intercept").routeDescription("Endpoint for intercept to Fedora")
@@ -196,11 +210,14 @@ public class RoutingImpl extends RouteBuilder {
                 .to(ROUTE_TO_FEDORA);
 
         from(ROUTE_TO_FEDORA)
+                .routeId("to-fedora")
+                .doTry()
                 .to("{{fcrepo.proxyURI}}" +
                         "?bridgeEndpoint=true" +
                         "&throwExceptionOnFailure=false" +
                         "&disableStreamCache=true" +
-                        "&preserveHostHeader=true").end()
+                        "&preserveHostHeader=true")
+                .doCatch(ClientProtocolException.class).to(ROUTE_HTTP_ERROR).end()
                 .process(ADD_SERVICE_HEADER)
                 .choice().when(simple("${in.header.CamelhttpResponseCode} range '200..299'"))
                 .to(ROUTE_INTERCEPT_OUTGOING).end();
@@ -230,6 +247,7 @@ public class RoutingImpl extends RouteBuilder {
                 URI.create(ex.getIn().getHeader(Exchange.HTTP_URL, String.class)));
 
         if (binding == null) {
+            LOG.info("No binding for {}", ex.getIn().getHeader(Exchange.HTTP_URL));
             return;
         }
 
