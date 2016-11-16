@@ -20,6 +20,7 @@ package org.fcrepo.apix.routing.impl;
 
 import static org.fcrepo.apix.routing.Util.append;
 import static org.fcrepo.apix.routing.Util.segment;
+import static org.fcrepo.apix.routing.Util.terminal;
 
 import java.net.URI;
 import java.util.List;
@@ -154,7 +155,7 @@ public class ExposedServiceUriAnalyzer implements Updateable {
 
         LOG.debug("ANALYZER:  Analyzing URI for exposed extensions {}", requestURI);
 
-        final String requestPath = segment(requestURI.getPath());
+        final String requestPath = terminal(requestURI.getPath());
 
         if (requestPath.startsWith(exposePath)) {
             final String rawPath = requestPath.replaceFirst("^" + exposePath + "/", "");
