@@ -21,6 +21,7 @@ package org.fcrepo.apix.jena.impl;
 import static org.fcrepo.apix.jena.Util.parse;
 
 import java.net.URI;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,6 +30,7 @@ import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.OntologyRegistry;
 import org.fcrepo.apix.model.components.OntologyService;
 
+import org.apache.jena.ontology.Individual;
 import org.apache.jena.ontology.OntModel;
 import org.apache.jena.ontology.OntModelSpec;
 import org.apache.jena.rdf.model.Model;
@@ -40,6 +42,8 @@ import org.apache.jena.rdf.model.Resource;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Uses Jena to parse and provide reasoning over ontologies.
@@ -58,6 +62,8 @@ public class JenaOntologyService implements OntologyService {
     static final String OWL_ONTOLOGY = "http://www.w3.org/2002/07/owl#Ontology";
 
     static final String OWL_IMPORTS = "http://www.w3.org/2002/07/owl#imports";
+
+    private static final Logger LOG = LoggerFactory.getLogger(JenaOntologyService.class);
 
     /**
      * Jena ontology model/reasoning specification.
@@ -172,17 +178,25 @@ public class JenaOntologyService implements OntologyService {
     }
 
     @Override
-    public Set<URI> inferClasses(final URI individual, final WebResource resource, final Ontology ontology) {
+    public Set<URI> inferClasses(final URI uri, final WebResource resource, final Ontology ontology) {
 
         final OntModel model = resolveImports(ont(ontology));
         model.add(parse(resource));
 
-        return model.getIndividual(individual.toString())
-                .listRDFTypes(false)
-                .filterKeep(Resource::isURIResource)
-                .mapWith(Resource::getURI)
-                .mapWith(URI::create)
-                .toSet();
+        final Individual individual = model.getIndividual(uri.toString());
+
+        if (individual != null) {
+            return individual
+                    .listRDFTypes(false)
+                    .filterKeep(Resource::isURIResource)
+                    .mapWith(Resource::getURI)
+                    .mapWith(URI::create)
+                    .toSet();
+        } else {
+            LOG.info("<{}> does not make any statements about itself, " +
+                    "so we can't infer anything about it nor bind extensions to it", uri);
+            return Collections.emptySet();
+        }
 
     }
 
