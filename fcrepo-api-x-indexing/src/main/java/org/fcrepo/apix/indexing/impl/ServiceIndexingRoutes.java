@@ -85,9 +85,9 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
         from("{{service.index.stream}}")
                 .routeId("index-services")
+                .filter(header(IDENTIFIER).contains("#")).stop()
 
-                .choice()
-                .when(e -> e.getIn().getHeader(IDENTIFIER, String.class).startsWith(extensionContainer))
+                .choice().when(header(IDENTIFIER).startsWith(extensionContainer))
                 .enrich(ROUTE_TRIGGER_REINDEX, (i, o) -> i)
                 .end()
 
@@ -120,7 +120,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .setHeader(FCREPO_NAMED_GRAPH, simple("{{triplestore.namedGraph}}"))
                 .process(new SparqlUpdateProcessor())
                 .log(LoggingLevel.INFO, LOG,
-                        "Indexing Serviced for Object ${headers[CamelFcrepoIdentifier]} " +
+                        "Indexing Services for Object ${headers[CamelFcrepoIdentifier]} " +
                                 "${headers[org.fcrepo.jms.identifier]}")
                 .to("jetty:{{triplestore.baseUrl}}");
 
