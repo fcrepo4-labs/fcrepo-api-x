@@ -1,0 +1,7 @@
+@prefix apix:<http://fedora.info/definitions/v4/api-extension#> .
+
+<> a apix:Extension;
+    apix:bindsTo <test:ExposedServiceIT#noService>;
+    apix:exposesService <http://example.org/ExposedServiceIT/NoService>;
+    apix:exposesServiceAt "/test:duplicate";
+    apix:consumesService <http://example.org/ExposedServiceIT/NoService> .

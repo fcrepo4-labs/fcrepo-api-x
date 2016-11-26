@@ -30,6 +30,7 @@ import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_REPOSITORY_RO
 import static org.fcrepo.apix.routing.Util.append;
 import static org.fcrepo.apix.routing.Util.segment;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -45,6 +46,7 @@ import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.ServiceDiscovery;
 import org.fcrepo.apix.model.components.ServiceRegistry;
 import org.fcrepo.apix.model.components.Updateable;
+import org.fcrepo.client.FcrepoClient;
 import org.fcrepo.client.FcrepoResponse;
 
 import org.apache.camel.CamelContext;
@@ -200,6 +202,104 @@ public class ExposedServiceIT implements KarafIT {
         // Make sure repository root URI is set
         assertEquals(segment(fcrepoBaseURI), segment(requestToService.getHeader(HTTP_HEADER_REPOSITORY_ROOT_URI,
                 String.class)));
+
+    }
+
+    @Test
+    public void duplicateExtensionTest() throws Exception {
+
+        // Register the extension TWICE
+        final URI first = extensionRegistry.put(testResource(
+                "objects/extension_ExposedServiceIT_duplicate.ttl"));
+
+        final URI second = extensionRegistry.put(testResource(
+                "objects/extension_ExposedServiceIT_duplicate.ttl"));
+
+        assertNotEquals(first, second);
+
+        // Register the service
+        final URI serviceURI = serviceRegistry.put(testResource("objects/service_ExposedServiceIT_duplicate.ttl"));
+
+        // Register the test service instance endpoint (run by the camel route in this IT)
+        client.patch(serviceURI).body(
+                IOUtils.toInputStream(
+                        String.format("INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
+                                PROP_HAS_ENDPOINT, serviceEndpoint, CLASS_SERVICE_INSTANCE), "UTF-8")).perform();
+
+        // Create the object
+        final URI object = postFromTestResource("objects/object_ExposedServiceIT_duplicate.ttl", objectContainer);
+
+        // Common tests should not fail, as the impl should pick one extension definition arbitrarily.
+        commonTests(object);
+    }
+
+    @Test
+    public void noInstanceTest() throws Exception {
+        // Register the extension
+
+        extensionRegistry.put(testResource(
+                "objects/extension_ExposedServiceIT_noInstance.ttl"));
+
+        // Register the service
+        serviceRegistry.put(testResource("objects/service_ExposedServiceIT_noInstance.ttl"));
+
+        // Do NOT register a service instance.
+
+        // Create the object
+        final URI object = postFromTestResource("objects/object_ExposedServiceIT_noInstance.ttl", objectContainer);
+
+        // Update all services
+        bundleContext.getServiceReferences(Updateable.class, null).stream()
+                .map(bundleContext::getService)
+                .forEach(Updateable::update);
+
+        // Look at the service document to discover the exposed URI
+        try (WebResource resource = discovery.getServiceDocumentFor(object, "text/turtle")) {
+            final Model doc = parse(resource);
+
+            final String sparql = "CONSTRUCT { ?endpoint <test:/endpointFor> ?serviceInstance . } WHERE { " +
+                    String.format("?serviceInstance <%s> <%s> . ", RDF_TYPE, CLASS_SERVICE_INSTANCE) +
+                    String.format("?serviceInstance <%s> ?endpoint . ", PROP_HAS_ENDPOINT) +
+                    "}";
+            exposedServiceEndpoint = subjectsOf(query(sparql, doc)).iterator().next();
+        }
+
+        try (final FcrepoResponse response = FcrepoClient.client().build().post(exposedServiceEndpoint).perform()) {
+            // We want a 404
+            assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusCode());
+        }
+    }
+
+    @Test
+    public void noServiceTest() throws Exception {
+        // Register the extension
+        extensionRegistry.put(testResource(
+                "objects/extension_ExposedServiceIT_noService.ttl"));
+
+        // Do NOT register a service or instance
+
+        final URI object = postFromTestResource("objects/object_ExposedServiceIT_noService.ttl", objectContainer);
+
+        // Update all services
+        bundleContext.getServiceReferences(Updateable.class, null).stream()
+                .map(bundleContext::getService)
+                .forEach(Updateable::update);
+
+        // Look at the service document to discover the exposed URI
+        try (WebResource resource = discovery.getServiceDocumentFor(object, "text/turtle")) {
+            final Model doc = parse(resource);
+
+            final String sparql = "CONSTRUCT { ?endpoint <test:/endpointFor> ?serviceInstance . } WHERE { " +
+                    String.format("?serviceInstance <%s> <%s> . ", RDF_TYPE, CLASS_SERVICE_INSTANCE) +
+                    String.format("?serviceInstance <%s> ?endpoint . ", PROP_HAS_ENDPOINT) +
+                    "}";
+            exposedServiceEndpoint = subjectsOf(query(sparql, doc)).iterator().next();
+        }
+
+        try (final FcrepoResponse response = FcrepoClient.client().build().post(exposedServiceEndpoint).perform()) {
+            // We want a 404
+            assertEquals(HttpStatus.SC_NOT_FOUND, response.getStatusCode());
+        }
     }
 
     private void commonTests(final URI object) throws Exception {

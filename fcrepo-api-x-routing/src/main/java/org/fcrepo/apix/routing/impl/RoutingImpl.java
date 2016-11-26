@@ -63,17 +63,23 @@ import org.slf4j.LoggerFactory;
  */
 public class RoutingImpl extends RouteBuilder {
 
+    static final Logger LOG = LoggerFactory.getLogger(RoutingImpl.class);
+
     private final Random random = new Random();
 
     private URI fcrepoBaseURI;
 
     public static final String EXECUTION_EXPOSE_MODALITY = "direct:execute_expose";
 
+    public static final String PROP_MESSAGE = "CamelApixMessage";
+
     public static final String EXPOSING_EXTENSION = "CamelApixExposingExtension";
 
     public static final String SERVICE_INSTANCE_URI = "CamelApixServiceInstanceUri";
 
     public static final String EXTENSION_NOT_FOUND = "direct:extension_not_found";
+
+    public static final String ROUTE_INSTANCE_NOT_FOUND = "direct:instance_not_found";
 
     public static final String ROUTE_INTERCEPT = "direct:intercept";
 
@@ -94,8 +100,6 @@ public class RoutingImpl extends RouteBuilder {
     private String interceptPath;
 
     private String proxyPath;
-
-    private static final Logger LOG = LoggerFactory.getLogger(RoutingImpl.class);
 
     /**
      * Set Fedora's baseURI.
@@ -225,13 +229,19 @@ public class RoutingImpl extends RouteBuilder {
         from(EXTENSION_NOT_FOUND).id("not-found-extension").routeDescription("Extension not found")
                 .process(e -> e.getOut().setHeader(Exchange.HTTP_RESPONSE_CODE, 404));
 
+        from(ROUTE_INSTANCE_NOT_FOUND).id("not-found-instance").routeDescription("Service instance not found")
+                .removeHeaders("*")
+                .setHeader(Exchange.HTTP_RESPONSE_CODE, constant(404))
+                .setBody(simple("${exchangeProperty." + PROP_MESSAGE + "}"));
+
         from(EXECUTION_EXPOSE_MODALITY)
                 .routeId("apix-proxy-service-endpoint")
                 .routeDescription("Proxies an exposed service to a service instance")
                 .process(SELECT_SERVICE_INSTANCE)
                 .setHeader(Exchange.HTTP_PATH).simple("${in.header." + BINDING + ".additionalPath}")
                 .setHeader(Exchange.HTTP_URI).header(SERVICE_INSTANCE_URI)
-                .to("http://localhost" +
+                .choice().when(header(SERVICE_INSTANCE_URI).isNull()).to(ROUTE_INSTANCE_NOT_FOUND)
+                .otherwise().to("http://localhost" +
                         "?preserveHostHeader=true" +
                         "&disableStreamCache=true" +
                         "&throwExceptionOnFailure=false");
@@ -265,7 +275,6 @@ public class RoutingImpl extends RouteBuilder {
         } else {
             ex.getIn().setHeader(HTTP_HEADER_REPOSITORY_ROOT_URI, fcrepoBaseURI);
             ex.getIn().setHeader(HTTP_HEADER_APIX_ROOT_URI, routing.interceptUriFor(fcrepoBaseURI));
-
         }
     });
 
@@ -290,19 +299,24 @@ public class RoutingImpl extends RouteBuilder {
                 "Exposed services must have exactly one consumed service in extension: " +
                         extension.uri());
 
-        final ServiceInstanceRegistry instanceRegistry = serviceRegistry.instancesOf(serviceRegistry.getService(
-                consumedServiceURI));
+        try {
+            final ServiceInstanceRegistry instanceRegistry = serviceRegistry.instancesOf(serviceRegistry.getService(
+                    consumedServiceURI));
 
-        if (instanceRegistry == null) {
-            throw new ResourceNotFoundException("No instance registry for service " + consumedServiceURI);
+            if (instanceRegistry == null) {
+                throw new ResourceNotFoundException("No instance registry for service " + consumedServiceURI);
+            }
+
+            final ServiceInstance instance = oneOf(instanceRegistry.instances(),
+                    "There must be at least one service instance for " + consumedServiceURI);
+
+            ex.getIn().setHeader(SERVICE_INSTANCE_URI, oneOf(
+                    instance.endpoints(),
+                    "There must be at least one endpoint for instances of " + consumedServiceURI));
+        } catch (final ResourceNotFoundException e) {
+            LOG.warn("No instances of service {}; {}", consumedServiceURI, e.getMessage());
+            ex.setProperty(PROP_MESSAGE, e.getMessage());
         }
-
-        final ServiceInstance instance = oneOf(instanceRegistry.instances(),
-                "There must be at least one service instance for " + consumedServiceURI);
-
-        ex.getIn().setHeader(SERVICE_INSTANCE_URI, oneOf(
-                instance.endpoints(),
-                "There must be at least one endpoint for instances of " + consumedServiceURI));
 
     });
 
