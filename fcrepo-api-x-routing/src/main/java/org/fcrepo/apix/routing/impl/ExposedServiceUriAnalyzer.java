@@ -23,6 +23,7 @@ import static org.fcrepo.apix.routing.Util.segment;
 import static org.fcrepo.apix.routing.Util.terminal;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -129,7 +130,13 @@ public class ExposedServiceUriAnalyzer implements Updateable {
                 .map(extensions::getExtension)
                 .filter(Extension::isExposing)
                 .filter(e -> e.exposed().scope() != Scope.EXTERNAL)
-                .collect(Collectors.toMap((e -> e.exposed().exposedAt().getPath()), e -> e));
+                .collect(Collectors.toMap(e -> e.exposed().exposedAt().getPath(), e -> e, (e1, e2) -> {
+                    // If there's a clash, ignore the one whose URI is lexically greatest
+                    LOG.warn("Expose path '{}' defined by two extensions: <{}> and <{}>; " +
+                            "Arbitrarily ignoring one of them",
+                            e1.exposed().exposedAt().getPath(), e1.uri(), e2.uri());
+                    return e1.uri().compareTo(e2.uri()) <= 0 ? e1 : e2;
+                }));
 
         endpoints.putAll(exts);
 
@@ -164,16 +171,33 @@ public class ExposedServiceUriAnalyzer implements Updateable {
 
             LOG.debug("ANALYZER: candidates: {}", endpoints.keySet());
 
-            final List<String> matches = endpoints.keySet().stream().filter(rawPath::contains).collect(Collectors
-                    .toList());
+            final List<String> matches = new ArrayList<String>(
+                    endpoints.keySet().stream()
+                            .filter(rawPath::contains)
+                            .collect(Collectors.toList()));
 
             LOG.debug("ANALYZER: matches: {}", matches);
 
             if (matches.isEmpty()) {
                 return null;
             } else if (matches.size() > 1) {
-                throw new RuntimeException(String.format("Resource URI %s matches multiple extensions: %s",
-                        requestURI, matches));
+                // If one is resource and one is repository-scoped, see if we can sort that out.
+
+                final List<String> repositoryScoped = matches.stream()
+                        .filter(rawPath::startsWith)
+                        .collect(Collectors.toList());
+                final List<String> resourceScoped = matches.stream()
+                        .filter(m -> endpoints.get(m).exposed().scope().equals(Scope.RESOURCE))
+                        .collect(Collectors.toList());
+
+                if (repositoryScoped.size() == 1) {
+                    matches.retainAll(repositoryScoped);
+                } else if (resourceScoped.size() == 1) {
+                    matches.retainAll(resourceScoped);
+                } else {
+                    throw new RuntimeException(String.format("Resource URI %s matches multiple extensions: %s",
+                            requestURI, matches));
+                }
             }
 
             final String exposeSegment = matches.get(0);

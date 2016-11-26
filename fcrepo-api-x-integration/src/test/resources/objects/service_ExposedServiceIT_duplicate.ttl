@@ -1,0 +1,16 @@
+@prefix svc:<http://fedora.info/definitions/v4/service#> .
+@prefix ore:<http://www.openarchives.org/ore/terms/> .
+
+<> ore:describes <#instances> .
+
+<#service> a svc:Service;
+    svc:canonical <http://example.org/ExposedServiceIT/DuplicateService>;
+    svc:hasServiceInstanceRegistry <#instanceRegistry> .
+
+<#instanceRegistry> a svc:ServiceInstanceRegistry;
+    svc:hasServiceInstance <#instances> .
+
+<#instances> a svc:ServiceInstance;
+    svc:isServiceInstanceOf <#service> .
+
+    
