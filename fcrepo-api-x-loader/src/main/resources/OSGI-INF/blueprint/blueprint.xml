@@ -52,7 +52,7 @@
 
     <!-- Self-register the loader service as an extension -->
     <route id="load-extension">
-      <from uri="timer:register?repeatCount=1" />
+      <from uri="timer:register?repeatCount=1&amp;delay=10000" />
       <onException>
         <exception>java.lang.Exception</exception>
         <redeliveryPolicy maximumRedeliveries="{{extension.load.maximumRediveries}}"
