@@ -98,11 +98,16 @@ public class LoaderService {
 
     /**
      * Load an extension and/or services.
+     * <p>
+     * We synchronize to assure that multiple services registering the same extension at the same time don't result in
+     * multiple entries in the extension registry. As extension registration is a relatively rare and asynchronous-ish
+     * event, it's acceptable to do this.
+     * </p>
      *
      * @param resource resource to load
      * @return URI pointing to service instance resource.
      */
-    public URI load(final WebResource resource) {
+    public synchronized URI load(final WebResource resource) {
 
         final byte[] body = toByteArray(resource);
 
