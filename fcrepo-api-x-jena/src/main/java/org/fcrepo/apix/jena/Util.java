@@ -74,17 +74,32 @@ public abstract class Util {
 
         final Model model =
                 ModelFactory.createDefaultModel();
-        model.setNsPrefix("", "");
 
-        final Lang lang = RDFLanguages.contentTypeToLang(r.contentType());
+        final Lang lang = rdfLanguage(r.contentType());
 
-        LOG.debug("Parsing rdf from {}", r.uri());
         try (InputStream representation = r.representation()) {
             RDFDataMgr.read(model, representation, base, lang);
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
+
         return model;
+    }
+
+    /**
+     * Determine the jena language from a content type string
+     *
+     * @param contentType content type
+     * @return language
+     */
+    public static final Lang rdfLanguage(final String contentType) {
+        final int separator = contentType.indexOf(';');
+
+        if (separator < 0) {
+            return RDFLanguages.contentTypeToLang(contentType);
+        } else {
+            return RDFLanguages.contentTypeToLang(contentType.substring(0, separator));
+        }
     }
 
     /**
@@ -97,7 +112,7 @@ public abstract class Util {
      * @return The model
      */
     public static Model parse(final WebResource r) {
-        return parse(r, r.uri() != null ? r.uri().toString() : "");
+        return parse(r, r.uri() == null ? "" : r.uri().toString());
     }
 
     /**

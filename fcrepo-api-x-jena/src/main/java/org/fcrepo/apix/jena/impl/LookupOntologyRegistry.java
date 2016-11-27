@@ -19,6 +19,7 @@
 package org.fcrepo.apix.jena.impl;
 
 import static org.fcrepo.apix.jena.Util.parse;
+import static org.fcrepo.apix.jena.Util.rdfLanguage;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -40,7 +41,6 @@ import org.fcrepo.apix.model.components.Updateable;
 
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.riot.RDFLanguages;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +80,8 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
 
     private Initialization init = Initialization.NONE;
 
+    private boolean persistAsBinary;
+
     private static final Logger LOG = LoggerFactory.getLogger(LookupOntologyRegistry.class);
 
     /**
@@ -100,6 +102,15 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
     @Reference
     public void setInitializer(final Initializer initializer) {
         this.initializer = initializer;
+    }
+
+    /**
+     * Persist ontologies as binary.
+     *
+     * @param binary True if binary.
+     */
+    public void setPersistAsBinary(final boolean binary) {
+        this.persistAsBinary = binary;
     }
 
     @Override
@@ -123,14 +134,28 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
     @Override
     public URI put(final WebResource ontologyResource, final URI ontologyIRI) {
         init.await();
+
         final Model model = parse(ontologyResource);
+
         model.add(model.getResource(ontologyIRI.toString()), model.getProperty(RDF_TYPE), model.getResource(
                 OWL_ONTOLOGY));
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
-        model.write(out, RDFLanguages.contentTypeToLang(ontologyResource.contentType()).getName());
+        model.write(out, rdfLanguage(ontologyResource.contentType()).getName());
 
         return put(WebResource.of(new ByteArrayInputStream(out.toByteArray()), ontologyResource.contentType(),
-                ontologyResource.uri(), ontologyResource.name()));
+                null, name(ontologyResource)), persistAsBinary);
+    }
+
+    private String name(final WebResource resource) {
+        if (resource.name() != null) {
+            return resource.name();
+        } else if (resource.uri() != null) {
+            return resource.uri().getHost() + resource.uri()
+                    .getPath()
+                    .replaceFirst("/$", "")
+                    .replaceAll("/", "-");
+        }
+        return null;
     }
 
     @Override
@@ -211,7 +236,7 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
                         ontologyIRIsToLocation.get(ontologyIRI), ontologyLocation));
             }
 
-            LOG.debug("Indexing ontology IRI {} which resolves to location {}", ontologyIRI, ontologyLocation);
+            LOG.info("Index: Indexing ontology IRI {} which resolves to location {}", ontologyIRI, ontologyLocation);
 
             ontologyIRIsToLocation.put(ontologyIRI, ontologyLocation);
         }
@@ -258,8 +283,8 @@ public class LookupOntologyRegistry implements OntologyRegistry, Updateable {
 
         ontologyIRIsToLocation.keySet().removeIf(iri -> !iriMap.containsKey(iri));
 
-        ontologyIRIsToLocation.entrySet().forEach(e -> LOG.debug(
-                "Indexing ontology IRI {} which resolves to location {}", e.getKey(), e.getValue()));
+        ontologyIRIsToLocation.entrySet().forEach(e -> LOG.info(
+                "Update: Indexing ontology IRI {} which resolves to location {}", e.getKey(), e.getValue()));
     }
 
     private static BinaryOperator<URI> CONFLICT = (v1, v2) -> {

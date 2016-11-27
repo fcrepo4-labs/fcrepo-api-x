@@ -92,14 +92,15 @@ public class LookupOntologyRegistryTest {
         final URI ontologyIRI = URI.create("http://example.org/test#OntologyNoIRI");
 
         final WebResource ontologyToPersist = new ReadableResource(this.getClass().getResourceAsStream(
-                "/ontologyWithoutIRI.ttl"), "text/turtle", ontologyLocationURI, null);
+                "/ontologyWithoutIRI.ttl"), "text/turtle", null, null);
 
         final ArrayList<URI> entries = new ArrayList<>();
 
-        when(delegate.put(any(WebResource.class))).then(new Answer<URI>() {
+        when(delegate.put(any(WebResource.class), any(Boolean.class))).then(new Answer<URI>() {
 
             @Override
             public URI answer(final InvocationOnMock invocation) throws Throwable {
+
                 final WebResource submitted = ((WebResource) invocation.getArguments()[0]);
                 when(delegate.get(ontologyLocationURI)).thenReturn(submitted);
                 entries.add(ontologyLocationURI);
