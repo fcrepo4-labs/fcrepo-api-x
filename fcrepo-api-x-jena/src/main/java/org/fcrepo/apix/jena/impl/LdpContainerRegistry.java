@@ -32,7 +32,6 @@ import org.fcrepo.apix.model.components.Initializer;
 import org.fcrepo.apix.model.components.Initializer.Initialization;
 import org.fcrepo.apix.model.components.Registry;
 
-import org.apache.commons.io.FilenameUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.apache.http.StatusLine;
@@ -208,22 +207,21 @@ public class LdpContainerRegistry implements Registry {
 
         if (resource.uri() == null || !resource.uri().isAbsolute()) {
             request = new HttpPost(containerId);
+            final String name = slugText(resource);
+            if (name != null) {
+                request.addHeader("Slug", name);
+            }
+
+            if (asBinary) {
+                request.addHeader("Content-Disposition",
+                        String.format("attachment; filename=%s", name != null ? name : "file.bin"));
+            }
+
         } else {
             request = new HttpPut(resource.uri());
             if (!asBinary) {
                 request.addHeader("Prefer", "handling=lenient; received=\"minimal\"");
             }
-        }
-
-        if (asBinary) {
-            request.addHeader("Content-Disposition", String.format("attachment; filename=%s", resource.uri() == null
-                    ? "file.bin" : FilenameUtils.getName(resource.uri().getPath())));
-        }
-
-        if (resource.name() != null) {
-            request.addHeader("Slug", slugText(resource.name()));
-        } else if (resource.uri() != null && !resource.uri().isAbsolute()) {
-            request.addHeader("Slug", slugText(resource.uri().toString()));
         }
 
         if (resource.representation() != null) {
@@ -318,7 +316,18 @@ public class LdpContainerRegistry implements Registry {
         return uri.toString().startsWith(containerId.toString());
     }
 
-    private String slugText(final String raw) {
+    private String slugText(final WebResource resource) {
+        final String raw;
+        if (resource.name() != null) {
+            raw = resource.name();
+        } else if (resource.uri() != null && !resource.uri().isAbsolute()) {
+            raw = resource.uri().toString();
+        } else if (resource.uri() != null) {
+            raw = resource.uri().getPath();
+        } else {
+            return null;
+        }
+
         return raw.replaceFirst("^/", "")
                 .replaceFirst("/$", "")
                 .replaceAll("[:/?#\\[\\]@#%]", "-");

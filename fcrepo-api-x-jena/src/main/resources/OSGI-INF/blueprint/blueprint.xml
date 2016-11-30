@@ -26,6 +26,9 @@
       <cm:property name="registry.service.content"
         value="classpath:/objects/service-registry.ttl" />
       <cm:property name="registry.ontology.index" value="true" />
+      <cm:property name="registry.ontologies.persist" value="true" />
+      <cm:property name="registry.ontologies.binary" value="true" />
+      <cm:property name="registry.ontologies.cache" value="true" />
     </cm:default-properties>
   </cm:property-placeholder>
 
@@ -79,14 +82,23 @@
   </bean>
 
   <bean id="jenaOntologyServiceImpl" class="org.fcrepo.apix.jena.impl.JenaOntologyService">
-    <property name="registryDelegate" ref="jenaOntologyRegistryImpl" />
+    <property name="registryDelegate" ref="jenaPersistingOntologyRegistry" />
   </bean>
 
   <bean id="jenaOntologyRegistryImpl" class="org.fcrepo.apix.jena.impl.LookupOntologyRegistry"
     init-method="init" destroy-method="shutdown">
     <property name="registryDelegate" ref="ldpOntologyServiceRegistryDelegate" />
     <property name="indexIRIs" value="${registry.ontology.index}" />
+    <property name="persistAsBinary" value="${registry.ontologies.binary}" />
     <property name="initializer" ref="initMgr" />
+  </bean>
+
+  <bean id="jenaPersistingOntologyRegistry" class="org.fcrepo.apix.jena.impl.PersistingOntologyRegistry">
+    <property name="ontologyRegistry" ref="jenaOntologyRegistryImpl" />
+    <property name="extensionRegistry" ref="jenaExtensionRegistryImpl" />
+    <property name="ontologyService" ref="jenaOntologyServiceImpl" />
+    <property name="generalRegistry" ref="underlyingRegistryDelegate" />
+    <property name="doPersist" value="${registry.ontologies.persist}" />
   </bean>
 
   <bean id="jenaServiceRegistryImpl" class="org.fcrepo.apix.jena.impl.JenaServiceRegistry"
@@ -98,7 +110,7 @@
   </bean>
 
   <service id="jenaOntologyRegistry"
-    interface="org.fcrepo.apix.model.components.OntologyRegistry" ref="jenaOntologyRegistryImpl" />
+    interface="org.fcrepo.apix.model.components.OntologyRegistry" ref="jenaPersistingOntologyRegistry" />
 
   <service id="jenaOntologyService" interface="org.fcrepo.apix.model.components.OntologyService"
     ref="jenaOntologyServiceImpl" />
@@ -114,6 +126,9 @@
 
   <service id="jenaOntologyRegistryUpdater" interface="org.fcrepo.apix.model.components.Updateable"
     ref="jenaOntologyRegistryImpl" />
+
+  <service id="jenaPersistingOntologyRegistryUpdater" interface="org.fcrepo.apix.model.components.Updateable"
+    ref="jenaPersistingOntologyRegistry" />
 
   <service id="jenaInitializer" interface="org.fcrepo.apix.model.components.Initializer"
     ref="initMgr" />
