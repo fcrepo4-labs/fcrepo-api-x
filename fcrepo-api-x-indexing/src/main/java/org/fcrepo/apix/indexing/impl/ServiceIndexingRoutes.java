@@ -40,6 +40,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;;
 
 /**
+ * Listens for updates to Fedora objects and indexes service docs.
+ * <p>
+ * Retrieves the service doc of added/updated objects and sends to triple store. Whenever an extension is added or
+ * updated, it initiates a re-index of all objects
+ * </p>
+ * 
  * @author apb@jhu.edu
  */
 public class ServiceIndexingRoutes extends RouteBuilder {
@@ -85,8 +91,10 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
         from("{{service.index.stream}}")
                 .routeId("index-services")
-                .filter(header(IDENTIFIER).contains("#")).stop()
 
+                .choice().when(header(IDENTIFIER).contains("#")).stop().end()
+
+                // If any members of an extension registry are updated, reindex all objects
                 .choice().when(header(IDENTIFIER).startsWith(extensionContainer))
                 .enrich(ROUTE_TRIGGER_REINDEX, (i, o) -> i)
                 .end()
@@ -97,17 +105,19 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .otherwise()
                 .to(ROUTE_INDEX_SERVICE_DOC);
 
+        // Reindex sends object ID in CamelFcrepoIdentifier header,
+        // not org.fcrepo.jms.identifier as sent by Fedora
         from("{{service.reindex.stream}}")
                 .routeId("reindex-services")
+                .setHeader(IDENTIFIER, header("CamelFcrepoIdentifier"))
                 .to(ROUTE_INDEX_SERVICE_DOC);
 
         from(ROUTE_INDEX_SERVICE_DOC)
                 .routeId("index-service-doc")
-
                 .setHeader(Exchange.HTTP_METHOD, constant("HEAD"))
                 .setHeader(Exchange.HTTP_PATH, header(IDENTIFIER))
                 .setHeader("Accept", constant("application/n-triples"))
-                .to("jetty:{{apix.baseUrl}}")
+                .to("{{apix.baseUrl}}")
                 .process(GET_SERVICE_DOC_HEADER)
                 .split(header(HEADER_SERVICE_DOC)).to(ROUTE_PERFORM_INDEX);
 
@@ -115,22 +125,23 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .removeHeaders("CamelHttp*")
                 .setHeader(Exchange.HTTP_URI, bodyAs(URI.class))
                 .setBody(constant(null))
-                .to("jetty:http://localhost")
+                .to("http://localhost")
                 .removeHeaders("CamelHttp*")
                 .setHeader(FCREPO_NAMED_GRAPH, simple("{{triplestore.namedGraph}}"))
                 .process(new SparqlUpdateProcessor())
                 .log(LoggingLevel.INFO, LOG,
-                        "Indexing Services for Object ${headers[CamelFcrepoIdentifier]} " +
-                                "${headers[org.fcrepo.jms.identifier]}")
-                .to("jetty:{{triplestore.baseUrl}}");
+                        "Indexing service doc of ${headers[org.fcrepo.jms.identifier]}")
+                .to("{{triplestore.baseUrl}}");
 
         from(ROUTE_TRIGGER_REINDEX).id("trigger-reindex")
                 .log(LoggingLevel.INFO, LOG,
-                        "Triggering reindex due update to extension ${headers[org.fcrepo.jms.identifier]}")
-                .setBody(constant("CamelFcrepoReindexingRecipients=" + reindexStream))
-                .removeHeader("CamelHttp*")
+                        "Triggering reindex to " + reindexStream +
+                                " due update to extension ${headers[org.fcrepo.jms.identifier]}")
+                .removeHeaders("*")
+                .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
+                .setBody(constant(String.format("[\"%s\"]", reindexStream)))
                 .setHeader(Exchange.HTTP_METHOD, constant("POST"))
-                .to("jetty:{{reindexing.service.uri}}");
+                .to("{{reindexing.service.uri}}");
     }
 
     @SuppressWarnings("unchecked")
