@@ -11,8 +11,7 @@
        http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
 
   <cm:property-placeholder id="properties"
-    persistent-id="org.fcrepo.apix.indexing"
-    update-strategy="reload">
+    persistent-id="org.fcrepo.apix.indexing" update-strategy="reload">
 
     <cm:default-properties>
       <cm:property name="error.maxRedeliveries" value="10" />
@@ -21,7 +20,7 @@
       <cm:property name="service.reindex.stream" value="broker:queue:service.reindex" />
       <cm:property name="triplestore.baseUrl"
         value="http://localhost:8080/fuseki/test/update" />
-      <cm:property name="reindexing.service.uri" value="http://localhost:9090/reindexing" />
+      <cm:property name="reindexing.service.uri" value="http://localhost:9090/reindexing/" />
       <cm:property name="ldp.path.extension.container"
         value="/extensions" />
       <cm:property name="triplestore.namedGraph" value="" />
@@ -33,6 +32,9 @@
     <property name="extensionContainer" value="${ldp.path.extension.container}" />
     <property name="reindexStream" value="${service.reindex.stream}" />
   </bean>
+
+  <bean id="http" class="org.apache.camel.component.http4.HttpComponent" />
+  <bean id="https" class="org.apache.camel.component.http4.HttpComponent" />
 
   <reference id="broker" interface="org.apache.camel.Component"
     filter="(osgi.jndi.service.name=fcrepo/Broker)" />

@@ -7,8 +7,8 @@
   <feature name="fcrepo-api-x-indexing" description="fcrepo-api-x-indexing">
     version="${project.version}">
     <feature version="${camel.version}">camel-core</feature>
-    <feature version="${camel.version}">camel-jetty</feature>
-    <feature version="${fcrepo-camel.version}">fcrepo-camel</feature>
+    <feature version="${camel.version}">camel-http4</feature>
+    <feature version="${fcrepo-toolbox.version}">fcrepo-reindexing</feature>
     <feature version="${fcrepo-toolbox.version}">fcrepo-service-activemq</feature>
   </feature>
 </features>
