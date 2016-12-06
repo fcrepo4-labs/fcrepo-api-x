@@ -18,9 +18,9 @@
 
 package org.fcrepo.apix.indexing.impl;
 
+import static org.fcrepo.camel.FcrepoHeaders.FCREPO_EVENT_TYPE;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_NAMED_GRAPH;
-import static org.fcrepo.camel.JmsHeaders.EVENT_TYPE;
-import static org.fcrepo.camel.JmsHeaders.IDENTIFIER;
+import static org.fcrepo.camel.FcrepoHeaders.FCREPO_URI;
 
 import java.net.URI;
 import java.util.Collection;
@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.fcrepo.camel.processor.EventProcessor;
 import org.fcrepo.camel.processor.SparqlUpdateProcessor;
 import org.fcrepo.client.FcrepoLink;
 
@@ -37,7 +38,7 @@ import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;;
+import org.slf4j.LoggerFactory;
 
 /**
  * Listens for updates to Fedora objects and indexes service docs.
@@ -45,7 +46,7 @@ import org.slf4j.LoggerFactory;;
  * Retrieves the service doc of added/updated objects and sends to triple store. Whenever an extension is added or
  * updated, it initiates a re-index of all objects
  * </p>
- * 
+ *
  * @author apb@jhu.edu
  */
 public class ServiceIndexingRoutes extends RouteBuilder {
@@ -91,16 +92,17 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
         from("{{service.index.stream}}")
                 .routeId("index-services")
+                .process(new EventProcessor())
 
-                .choice().when(header(IDENTIFIER).contains("#")).stop().end()
+                .choice().when(header(FCREPO_URI).contains("#")).stop().end()
 
                 // If any members of an extension registry are updated, reindex all objects
-                .choice().when(header(IDENTIFIER).startsWith(extensionContainer))
+                .choice().when(header(FCREPO_URI).startsWith(extensionContainer))
                 .enrich(ROUTE_TRIGGER_REINDEX, (i, o) -> i)
                 .end()
 
                 .choice()
-                .when(header(EVENT_TYPE).isEqualTo(RESOURCE_DELETION))
+                .when(header(FCREPO_EVENT_TYPE).contains(RESOURCE_DELETION))
                 .to(ROUTE_DELETE_SERVICE_DOC)
                 .otherwise()
                 .to(ROUTE_INDEX_SERVICE_DOC);
@@ -109,13 +111,12 @@ public class ServiceIndexingRoutes extends RouteBuilder {
         // not org.fcrepo.jms.identifier as sent by Fedora
         from("{{service.reindex.stream}}")
                 .routeId("reindex-services")
-                .setHeader(IDENTIFIER, header("CamelFcrepoIdentifier"))
                 .to(ROUTE_INDEX_SERVICE_DOC);
 
         from(ROUTE_INDEX_SERVICE_DOC)
                 .routeId("index-service-doc")
                 .setHeader(Exchange.HTTP_METHOD, constant("HEAD"))
-                .setHeader(Exchange.HTTP_PATH, header(IDENTIFIER))
+                .setHeader(Exchange.HTTP_URI, header(FCREPO_URI))
                 .setHeader("Accept", constant("application/n-triples"))
                 .to("{{apix.baseUrl}}")
                 .process(GET_SERVICE_DOC_HEADER)

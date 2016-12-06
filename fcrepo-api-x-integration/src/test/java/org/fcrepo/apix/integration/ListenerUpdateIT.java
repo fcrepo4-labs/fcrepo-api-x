@@ -83,7 +83,8 @@ public class ListenerUpdateIT implements KarafIT {
                         .classifier("features").type("xml");
 
         return Arrays.asList(
-                features(apixRepo, "fcrepo-api-x-listener"));
+                features(apixRepo, "fcrepo-api-x-listener"),
+                deployFile("cfg/org.fcrepo.camel.service.activemq.cfg"));
     }
 
     // Verify that we can add an Updateable service,
@@ -112,11 +113,11 @@ public class ListenerUpdateIT implements KarafIT {
             while ((uri = objects.poll(30, TimeUnit.SECONDS)) != null) {
 
                 // Skip over objects in the queue we don't care about
-                if (uri.equals(OBJECT)) {
+                if (OBJECT.equals(uri)) {
                     break;
                 }
             }
-            return uri.equals(OBJECT);
+            return (OBJECT.equals(uri));
         }));
 
     }

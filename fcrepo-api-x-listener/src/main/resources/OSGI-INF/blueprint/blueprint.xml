@@ -13,23 +13,19 @@
   <cm:property-placeholder persistent-id="org.fcrepo.apix.listener"
     update-strategy="reload">
     <cm:default-properties>
-      <cm:property name="input.uri" value="activemq:topic:fedora" />
-      <cm:property name="broker.uri" value="tcp://localhost:61616" />
-      <cm:property name="fcrepo.baseURI" value="http://localhost:8080/fcrepo/rest" />
+      <cm:property name="input.uri" value="broker:topic:fedora" />
     </cm:default-properties>
   </cm:property-placeholder>
+
+  <reference id="broker" interface="org.apache.camel.Component"
+    filter="(osgi.jndi.service.name=fcrepo/Broker)" />
 
   <reference-list id="toUpdate" member-type="service-object"
     interface="org.fcrepo.apix.model.components.Updateable"
     availability="optional" />
 
-  <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
-    <property name="brokerURL" value="${broker.uri}" />
-  </bean>
-
   <bean id="updaterRoutes" class="org.fcrepo.apix.listener.impl.UpdateListener">
     <property name="toUpdate" ref="toUpdate" />
-    <property name="fcrepoBaseURI" value="${fcrepo.baseURI}" />
   </bean>
 
   <camel:camelContext id="apix-listener">

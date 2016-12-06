@@ -37,5 +37,12 @@
       <scope>provided</scope>
     </dependency>
 
+    <dependency>
+      <groupId>org.fcrepo.camel</groupId>
+      <artifactId>fcrepo-camel</artifactId>
+      <version>${fcrepo-camel.version}</version>
+      <scope>provided</scope>
+    </dependency>
+
   </dependencies>
 </project>

@@ -18,17 +18,23 @@
 
 package org.fcrepo.apix.listener.impl;
 
+import static org.fcrepo.camel.FcrepoHeaders.FCREPO_RESOURCE_TYPE;
+import static org.fcrepo.camel.FcrepoHeaders.FCREPO_URI;
+
 import java.net.URI;
 import java.util.List;
 
 import org.fcrepo.apix.model.components.Updateable;
+import org.fcrepo.camel.processor.EventProcessor;
 
-import org.apache.camel.Exchange;
+import org.apache.camel.LoggingLevel;
 import org.apache.camel.builder.RouteBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * Listens for updates to repository resources and notifies {@link Updateable}s
+ *
  * @author apb@jhu.edu
  */
 public class UpdateListener extends RouteBuilder {
@@ -37,13 +43,7 @@ public class UpdateListener extends RouteBuilder {
 
     private List<Updateable> toUpdate;
 
-    private String fcrepoBaseURI;
-
-    private static final String RESOURCE_PATH = "org.fcrepo.jms.identifier";
-
-    private static final String TYPE = "org.fcrepo.jms.resourceType";
-
-    private static final String TYPE_RESOURCE = "http://fedora.info/definitions/v4/repository#Resource";
+    private static final String TYPE_REPOSITORY_RESOURCE = "http://fedora.info/definitions/v4/repository#Resource";
 
     /**
      * Set the list of services to update
@@ -54,31 +54,19 @@ public class UpdateListener extends RouteBuilder {
         this.toUpdate = list;
     }
 
-    /**
-     * Set the Fedora baseURI.
-     *
-     * @param uri Fedora baseURI.
-     */
-    public void setFcrepoBaseURI(final String uri) {
-        this.fcrepoBaseURI = uri.replaceFirst("/$", "");
-    }
-
     @Override
     public void configure() throws Exception {
 
         from("{{input.uri}}").id("listener-update-apix")
-                .choice().when(e -> e.getIn().getHeader(TYPE, String.class).contains(TYPE_RESOURCE))
-                .process(e -> LOG.debug("UPDATING {}", e.getIn().getHeader(RESOURCE_PATH)))
+                .process(new EventProcessor())
+                .choice().when(header(FCREPO_RESOURCE_TYPE).contains(TYPE_REPOSITORY_RESOURCE))
+                .log(LoggingLevel.DEBUG, LOG, "Updating due to ${headers[" + FCREPO_URI + "]}")
                 .process(e -> toUpdate.forEach(u -> {
                     try {
-                        u.update(objectURI(e));
+                        u.update(URI.create(e.getIn().getHeader(FCREPO_URI, String.class)));
                     } catch (final Exception x) {
-                        LOG.warn(String.format("Update to <%s> failed", objectURI(e)), x);
+                        LOG.warn(String.format("Update to <%s> failed", e.getIn().getHeader(FCREPO_URI)), x);
                     }
                 }));
-    }
-
-    private URI objectURI(final Exchange e) {
-        return URI.create(fcrepoBaseURI + e.getIn().getHeader(RESOURCE_PATH));
     }
 }

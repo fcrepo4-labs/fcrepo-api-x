@@ -37,7 +37,6 @@ import org.fcrepo.apix.model.components.Routing;
 
 import org.apache.camel.Exchange;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -50,7 +49,6 @@ import org.ops4j.pax.exam.options.MavenUrlReference;
  * @author apb@jhu.edu
  */
 @RunWith(PaxExam.class)
-@Ignore("Pending resolution of Camel Toolbox and API-X Jena dependency versions")
 public class KarafServiceIndexingIT extends ServiceBasedTest {
 
     @Rule
