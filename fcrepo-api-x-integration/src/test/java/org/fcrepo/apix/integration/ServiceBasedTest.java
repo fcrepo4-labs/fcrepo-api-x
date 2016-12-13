@@ -18,7 +18,14 @@
 
 package org.fcrepo.apix.integration;
 
+import static org.fcrepo.apix.jena.Util.rdfResource;
+import static org.fcrepo.apix.model.Ontologies.Apix.CLASS_EXTENSION;
+import static org.fcrepo.apix.model.Ontologies.Apix.PROP_BINDS_TO;
+import static org.fcrepo.apix.model.Ontologies.Apix.PROP_CONSUMES_SERVICE;
+import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE;
+import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE_AT;
 import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE_INSTANCE;
+import static org.fcrepo.apix.model.Ontologies.Service.PROP_CANONICAL;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_ENDPOINT;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
@@ -26,9 +33,12 @@ import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.fcrepo.apix.model.Extension;
+import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.ServiceRegistry;
@@ -42,6 +52,7 @@ import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.impl.DefaultMessage;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
+import org.junit.rules.TestName;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 import org.ops4j.pax.exam.util.Filter;
@@ -57,6 +68,8 @@ public abstract class ServiceBasedTest implements KarafIT {
     static final protected String serviceEndpoint = "http://127.0.0.1:" + System.getProperty(
             "services.dynamic.test.port") +
             "/TestService";
+
+    static final String SERVICE_ROUTE_ID = "test-service-endpoint";
 
     @Inject
     @Filter(("id=testContext"))
@@ -88,7 +101,9 @@ public abstract class ServiceBasedTest implements KarafIT {
 
     @Before
     public void start() throws Exception {
-        cxt.addRoutes(createRouteBuilder());
+        if (cxt.getRoute(SERVICE_ROUTE_ID) == null) {
+            cxt.addRoutes(createRouteBuilder());
+        }
     }
 
     protected void onServiceRequest(final Processor process) {
@@ -134,6 +149,7 @@ public abstract class ServiceBasedTest implements KarafIT {
             public void configure() throws Exception {
                 from("jetty:" + serviceEndpoint +
                         "?matchOnUriPrefix=true")
+                                .routeId(SERVICE_ROUTE_ID)
                                 .process(ex -> {
                                     requestToService.copyFrom(ex.getIn());
 
@@ -146,5 +162,88 @@ public abstract class ServiceBasedTest implements KarafIT {
                                 });
             }
         };
+    }
+
+    protected ExtensionBuilder newExtension(final TestName name) {
+        return new ExtensionBuilder(name);
+    }
+
+    class ExtensionBuilder {
+
+        String differentiator;
+
+        private final String name;
+
+        private Scope scope;
+
+        private String bindingClass;
+
+        ExtensionBuilder(final TestName name) {
+            this.name = name.getMethodName();
+            differentiator = name.getMethodName() + "-" + UUID.randomUUID().toString();
+        }
+
+        ExtensionBuilder withScope(final Scope scope) {
+            this.scope = scope;
+            return this;
+        }
+
+        ExtensionBuilder bindsTo(final URI bindingClass) {
+            this.bindingClass = bindingClass.toString();
+            return this;
+        }
+
+        ExtensionBuilder withDifferentiator(final String diff) {
+            this.differentiator = name + "-" + diff;
+            return this;
+        }
+
+        Extension create() throws Exception {
+            bindingClass = "http://example.org/test/class/" + differentiator;
+
+            final String serviceURI = "http://example.org/test/service/" + differentiator;
+
+            registerService(rdfResource(null, serviceBody(
+                    serviceURI), differentiator));
+
+            return extensionRegistry.getExtension(
+                    registerExtension(rdfResource(null,
+                            extensionBody(serviceURI), differentiator)));
+
+        }
+
+        private String serviceBody(final String serviceURI) throws Exception {
+            final StringBuilder serviceBody = new StringBuilder();
+            try (WebResource template = testResource("objects/service.ttl")) {
+                serviceBody.append(IOUtils.toString(template.representation(), "utf8"));
+            }
+
+            serviceBody.append(String.format("<#service> <%s> <%s> .\n", PROP_CANONICAL, serviceURI));
+
+            return serviceBody.toString();
+
+        }
+
+        private String extensionBody(final String serviceURI) {
+            final String differentiator = UUID.randomUUID().toString();
+
+            final String endpointSpec = String.format("%s:%s", name, differentiator);
+            final StringBuilder extensionBody = new StringBuilder();
+
+            extensionBody.append(String.format("<> a <%s> .\n", CLASS_EXTENSION));
+            extensionBody.append(String.format("<> <%s> <%s> .\n", PROP_BINDS_TO, bindingClass));
+
+            if (Scope.RESOURCE.equals(scope)) {
+                extensionBody.append(String.format("<> <%s> \"%s\" .\n", PROP_EXPOSES_SERVICE_AT, endpointSpec));
+                extensionBody.append(String.format("<> <%s> <%s> .\n", PROP_EXPOSES_SERVICE, serviceURI));
+            } else if (Scope.REPOSITORY.equals(scope)) {
+                extensionBody.append(String.format("<> <%s> \"/%s\" .\n", PROP_EXPOSES_SERVICE_AT, endpointSpec));
+                extensionBody.append(String.format("<> <%s> <%s> .\n", PROP_EXPOSES_SERVICE, serviceURI));
+            } else {
+                extensionBody.append(String.format("<> <%s> <%s> .\n", PROP_CONSUMES_SERVICE, serviceURI));
+            }
+
+            return extensionBody.toString();
+        }
     }
 }

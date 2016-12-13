@@ -18,10 +18,17 @@
 
 package org.fcrepo.apix.indexing.impl;
 
+import static java.net.URLEncoder.encode;
+import static org.apache.http.entity.ContentType.parse;
+import static org.apache.jena.riot.RDFLanguages.contentTypeToLang;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_EVENT_TYPE;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_NAMED_GRAPH;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_URI;
+import static org.fcrepo.camel.processor.ProcessorUtils.getSubjectUri;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashSet;
@@ -30,13 +37,15 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.fcrepo.camel.processor.EventProcessor;
-import org.fcrepo.camel.processor.SparqlUpdateProcessor;
 import org.fcrepo.client.FcrepoLink;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.riot.RDFDataMgr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -90,11 +99,18 @@ public class ServiceIndexingRoutes extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
+        // onException(HttpOperationFailedException.class).onWhen(e -> e.getProperty(Exchange.EXCEPTION_CAUGHT,
+        // HttpOperationFailedException.class).getStatusCode() == 410)
+        // .to(ROUTE_DELETE_SERVICE_DOC);
+
         from("{{service.index.stream}}")
                 .routeId("index-services")
                 .process(new EventProcessor())
+                .process(e -> System.out.println("CONSIDERING " + e.getIn().getHeader(FCREPO_URI)))
 
                 .choice().when(header(FCREPO_URI).contains("#")).stop().end()
+
+                .process(e -> System.out.println("PASSING " + e.getIn().getHeader(FCREPO_URI)))
 
                 // If any members of an extension registry are updated, reindex all objects
                 .choice().when(header(FCREPO_URI).startsWith(extensionContainer))
@@ -122,22 +138,31 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .process(GET_SERVICE_DOC_HEADER)
                 .split(header(HEADER_SERVICE_DOC)).to(ROUTE_PERFORM_INDEX);
 
+        from(ROUTE_DELETE_SERVICE_DOC)
+                .routeId("delete-service-doc")
+                .process(SPARQL_DELETE_PROCESSOR)
+                .log(LoggingLevel.INFO, LOG,
+                        "Deleting service doc of ${headers[CamelFcrepoUri]}")
+                .to("{{triplestore.baseUrl}}");
+
         from(ROUTE_PERFORM_INDEX).routeId("perform-index")
                 .removeHeaders("CamelHttp*")
                 .setHeader(Exchange.HTTP_URI, bodyAs(URI.class))
+                .process(e -> System.out.println("FETCH " + e.getIn().getHeader(Exchange.HTTP_URI)))
                 .setBody(constant(null))
                 .to("http://localhost")
                 .removeHeaders("CamelHttp*")
+                .process(e -> System.out.println("GOT SERVICE DOC"))
                 .setHeader(FCREPO_NAMED_GRAPH, simple("{{triplestore.namedGraph}}"))
-                .process(new SparqlUpdateProcessor())
+                .process(SPARQL_UPDATE_PROCESSOR)
                 .log(LoggingLevel.INFO, LOG,
-                        "Indexing service doc of ${headers[org.fcrepo.jms.identifier]}")
+                        "Indexing service doc of ${headers[CamelFcrepoUri]}")
                 .to("{{triplestore.baseUrl}}");
 
         from(ROUTE_TRIGGER_REINDEX).id("trigger-reindex")
                 .log(LoggingLevel.INFO, LOG,
                         "Triggering reindex to " + reindexStream +
-                                " due update to extension ${headers[org.fcrepo.jms.identifier]}")
+                                " due update to extension ${headers[CamelFcrepoUri]}")
                 .removeHeaders("*")
                 .setHeader(Exchange.CONTENT_TYPE, constant("application/json"))
                 .setBody(constant(String.format("[\"%s\"]", reindexStream)))
@@ -146,7 +171,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
     }
 
     @SuppressWarnings("unchecked")
-    final Processor GET_SERVICE_DOC_HEADER = ex -> {
+    static final Processor GET_SERVICE_DOC_HEADER = ex -> {
 
         final Set<String> rawLinkHeaders = new HashSet<>();
 
@@ -163,7 +188,57 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .filter(l -> l.getRel().equals("service"))
                 .map(l -> l.getUri()).collect(Collectors.toList());
 
+        System.out.println("SERVICE DOC " + services);
         ex.getIn().setHeader(HEADER_SERVICE_DOC, services);
     };
+
+    private static final Processor SPARQL_UPDATE_PROCESSOR = ex -> {
+        final ByteArrayOutputStream serializedGraph = new ByteArrayOutputStream();
+        final String subject = getSubjectUri(ex);
+        // final String namedGraph = ex.getIn().getHeader(FCREPO_NAMED_GRAPH, "", String.class);
+        final Model model = ModelFactory.createDefaultModel();
+
+        RDFDataMgr.read(model, ex.getIn().getBody(InputStream.class),
+                contentTypeToLang(parse(ex.getIn().getHeader(Exchange.CONTENT_TYPE, String.class)).getMimeType()));
+
+        model.write(serializedGraph, "N-TRIPLE");
+
+        ex.getIn().setBody("update=" + encode(deleteGraph(subject) + ";\n" +
+                insertGraph(serializedGraph.toString("utf8"), subject), "utf8"));
+
+        ex.getIn().setHeader(Exchange.HTTP_METHOD, "POST");
+        ex.getIn().setHeader(Exchange.CONTENT_TYPE, "application/x-www-form-urlencoded; charset=utf-8");
+    };
+
+    private static final Processor SPARQL_DELETE_PROCESSOR = ex -> {
+        final ByteArrayOutputStream serializedGraph = new ByteArrayOutputStream();
+        final String subject = getSubjectUri(ex);
+        // final String namedGraph = ex.getIn().getHeader(FCREPO_NAMED_GRAPH, "", String.class);
+        final Model model = ModelFactory.createDefaultModel();
+
+        RDFDataMgr.read(model, ex.getIn().getBody(InputStream.class),
+                contentTypeToLang(parse(ex.getIn().getHeader(Exchange.CONTENT_TYPE, String.class)).getMimeType()));
+
+        model.write(serializedGraph, "N-TRIPLE");
+
+        ex.getIn().setBody("update=" + encode(deleteGraph(subject), "utf8"));
+
+        ex.getIn().setHeader(Exchange.HTTP_METHOD, "POST");
+        ex.getIn().setHeader(Exchange.CONTENT_TYPE, "application/x-www-form-urlencoded; charset=utf-8");
+    };
+
+    static String deleteGraph(final String namedGraph) throws UnsupportedEncodingException {
+        return "DELETE WHERE { " +
+                "GRAPH < " + encode(namedGraph, "utf8") + "> {" +
+                "?s ?p ?o" +
+                "}}";
+    }
+
+    static String insertGraph(final String content, final String namedGraph) throws UnsupportedEncodingException {
+        return "INSERT DATA { " +
+                "GRAPH < " + encode(namedGraph, "utf8") + "> {" +
+                content +
+                "}}";
+    }
 
 }

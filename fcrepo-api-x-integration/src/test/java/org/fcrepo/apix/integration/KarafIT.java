@@ -119,7 +119,7 @@ public interface KarafIT {
             karafDistributionConfiguration().frameworkUrl(karafUrl)
                     .unpackDirectory(new File("target", "exam")).useDeployFolder(false),
             // KarafDistributionOption.configureConsole().ignoreLocalConsole(),
-            logLevel(LogLevel.WARN),
+            logLevel(LogLevel.INFO),
 
             // KarafDistributionOption.debugConfiguration("5005", true),
 
@@ -265,15 +265,16 @@ public interface KarafIT {
 
     public static <T> T attempt(final int times, final Callable<T> it) {
 
-        Exception caught = null;
+        Throwable caught = null;
 
         for (int tries = 0; tries < times; tries++) {
             try {
                 return it.call();
-            } catch (final Exception e) {
+            } catch (final Throwable e) {
                 caught = e;
                 try {
                     Thread.sleep(1000);
+                    System.out.println(".");
                 } catch (final InterruptedException i) {
                     Thread.currentThread().interrupt();
                     return null;

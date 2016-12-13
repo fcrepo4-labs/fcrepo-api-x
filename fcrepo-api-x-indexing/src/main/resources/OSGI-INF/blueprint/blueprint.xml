@@ -39,11 +39,9 @@
   <reference id="broker" interface="org.apache.camel.Component"
     filter="(osgi.jndi.service.name=fcrepo/Broker)" />
 
-  <camelContext id="FcrepoTriplestoreIndexer"
+  <camelContext id="FcrepoServiceIndexer"
     xmlns="http://camel.apache.org/schema/blueprint">
     <routeBuilder ref="indexerRoutes" />
   </camelContext>
-
-
 
 </blueprint>
