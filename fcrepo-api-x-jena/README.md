@@ -1,4 +1,4 @@
-# API-X Binding module
+# API-X Jena module
 
 This module contains [jena](jena.apache.org)-based implementations of the [ontology registry](../src/site/markdown/extension-definition-and-binding.md#ontology-registry), [ontology reasoning service](../src/site/markdown/extension-definition-and-binding.md#owl-reasoning), and various other internal API-X components
 
