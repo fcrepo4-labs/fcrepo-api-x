@@ -17,7 +17,7 @@ To build API-X, do:
 API-X is distributed as OSGi bundles and provides Karaf feature descriptors, making it easy to deploy in a Karaf container. There are several ways to install these features, please refer to the [karaf provisioning documentation](https://karaf.apache.org/manual/latest/#_provisioning) for more information.  
 
 ### Manual installation in Karaf
-To do this, first, add the `toolbox-features` repository:
+To do this, first, add the `fcrepo-api-x-karaf` repository in the Karaf console:
 
     $ feature:repo-add mvn:org.fcrepo.apix/fcrepo-apix-karaf/LATEST/xml/features
 
