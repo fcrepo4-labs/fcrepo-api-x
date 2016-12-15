@@ -317,6 +317,13 @@
     </license>
   </licenses>
 
+  <scm>
+    <connection>scm:git:git://github.com/fcrepo4-labs/fcrepo-api-x.git</connection>
+    <developerConnection>scm:git:git@github.com:fcrepo4-labs/fcrepo-api-x.git</developerConnection>
+    <url>https://github.com/fcrepo4-labs/fcrepo-api-x</url>
+    <tag>HEAD</tag>
+  </scm>
+
   <repositories>
     <repository>
       <id>snapshots-repo</id>
