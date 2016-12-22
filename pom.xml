@@ -24,8 +24,8 @@
     <docker>false</docker>
     <dexx-collection.version>0.6</dexx-collection.version>
     <fcrepo.version>4.7.0</fcrepo.version>
-    <fcrepo-camel.version>4.5.0-SNAPSHOT</fcrepo-camel.version>
-    <fcrepo-toolbox.version>4.7.0-SNAPSHOT</fcrepo-toolbox.version>
+    <fcrepo-camel.version>4.5.0</fcrepo-camel.version>
+    <fcrepo-toolbox.version>4.7.0</fcrepo-toolbox.version>
     <fcrepo-build-tools.version>4.4.2</fcrepo-build-tools.version>
     <fcrepo.client.version>0.2.1</fcrepo.client.version>
     <httpclient.version>4.5.2</httpclient.version>
