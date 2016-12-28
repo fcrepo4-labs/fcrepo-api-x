@@ -41,7 +41,6 @@ import javax.inject.Inject;
 import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.components.Routing;
-import org.fcrepo.client.FcrepoClient;
 import org.fcrepo.client.FcrepoResponse;
 
 import org.apache.commons.io.IOUtils;
@@ -92,20 +91,6 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
 
     @BeforeClass
     public static void init() throws Exception {
-        attempt(60, () -> {
-            try (FcrepoResponse head = FcrepoClient.client().build().head(URI.create(fusekiURI)).perform()) {
-                if (head.getStatusCode() == 404) {
-                    try (FcrepoResponse response = client.post(URI.create(fusekiBaseURI + "$/datasets/")).body(IOUtils
-                            .toInputStream("dbType=tdb&dbName=" +
-                                    tripleDatasetName,
-                                    "utf8"), "application/x-www-form-urlencoded").perform()) {
-                        return response.getStatusCode();
-                    }
-                } else {
-                    return 200;
-                }
-            }
-        });
         KarafIT.createContainers();
     }
 
@@ -156,7 +141,7 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
 
         // Now only the first should be bound
         attempt(60, () -> assertSparqlBound(object, extension));
-        attempt(600, () -> assertSparqlNotBound(object, extension2));
+        attempt(60, () -> assertSparqlNotBound(object, extension2));
     }
 
     @Test
@@ -204,7 +189,7 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
     }
 
     private String getAskForExtensionQuery(final URI object, final Extension extension) {
-        final StringBuilder query = new StringBuilder("ASK {\n");
+        final StringBuilder query = new StringBuilder("ASK { GRAPH ?g {\n");
 
         query.append(String.format("?doc <%s> <%s>. \n", PROP_IS_SERVICE_DOCUMENT_FOR, object));
         query.append(String.format("?doc <%s> ?aggregation .\n", ORE_DESCRIBES));
@@ -216,7 +201,7 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
             query.append(String.format("?instance <%s> <%s>.\n", PROP_IS_FUNCTION_OF, object));
         }
 
-        query.append("}");
+        query.append("}}");
 
         return query.toString();
 

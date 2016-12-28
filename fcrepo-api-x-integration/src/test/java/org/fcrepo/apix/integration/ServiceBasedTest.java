@@ -199,7 +199,10 @@ public abstract class ServiceBasedTest implements KarafIT {
         }
 
         Extension create() throws Exception {
-            bindingClass = "http://example.org/test/class/" + differentiator;
+
+            if (bindingClass == null) {
+                bindingClass = "http://example.org/test/class/" + differentiator;
+            }
 
             final String serviceURI = "http://example.org/test/service/" + differentiator;
 

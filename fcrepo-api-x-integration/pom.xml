@@ -104,8 +104,8 @@
             <systemProperties>
               <fcrepo.jms.baseUrl>http://localhost:${apix.dynamic.test.port}/${fcrepo.cxtPath}/rest</fcrepo.jms.baseUrl>
               <fcrepo.home>${project.build.directory}/fcrepo</fcrepo.home>
-              <FUSEKI_HOME>${project.build.directory}/cargo</FUSEKI_HOME>
-              <FUSEKI_BASE>${project.build.directory}/cargo</FUSEKI_BASE>
+              <FUSEKI_HOME>${project.build.directory}/fuseki</FUSEKI_HOME>
+              <FUSEKI_BASE>${project.build.directory}/fuseki</FUSEKI_BASE>
               <fcrepo.modeshape.configuration>classpath:/config/file-simple/repository.json</fcrepo.modeshape.configuration>
               <fcrepo.dynamic.jms.port>${fcrepo.dynamic.jms.port}</fcrepo.dynamic.jms.port>
               <fcrepo.dynamic.stomp.port>${fcrepo.dynamic.stomp.port}</fcrepo.dynamic.stomp.port>
@@ -160,6 +160,11 @@
       <testResource>
         <directory>src/test/resources/cfg</directory>
         <targetPath>cfg</targetPath>
+        <filtering>true</filtering>
+      </testResource>
+      <testResource>
+        <directory>src/test/resources/fuseki</directory>
+        <targetPath>${project.build.directory}/fuseki</targetPath>
         <filtering>true</filtering>
       </testResource>
     </testResources>

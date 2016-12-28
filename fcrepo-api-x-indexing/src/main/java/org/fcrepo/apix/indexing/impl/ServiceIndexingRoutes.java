@@ -18,7 +18,6 @@
 
 package org.fcrepo.apix.indexing.impl;
 
-import static java.net.URLEncoder.encode;
 import static org.apache.http.entity.ContentType.parse;
 import static org.apache.jena.riot.RDFLanguages.contentTypeToLang;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_EVENT_TYPE;
@@ -195,7 +194,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
     private static final Processor SPARQL_UPDATE_PROCESSOR = ex -> {
         final ByteArrayOutputStream serializedGraph = new ByteArrayOutputStream();
         final String subject = getSubjectUri(ex);
-        // final String namedGraph = ex.getIn().getHeader(FCREPO_NAMED_GRAPH, "", String.class);
+
         final Model model = ModelFactory.createDefaultModel();
 
         RDFDataMgr.read(model, ex.getIn().getBody(InputStream.class),
@@ -203,40 +202,34 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
         model.write(serializedGraph, "N-TRIPLE");
 
-        ex.getIn().setBody("update=" + encode(deleteGraph(subject) + ";\n" +
-                insertGraph(serializedGraph.toString("utf8"), subject), "utf8"));
+        ex.getIn().setBody(deleteGraph(subject) + ";\n" +
+                insertGraph(serializedGraph.toString("utf8"), subject));
+
+        System.out.println("SPARQL: " + ex.getIn().getBody(String.class));
 
         ex.getIn().setHeader(Exchange.HTTP_METHOD, "POST");
-        ex.getIn().setHeader(Exchange.CONTENT_TYPE, "application/x-www-form-urlencoded; charset=utf-8");
+        ex.getIn().setHeader("Content-Type", "application/sparql-update");
     };
 
     private static final Processor SPARQL_DELETE_PROCESSOR = ex -> {
-        final ByteArrayOutputStream serializedGraph = new ByteArrayOutputStream();
-        final String subject = getSubjectUri(ex);
-        // final String namedGraph = ex.getIn().getHeader(FCREPO_NAMED_GRAPH, "", String.class);
-        final Model model = ModelFactory.createDefaultModel();
+        final String graphUri = getSubjectUri(ex);
 
-        RDFDataMgr.read(model, ex.getIn().getBody(InputStream.class),
-                contentTypeToLang(parse(ex.getIn().getHeader(Exchange.CONTENT_TYPE, String.class)).getMimeType()));
-
-        model.write(serializedGraph, "N-TRIPLE");
-
-        ex.getIn().setBody("update=" + encode(deleteGraph(subject), "utf8"));
+        ex.getIn().setBody(deleteGraph(graphUri));
 
         ex.getIn().setHeader(Exchange.HTTP_METHOD, "POST");
-        ex.getIn().setHeader(Exchange.CONTENT_TYPE, "application/x-www-form-urlencoded; charset=utf-8");
+        ex.getIn().setHeader("Content-Type", "application/sparql-update");
     };
 
     static String deleteGraph(final String namedGraph) throws UnsupportedEncodingException {
         return "DELETE WHERE { " +
-                "GRAPH < " + encode(namedGraph, "utf8") + "> {" +
+                "GRAPH <" + namedGraph + "> {" +
                 "?s ?p ?o" +
                 "}}";
     }
 
     static String insertGraph(final String content, final String namedGraph) throws UnsupportedEncodingException {
         return "INSERT DATA { " +
-                "GRAPH < " + encode(namedGraph, "utf8") + "> {" +
+                "GRAPH <" + namedGraph + "> {" +
                 content +
                 "}}";
     }
