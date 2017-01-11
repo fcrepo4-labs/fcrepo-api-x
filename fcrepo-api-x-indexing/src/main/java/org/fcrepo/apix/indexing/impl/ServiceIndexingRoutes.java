@@ -18,12 +18,12 @@
 
 package org.fcrepo.apix.indexing.impl;
 
+import static org.apache.camel.builder.PredicateBuilder.not;
 import static org.apache.http.entity.ContentType.parse;
 import static org.apache.jena.riot.RDFLanguages.contentTypeToLang;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_EVENT_TYPE;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_NAMED_GRAPH;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_URI;
-import static org.fcrepo.camel.processor.ProcessorUtils.getSubjectUri;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -63,7 +63,13 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
     static final String ROUTE_INDEX_SERVICE_DOC = "direct:index.services";
 
+    static final String ROUTE_PROCESS_MESSAGE = "direct:process_message";
+
+    static final String ROUTE_GET_SERVICE_DOC_URI = "direct:servicedoc.uri.get";
+
     static final String ROUTE_PERFORM_INDEX = "direct:index.services.perform";
+
+    static final String ROUTE_PERFORM_DELETE = "direct:index.services.delete";
 
     static final String ROUTE_DELETE_SERVICE_DOC = "direct:delete.services";
 
@@ -76,6 +82,8 @@ public class ServiceIndexingRoutes extends RouteBuilder {
     private String extensionContainer;
 
     private String reindexStream;
+
+    private static final EventProcessor EVENT_PROCESSOR = new EventProcessor();
 
     /**
      * set the extension container path.
@@ -104,10 +112,11 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
         from("{{service.index.stream}}")
                 .routeId("index-services")
-                .process(new EventProcessor())
+                .to(ROUTE_PROCESS_MESSAGE)
                 .process(e -> System.out.println("CONSIDERING " + e.getIn().getHeader(FCREPO_URI)))
+                .process(ex -> System.out.println("\n\n" + ex.getIn().getHeader(FCREPO_EVENT_TYPE) + "\n\n"))
 
-                .choice().when(header(FCREPO_URI).contains("#")).stop().end()
+                .filter(not(header(FCREPO_URI).contains("#")))
 
                 .process(e -> System.out.println("PASSING " + e.getIn().getHeader(FCREPO_URI)))
 
@@ -122,23 +131,31 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .otherwise()
                 .to(ROUTE_INDEX_SERVICE_DOC);
 
-        // Reindex sends object ID in CamelFcrepoIdentifier header,
-        // not org.fcrepo.jms.identifier as sent by Fedora
+        from(ROUTE_PROCESS_MESSAGE).routeId("process-message")
+                .process(EVENT_PROCESSOR);
+
         from("{{service.reindex.stream}}")
                 .routeId("reindex-services")
                 .to(ROUTE_INDEX_SERVICE_DOC);
 
-        from(ROUTE_INDEX_SERVICE_DOC)
-                .routeId("index-service-doc")
+        from(ROUTE_GET_SERVICE_DOC_URI).routeId("get-servicedoc-uri")
                 .setHeader(Exchange.HTTP_METHOD, constant("HEAD"))
                 .setHeader(Exchange.HTTP_URI, header(FCREPO_URI))
                 .setHeader("Accept", constant("application/n-triples"))
                 .to("{{apix.baseUrl}}")
-                .process(GET_SERVICE_DOC_HEADER)
+                .process(GET_SERVICE_DOC_HEADER);
+
+        from(ROUTE_INDEX_SERVICE_DOC)
+                .to(ROUTE_GET_SERVICE_DOC_URI)
                 .split(header(HEADER_SERVICE_DOC)).to(ROUTE_PERFORM_INDEX);
 
         from(ROUTE_DELETE_SERVICE_DOC)
                 .routeId("delete-service-doc")
+                .to(ROUTE_GET_SERVICE_DOC_URI)
+                .split(header(HEADER_SERVICE_DOC)).to(ROUTE_PERFORM_DELETE);
+
+        from(ROUTE_PERFORM_DELETE).routeId("perform-delete")
+                .setHeader(FCREPO_NAMED_GRAPH, bodyAs(URI.class))
                 .process(SPARQL_DELETE_PROCESSOR)
                 .log(LoggingLevel.INFO, LOG,
                         "Deleting service doc of ${headers[CamelFcrepoUri]}")
@@ -150,9 +167,9 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .process(e -> System.out.println("FETCH " + e.getIn().getHeader(Exchange.HTTP_URI)))
                 .setBody(constant(null))
                 .to("http://localhost")
+                .setHeader(FCREPO_NAMED_GRAPH, header(Exchange.HTTP_URI))
                 .removeHeaders("CamelHttp*")
                 .process(e -> System.out.println("GOT SERVICE DOC"))
-                .setHeader(FCREPO_NAMED_GRAPH, simple("{{triplestore.namedGraph}}"))
                 .process(SPARQL_UPDATE_PROCESSOR)
                 .log(LoggingLevel.INFO, LOG,
                         "Indexing service doc of ${headers[CamelFcrepoUri]}")
@@ -193,7 +210,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
     private static final Processor SPARQL_UPDATE_PROCESSOR = ex -> {
         final ByteArrayOutputStream serializedGraph = new ByteArrayOutputStream();
-        final String subject = getSubjectUri(ex);
+        final String graph = ex.getIn().getHeader(FCREPO_NAMED_GRAPH).toString();
 
         final Model model = ModelFactory.createDefaultModel();
 
@@ -202,8 +219,8 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
         model.write(serializedGraph, "N-TRIPLE");
 
-        ex.getIn().setBody(deleteGraph(subject) + ";\n" +
-                insertGraph(serializedGraph.toString("utf8"), subject));
+        ex.getIn().setBody(deleteGraph(graph) + ";\n" +
+                insertGraph(serializedGraph.toString("utf8"), graph));
 
         System.out.println("SPARQL: " + ex.getIn().getBody(String.class));
 
@@ -212,9 +229,9 @@ public class ServiceIndexingRoutes extends RouteBuilder {
     };
 
     private static final Processor SPARQL_DELETE_PROCESSOR = ex -> {
-        final String graphUri = getSubjectUri(ex);
+        final String graph = ex.getIn().getHeader(FCREPO_NAMED_GRAPH).toString();
 
-        ex.getIn().setBody(deleteGraph(graphUri));
+        ex.getIn().setBody(deleteGraph(graph));
 
         ex.getIn().setHeader(Exchange.HTTP_METHOD, "POST");
         ex.getIn().setHeader("Content-Type", "application/sparql-update");

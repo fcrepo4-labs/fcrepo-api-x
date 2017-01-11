@@ -23,7 +23,6 @@
       <cm:property name="reindexing.service.uri" value="http://localhost:9090/reindexing/" />
       <cm:property name="ldp.path.extension.container"
         value="/extensions" />
-      <cm:property name="triplestore.namedGraph" value="" />
     </cm:default-properties>
 
   </cm:property-placeholder>
@@ -37,7 +36,7 @@
   <bean id="https" class="org.apache.camel.component.http4.HttpComponent" />
 
   <reference id="broker" interface="org.apache.camel.Component"
-    filter="(osgi.jndi.service.name=fcrepo/Broker)" />
+    filter="(osgi.jndi.service.name=fcrepo/Broker)" availability="optional" />
 
   <camelContext id="FcrepoServiceIndexer"
     xmlns="http://camel.apache.org/schema/blueprint">
