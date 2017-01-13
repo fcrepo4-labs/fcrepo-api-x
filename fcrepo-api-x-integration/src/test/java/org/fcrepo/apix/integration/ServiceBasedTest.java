@@ -72,7 +72,7 @@ public abstract class ServiceBasedTest implements KarafIT {
     static final String SERVICE_ROUTE_ID = "test-service-endpoint";
 
     @Inject
-    @Filter(("id=testContext"))
+    @Filter("(role=test)")
     private CamelContext cxt;
 
     @Inject
@@ -101,6 +101,7 @@ public abstract class ServiceBasedTest implements KarafIT {
 
     @Before
     public void start() throws Exception {
+        System.out.println("\n\nSERVICE BASED TEST: " + cxt.getName() + "\n");
         if (cxt.getRoute(SERVICE_ROUTE_ID) == null) {
             cxt.addRoutes(createRouteBuilder());
         }

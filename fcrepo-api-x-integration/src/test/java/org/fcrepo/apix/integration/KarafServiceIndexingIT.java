@@ -32,6 +32,7 @@ import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.editConfi
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,10 +44,10 @@ import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.components.Routing;
 import org.fcrepo.client.FcrepoResponse;
 
+import org.apache.camel.CamelContext;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.query.QueryExecutionFactory;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
@@ -56,6 +57,7 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.MavenUrlReference;
 import org.ops4j.pax.exam.spi.reactors.ExamReactorStrategy;
 import org.ops4j.pax.exam.spi.reactors.PerClass;
+import org.ops4j.pax.exam.util.Filter;
 
 /**
  * @author apb@jhu.edu
@@ -79,6 +81,10 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
     @Inject
     public Routing routing;
 
+    @Inject
+    @Filter("(role=FcrepoServiceIndexer)")
+    public CamelContext camelContext;
+
     @Override
     public String testClassName() {
         return getClass().getSimpleName();
@@ -101,18 +107,21 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
                         .artifactId("fcrepo-api-x-karaf").versionAsInProject()
                         .classifier("features").type("xml");
 
-        return Arrays.asList(
+        final ArrayList<Option> options = new ArrayList<>(super.additionalKarafConfig());
+
+        options.addAll(Arrays.asList(
                 editConfigurationFilePut("etc/system.properties", "reindexing.dynamic.test.port", System.getProperty(
                         "reindexing.dynamic.test.port")),
                 deployFile("cfg/org.fcrepo.camel.reindexing.cfg"),
                 deployFile("cfg/org.fcrepo.camel.service.activemq.cfg"),
                 deployFile("cfg/org.fcrepo.camel.service.cfg"),
                 deployFile("cfg/org.fcrepo.apix.indexing.cfg"),
-                features(apixRepo, "fcrepo-api-x-indexing"));
+                features(apixRepo, "fcrepo-api-x-indexing")));
+
+        return options;
     }
 
     @Test
-    @Ignore
     public void simpleBindingTest() throws Exception {
         final Extension extension = newExtension(name).withScope(Scope.RESOURCE).create();
 
@@ -132,12 +141,14 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
                 .bindsTo(extension.bindingClass())
                 .create();
 
+        update();
         // Both extensions should be bound
         attempt(60, () -> assertSparqlBound(object, extension));
         attempt(60, () -> assertSparqlBound(object, extension2));
 
         // Delete the new extension
         client.delete(extension2.uri()).perform();
+        update();
 
         // Now only the first should be bound
         attempt(60, () -> assertSparqlBound(object, extension));
@@ -145,7 +156,6 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
     }
 
     @Test
-    @Ignore
     public void bindObjectTest() throws Exception {
         final Extension extension = newExtension(name).withScope(Scope.RESOURCE).create();
 
@@ -208,7 +218,6 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
     }
 
     private boolean assertSparqlNotBound(final URI object, final Extension extension) {
-        System.out.println(getAskForExtensionQuery(object, extension));
         assertFalse(QueryExecutionFactory.sparqlService(fusekiURI, getAskForExtensionQuery(object, extension))
                 .execAsk());
 
@@ -216,7 +225,6 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
     }
 
     private boolean assertSparqlBound(final URI object, final Extension extension) {
-        System.out.println(getAskForExtensionQuery(object, extension));
         assertTrue(QueryExecutionFactory.sparqlService(fusekiURI, getAskForExtensionQuery(object, extension))
                 .execAsk());
         return true;
