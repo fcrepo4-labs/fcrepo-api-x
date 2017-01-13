@@ -19,6 +19,7 @@
 package org.fcrepo.apix.indexing.impl;
 
 import static org.apache.camel.builder.PredicateBuilder.not;
+import static org.apache.camel.builder.PredicateBuilder.or;
 import static org.apache.http.entity.ContentType.parse;
 import static org.apache.jena.riot.RDFLanguages.contentTypeToLang;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_EVENT_TYPE;
@@ -60,23 +61,25 @@ import org.slf4j.LoggerFactory;
  */
 public class ServiceIndexingRoutes extends RouteBuilder {
 
-    static final String ROUTE_TRIGGER_REINDEX = "direct:reindex.trigger";
+    static final String ROUTE_TRIGGER_REINDEX = "direct:trigger-reindex";
 
-    static final String ROUTE_INDEX_SERVICE_DOC = "direct:index.services";
+    static final String ROUTE_INDEX_PREPARE = "direct:index-service-doc";
 
-    static final String ROUTE_PROCESS_MESSAGE = "direct:process_message";
+    static final String ROUTE_EVENT_PROCESOR = "direct:event-processor";
 
-    static final String ROUTE_GET_SERVICE_DOC_URI = "direct:servicedoc.uri.get";
+    static final String ROUTE_GET_SERVICE_DOC_URI = "direct:get-servicedoc-uri";
 
-    static final String ROUTE_PERFORM_INDEX = "direct:index.services.perform";
+    static final String ROUTE_PERFORM_INDEX = "direct:perform-index";
 
-    static final String ROUTE_PERFORM_DELETE = "direct:index.services.delete";
+    static final String ROUTE_PERFORM_DELETE = "direct:perform-delete";
 
-    static final String ROUTE_DELETE_SERVICE_DOC = "direct:delete.services";
+    static final String ROUTE_DELETE_SERVICE_DOC = "direct:delete-service-doc";
 
     static final String HEADER_SERVICE_DOC = "CamelApixServiceDocument";
 
-    private static final String RESOURCE_DELETION = "http://fedora.info/definitions/v4/event#ResourceDeletion";
+    private static final String FCR_DELETE = "http://fedora.info/definitions/v4/event#ResourceDeletion";
+
+    private static final String AS_DELETE = "https://www.w3.org/ns/activitystreams#Delete";
 
     private static final Logger LOG = LoggerFactory.getLogger(ServiceIndexingRoutes.class);
 
@@ -108,10 +111,10 @@ public class ServiceIndexingRoutes extends RouteBuilder {
     public void configure() throws Exception {
 
         from("{{service.index.stream}}")
-                .routeId("index-services")
-                .to(ROUTE_PROCESS_MESSAGE)
+                .routeId("from-index-stream")
+                .to(ROUTE_EVENT_PROCESOR)
 
-                // At the moment, I think this is the only way to filter out messages for "hash resources"
+                // At the moment, this seems to be the only way to filter out messages for "hash resources"
                 .filter(not(header(FCREPO_URI).contains("#")))
 
                 // If any members of an extension registry are updated, reindex all objects
@@ -120,19 +123,23 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .end()
 
                 .choice()
-                .when(header(FCREPO_EVENT_TYPE).contains(RESOURCE_DELETION))
+                .when(or(header(FCREPO_EVENT_TYPE).contains(FCR_DELETE),
+                        header(FCREPO_EVENT_TYPE).contains(AS_DELETE)))
                 .to(ROUTE_DELETE_SERVICE_DOC)
                 .otherwise()
-                .to(ROUTE_INDEX_SERVICE_DOC);
+                .to(ROUTE_INDEX_PREPARE);
 
-        from(ROUTE_PROCESS_MESSAGE).routeId("process-message")
+        // It's set up this way to make testing a little easier.
+        from(ROUTE_EVENT_PROCESOR)
+                .routeId("event-processor")
                 .process(EVENT_PROCESSOR);
 
         from("{{service.reindex.stream}}")
-                .routeId("reindex-services")
-                .to(ROUTE_INDEX_SERVICE_DOC);
+                .routeId("from-reindex-stream")
+                .to(ROUTE_INDEX_PREPARE);
 
-        from(ROUTE_GET_SERVICE_DOC_URI).routeId("get-servicedoc-uri")
+        from(ROUTE_GET_SERVICE_DOC_URI)
+                .routeId("get-servicedoc-uri")
                 .setHeader(Exchange.HTTP_METHOD, constant("HEAD"))
                 .setHeader(Exchange.HTTP_URI, header(FCREPO_URI))
                 .setHeader("Accept", constant("application/n-triples"))
@@ -145,7 +152,8 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .doFinally()
                 .process(GET_SERVICE_DOC_HEADER);
 
-        from("direct:410").id("handle-error")
+        from("direct:410")
+                .id("handle-error")
                 .choice()
                 .when(e -> e.getProperty(Exchange.EXCEPTION_CAUGHT, HttpOperationFailedException.class)
                         .getStatusCode() != 410)
@@ -153,7 +161,8 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                     throw e.getProperty(Exchange.EXCEPTION_CAUGHT, HttpOperationFailedException.class);
                 });
 
-        from(ROUTE_INDEX_SERVICE_DOC)
+        from(ROUTE_INDEX_PREPARE)
+                .routeId("prepare-for-index")
                 .to(ROUTE_GET_SERVICE_DOC_URI)
                 .split(header(HEADER_SERVICE_DOC)).to(ROUTE_PERFORM_INDEX);
 
@@ -162,14 +171,16 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .to(ROUTE_GET_SERVICE_DOC_URI)
                 .split(header(HEADER_SERVICE_DOC)).to(ROUTE_PERFORM_DELETE);
 
-        from(ROUTE_PERFORM_DELETE).routeId("perform-delete")
+        from(ROUTE_PERFORM_DELETE)
+                .routeId("perform-delete")
                 .setHeader(FCREPO_NAMED_GRAPH, bodyAs(URI.class))
                 .process(SPARQL_DELETE_PROCESSOR)
                 .log(LoggingLevel.INFO, LOG,
                         "Deleting service doc of ${headers[CamelFcrepoUri]}")
                 .to("{{triplestore.baseUrl}}");
 
-        from(ROUTE_PERFORM_INDEX).routeId("perform-index")
+        from(ROUTE_PERFORM_INDEX)
+                .routeId("perform-index")
                 .removeHeaders("CamelHttp*")
                 .setHeader(Exchange.HTTP_URI, bodyAs(URI.class))
                 .setBody(constant(null))
@@ -181,7 +192,8 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                         "Indexing service doc of ${headers[CamelFcrepoUri]}")
                 .to("{{triplestore.baseUrl}}");
 
-        from(ROUTE_TRIGGER_REINDEX).id("trigger-reindex")
+        from(ROUTE_TRIGGER_REINDEX)
+                .id("trigger-reindex")
                 .log(LoggingLevel.INFO, LOG,
                         "Triggering reindex to " + reindexStream +
                                 " due update to extension ${headers[CamelFcrepoUri]}")

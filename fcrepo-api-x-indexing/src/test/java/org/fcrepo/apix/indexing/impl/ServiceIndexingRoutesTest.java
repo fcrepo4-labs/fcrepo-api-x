@@ -18,7 +18,7 @@
 
 package org.fcrepo.apix.indexing.impl;
 
-import static org.fcrepo.apix.indexing.impl.ServiceIndexingRoutes.ROUTE_PROCESS_MESSAGE;
+import static org.fcrepo.apix.indexing.impl.ServiceIndexingRoutes.ROUTE_EVENT_PROCESOR;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_EVENT_TYPE;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_URI;
 
@@ -122,12 +122,12 @@ public class ServiceIndexingRoutesTest extends CamelBlueprintTestSupport {
         dataset.addNamedModel(SERVICE_DOC_URI, b);
 
         // Skip the event processor parsing, this test uses the final headers and NOT raw repository event json.
-        context.getRouteDefinition("index-services").adviceWith(context, new AdviceWithRouteBuilder() {
+        context.getRouteDefinition("from-index-stream").adviceWith(context, new AdviceWithRouteBuilder() {
 
             @Override
             public void configure() throws Exception {
                 replaceFromWith("direct:start");
-                interceptSendToEndpoint(ROUTE_PROCESS_MESSAGE).skipSendToOriginalEndpoint().to("log:foo");
+                interceptSendToEndpoint(ROUTE_EVENT_PROCESOR).skipSendToOriginalEndpoint().to("log:foo");
             }
         });
 
