@@ -42,6 +42,7 @@ import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.http.common.HttpOperationFailedException;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
@@ -106,19 +107,12 @@ public class ServiceIndexingRoutes extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        // onException(HttpOperationFailedException.class).onWhen(e -> e.getProperty(Exchange.EXCEPTION_CAUGHT,
-        // HttpOperationFailedException.class).getStatusCode() == 410)
-        // .to(ROUTE_DELETE_SERVICE_DOC);
-
         from("{{service.index.stream}}")
                 .routeId("index-services")
                 .to(ROUTE_PROCESS_MESSAGE)
-                .process(e -> System.out.println("CONSIDERING " + e.getIn().getHeader(FCREPO_URI)))
-                .process(ex -> System.out.println("\n\n" + ex.getIn().getHeader(FCREPO_EVENT_TYPE) + "\n\n"))
 
+                // At the moment, I think this is the only way to filter out messages for "hash resources"
                 .filter(not(header(FCREPO_URI).contains("#")))
-
-                .process(e -> System.out.println("PASSING " + e.getIn().getHeader(FCREPO_URI)))
 
                 // If any members of an extension registry are updated, reindex all objects
                 .choice().when(header(FCREPO_URI).startsWith(extensionContainer))
@@ -142,8 +136,22 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .setHeader(Exchange.HTTP_METHOD, constant("HEAD"))
                 .setHeader(Exchange.HTTP_URI, header(FCREPO_URI))
                 .setHeader("Accept", constant("application/n-triples"))
+
+                // This is annoying, no easy way around
+                .doTry()
                 .to("{{apix.baseUrl}}")
+                .doCatch(HttpOperationFailedException.class)
+                .to("direct:410")
+                .doFinally()
                 .process(GET_SERVICE_DOC_HEADER);
+
+        from("direct:410").id("handle-error")
+                .choice()
+                .when(e -> e.getProperty(Exchange.EXCEPTION_CAUGHT, HttpOperationFailedException.class)
+                        .getStatusCode() != 410)
+                .process(e -> {
+                    throw e.getProperty(Exchange.EXCEPTION_CAUGHT, HttpOperationFailedException.class);
+                });
 
         from(ROUTE_INDEX_SERVICE_DOC)
                 .to(ROUTE_GET_SERVICE_DOC_URI)
@@ -164,12 +172,10 @@ public class ServiceIndexingRoutes extends RouteBuilder {
         from(ROUTE_PERFORM_INDEX).routeId("perform-index")
                 .removeHeaders("CamelHttp*")
                 .setHeader(Exchange.HTTP_URI, bodyAs(URI.class))
-                .process(e -> System.out.println("FETCH " + e.getIn().getHeader(Exchange.HTTP_URI)))
                 .setBody(constant(null))
                 .to("http://localhost")
                 .setHeader(FCREPO_NAMED_GRAPH, header(Exchange.HTTP_URI))
                 .removeHeaders("CamelHttp*")
-                .process(e -> System.out.println("GOT SERVICE DOC"))
                 .process(SPARQL_UPDATE_PROCESSOR)
                 .log(LoggingLevel.INFO, LOG,
                         "Indexing service doc of ${headers[CamelFcrepoUri]}")
@@ -204,7 +210,6 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .filter(l -> l.getRel().equals("service"))
                 .map(l -> l.getUri()).collect(Collectors.toList());
 
-        System.out.println("SERVICE DOC " + services);
         ex.getIn().setHeader(HEADER_SERVICE_DOC, services);
     };
 
@@ -221,8 +226,6 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
         ex.getIn().setBody(deleteGraph(graph) + ";\n" +
                 insertGraph(serializedGraph.toString("utf8"), graph));
-
-        System.out.println("SPARQL: " + ex.getIn().getBody(String.class));
 
         ex.getIn().setHeader(Exchange.HTTP_METHOD, "POST");
         ex.getIn().setHeader("Content-Type", "application/sparql-update");
