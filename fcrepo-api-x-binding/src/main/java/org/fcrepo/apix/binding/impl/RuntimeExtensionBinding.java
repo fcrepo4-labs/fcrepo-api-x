@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.WebResource;
@@ -34,6 +35,7 @@ import org.fcrepo.apix.model.components.ExtensionBinding;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.OntologyService;
 import org.fcrepo.apix.model.components.Registry;
+import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.client.FcrepoClient;
 import org.fcrepo.client.FcrepoResponse;
 
@@ -127,7 +129,7 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
             final byte[] content = IOUtils.toByteArray(resourceContent);
 
             final Set<URI> rdfTypes = extensions.stream()
-                    .map(Extension::getResource)
+                    .flatMap(RuntimeExtensionBinding::getExtensionResource)
                     .peek(r -> LOG.debug("Examinining the ontology closure of extension {}", r.uri()))
                     .map(ontologySvc::parseOntology)
                     .flatMap(o -> ontologySvc.inferClasses(resource.uri(), cached(resource, content), o).stream())
@@ -142,6 +144,15 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
                     .collect(Collectors.toList());
         } catch (final IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static Stream<WebResource> getExtensionResource(final Extension e) {
+
+        try {
+            return Stream.of(e.getResource());
+        } catch (final ResourceNotFoundException x) {
+            return Stream.empty();
         }
     }
 
