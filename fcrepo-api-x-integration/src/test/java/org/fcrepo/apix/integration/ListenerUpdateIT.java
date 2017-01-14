@@ -114,20 +114,21 @@ public class ListenerUpdateIT implements KarafIT {
             }
         }, new Hashtable<>());
 
-        assertTrue(attempt(3, () -> {
+        attempt(3, () -> {
 
             final URI OBJECT = client.post(objectContainer).perform().getLocation();
 
             URI uri;
-            while ((uri = objects.poll(30, TimeUnit.SECONDS)) != null) {
+            while ((uri = objects.poll(10, TimeUnit.SECONDS)) != null) {
 
                 // Skip over objects in the queue we don't care about
                 if (OBJECT.equals(uri)) {
                     break;
                 }
             }
-            return (OBJECT.equals(uri));
-        }));
+            assertTrue(OBJECT.equals(uri));
+            return true;
+        });
 
     }
 
