@@ -20,15 +20,25 @@
   <reference id="broker" interface="org.apache.camel.Component"
     filter="(osgi.jndi.service.name=fcrepo/Broker)" />
 
+  <reference id="routing" interface="org.fcrepo.apix.model.components.Routing" />
+
   <reference-list id="toUpdate" member-type="service-object"
     interface="org.fcrepo.apix.model.components.Updateable"
     availability="optional" />
 
   <bean id="updaterRoutes" class="org.fcrepo.apix.listener.impl.UpdateListener">
     <property name="toUpdate" ref="toUpdate" />
+    <property name="routing" ref="routing" />
   </bean>
 
   <camel:camelContext id="apix-listener">
     <camel:routeBuilder ref="updaterRoutes" />
   </camel:camelContext>
+
+  <!-- For integration testing -->
+  <service interface="org.apache.camel.CamelContext" ref="apix-listener">
+    <service-properties>
+      <entry key="role" value="apix-listener" />
+    </service-properties>
+  </service>
 </blueprint>

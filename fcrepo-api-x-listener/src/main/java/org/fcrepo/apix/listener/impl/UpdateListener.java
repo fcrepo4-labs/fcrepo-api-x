@@ -18,16 +18,18 @@
 
 package org.fcrepo.apix.listener.impl;
 
+import static org.apache.camel.builder.PredicateBuilder.not;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_RESOURCE_TYPE;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_URI;
 
 import java.net.URI;
 import java.util.List;
 
+import org.fcrepo.apix.model.components.Routing;
 import org.fcrepo.apix.model.components.Updateable;
 import org.fcrepo.camel.processor.EventProcessor;
 
-import org.apache.camel.LoggingLevel;
+import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +47,8 @@ public class UpdateListener extends RouteBuilder {
 
     private static final String TYPE_REPOSITORY_RESOURCE = "http://fedora.info/definitions/v4/repository#Resource";
 
+    private Routing routing;
+
     /**
      * Set the list of services to update
      *
@@ -54,13 +58,26 @@ public class UpdateListener extends RouteBuilder {
         this.toUpdate = list;
     }
 
+    /**
+     * Set the routing service.
+     *
+     * @param routing Routing impl.
+     */
+    public void setRouting(final Routing routing) {
+        this.routing = routing;
+    }
+
     @Override
     public void configure() throws Exception {
 
         from("{{input.uri}}").id("listener-update-apix")
                 .process(new EventProcessor())
-                .choice().when(header(FCREPO_RESOURCE_TYPE).contains(TYPE_REPOSITORY_RESOURCE))
-                .log(LoggingLevel.DEBUG, LOG, "Updating due to ${headers[" + FCREPO_URI + "]}")
+
+                // At the moment, this seems to be the only way to filter out messages for "hash resources"
+                .filter(not(header(FCREPO_URI).contains("#")))
+                .filter(header(FCREPO_RESOURCE_TYPE).contains(TYPE_REPOSITORY_RESOURCE))
+
+                .process(USE_FCREPO_URIS)
                 .process(e -> toUpdate.forEach(u -> {
                     try {
                         u.update(URI.create(e.getIn().getHeader(FCREPO_URI, String.class)));
@@ -69,4 +86,9 @@ public class UpdateListener extends RouteBuilder {
                     }
                 }));
     }
+
+    private final Processor USE_FCREPO_URIS = ex -> {
+        ex.getIn().setHeader(FCREPO_URI,
+                routing.nonProxyURIFor(URI.create(ex.getIn().getHeader(FCREPO_URI, String.class))));
+    };
 }
