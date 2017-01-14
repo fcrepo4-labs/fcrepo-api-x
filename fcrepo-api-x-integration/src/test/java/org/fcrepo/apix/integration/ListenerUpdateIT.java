@@ -36,6 +36,7 @@ import javax.inject.Inject;
 
 import org.fcrepo.apix.model.components.Updateable;
 
+import org.apache.camel.CamelContext;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,6 +45,7 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.MavenUrlReference;
+import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -59,6 +61,11 @@ public class ListenerUpdateIT implements KarafIT {
 
     @Rule
     public TestName name;
+
+    // Make sure the test doesn't start before the listener context has started.
+    @Inject
+    @Filter("(role=apix-listener)")
+    CamelContext camelContext;
 
     @Override
     public String testClassName() {
@@ -108,7 +115,9 @@ public class ListenerUpdateIT implements KarafIT {
         }, new Hashtable<>());
 
         assertTrue(attempt(3, () -> {
+
             final URI OBJECT = client.post(objectContainer).perform().getLocation();
+
             URI uri;
             while ((uri = objects.poll(30, TimeUnit.SECONDS)) != null) {
 
