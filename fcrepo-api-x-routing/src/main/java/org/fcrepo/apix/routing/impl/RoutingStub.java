@@ -137,20 +137,37 @@ public class RoutingStub implements Routing {
     @Override
     public String resourcePath(final URI resourceURI) {
 
-        if (!resourceURI.toString().startsWith(fcrepoBaseURI.toString())) {
-            throw new ResourceNotFoundException(String.format("Resource URI %s is not prefixed by base URI %s",
-                    resourceURI,
-                    fcrepoBaseURI));
+        final String r = resourceURI.toString();
+
+        if (r.startsWith(fcrepoBaseURI.toString())) {
+            return "/" + fcrepoBaseURI.relativize(resourceURI).getPath();
         }
-        return "/" + fcrepoBaseURI.relativize(resourceURI).getPath();
+
+        final URI interceptBase = append(baseURI(), interceptPath);
+
+        if (r.startsWith(interceptBase.toString())) {
+            return "/" + interceptBase.relativize(resourceURI).getPath();
+        } else {
+            throw new ResourceNotFoundException(String.format(
+                    "%s is not in the repository or intercept domain (%s, %s)", r, fcrepoBaseURI, interceptBase));
+        }
+
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public URI interceptUriFor(final URI resource) {
+        if (resource.getPath().startsWith(interceptPath.toString())) {
+            return resource;
+        }
         return append(baseURI(), interceptPath, resourcePath(resource));
+    }
+
+    @Override
+    public URI nonProxyURIFor(final URI resource) {
+        if (resource.getPath().startsWith(fcrepoBaseURI.toString())) {
+            return resource;
+        }
+        return append(fcrepoBaseURI, resourcePath(resource));
     }
 
     URI baseURI() {
