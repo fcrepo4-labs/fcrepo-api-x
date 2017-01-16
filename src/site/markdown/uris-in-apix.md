@@ -90,7 +90,7 @@ Server: Jetty(9.2.3.v20140905)
 
 Differences between fedora vs API-X requests or responses are highlighted in bold.  Notable characteristics are:
 
-* API-X has added a link header in the response, linking to a document describing services exposed by API-X on the object (see [Service Discovery and Binding]).
+* API-X has added a link header in the response, linking to a document describing services exposed by API-X on the object (see [Service Discovery and Binding](https://github.com/fcrepo4-labs/fcrepo-api-x/blob/master/src/site/markdown/service-discovery-and-binding.md) ).
 * All links to repository resources in the header or body of the response are prefixed with the API-X repository base URI.  There are no links directly to the Fedora instance proxied by API-X.
 * Syntactically, relative URIs do not change at all<sup><a href="#sup3">3</a></sup>. In this example, the only relative URI is the null relative URI (`<>`).
 
