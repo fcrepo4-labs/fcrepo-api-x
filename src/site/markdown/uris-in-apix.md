@@ -145,7 +145,7 @@ The [example](#exposing-example) shows an OAI-PMH provider as an example of such
 
 In extension definitions, an external service is indicated by specifying an absolute _path segment_ for [`apix:exposesServiceAtURI`][2].
 
-Because API-X mediates interactions with repository scoped services services (i.e. there is an execution engine that routes a request to and from an implementing service), API-X must expose a URI for such service.  In order to be routable by API-X, this URI must convey:
+Because API-X mediates interactions with repository scoped services (i.e. there is an execution engine that routes a request to and from an implementing service), API-X must expose a URI for such service.  In order to be routable by API-X, this URI must convey:
 
 *  The identity of service (correlated with the path segment defined by `apix:exposesServiceAtURI`)
 *  Additional query parameters, path elements, or fragments specific to service 
