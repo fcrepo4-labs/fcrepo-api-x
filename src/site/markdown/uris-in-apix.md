@@ -200,5 +200,5 @@ While multi-tenancy is not a use case or explicit goal of API-X, there is nothin
 [1]: ./apix-design-overview.md "API-X Design Overview"
 [2]: ./extension-definition-and-binding.md#apixexposesserviceaturi "API-X Extension Definition and Binding - apix:exposesServiceAtURI"
 [3]: ./execution-and-routing.md#execution-engines "API-X Execution & Routing"
-[4]: https://docs.google.com/document/d/1fQOUJE0-QjlbGhDRs1fknj-rDuUeAZ9kVSxg9ETdn_I/edit "Fedora Specification - Fedora Messaging SPI"
+[4]: https://fcrepo.github.io/fcrepo-specification/#messaging-spi "Fedora Specification - Fedora Messaging SPI"
 [5]: ./service-discovery-and-binding.md "API-X Service Discovery & Binding"
