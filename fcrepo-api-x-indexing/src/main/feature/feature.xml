@@ -6,7 +6,7 @@
   <repository>mvn:org.fcrepo.camel/toolbox-features/${fcrepo-toolbox.version}/xml/features</repository>
   <feature name="fcrepo-api-x-indexing" description="fcrepo-api-x-indexing">
     version="${project.version}">
-    <feature version="${camel.version}">camel-core</feature>
+    <feature version="${activemq.version}">activemq-camel</feature>
     <feature version="${camel.version}">camel-http4</feature>
     <feature version="${fcrepo-toolbox.version}">fcrepo-reindexing</feature>
     <feature version="${fcrepo-toolbox.version}">fcrepo-service-activemq</feature>

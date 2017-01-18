@@ -13,7 +13,7 @@
   <cm:property-placeholder persistent-id="org.fcrepo.apix.routing"
     update-strategy="reload">
     <cm:default-properties>
-      <cm:property name="apix.host" value="127.0.0.1" />
+      <cm:property name="apix.host" value="localhost" />
       <cm:property name="apix.port" value="8081" />
       <cm:property name="apix.listen.host" value="0.0.0.0" />
       <cm:property name="apix.discoveryPath" value="discovery" />

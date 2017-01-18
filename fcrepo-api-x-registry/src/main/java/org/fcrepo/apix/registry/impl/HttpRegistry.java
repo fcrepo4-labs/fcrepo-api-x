@@ -20,6 +20,7 @@ package org.fcrepo.apix.registry.impl;
 
 import static org.apache.http.HttpHeaders.ACCEPT;
 import static org.apache.http.HttpHeaders.CONTENT_TYPE;
+import static org.apache.http.HttpStatus.SC_GONE;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.osgi.service.component.annotations.ConfigurationPolicy.REQUIRE;
@@ -119,10 +120,11 @@ public class HttpRegistry implements Registry {
             throw new RuntimeException(e);
         }
 
-        if (response.getStatusLine().getStatusCode() != SC_OK) {
+        final int code = response.getStatusLine().getStatusCode();
+        if (code != SC_OK) {
             try {
-                if (response.getStatusLine().getStatusCode() == SC_NOT_FOUND) {
-                    throw new ResourceNotFoundException("404 not found: " + request.getURI());
+                if (code == SC_NOT_FOUND || code == SC_GONE) {
+                    throw new ResourceNotFoundException("HTTP " + code + ": " + request.getURI());
                 }
 
                 try {

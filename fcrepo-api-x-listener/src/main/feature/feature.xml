@@ -1,10 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <features xmlns="http://karaf.apache.org/xmlns/features/v1.4.0"
   name="fcrepo-api-x-listener">
-  <repository>mvn:org.apache.activemq/activemq-karaf/${activemq.version}/xml/features</repository>
+    <repository>mvn:org.apache.activemq/activemq-karaf/${activemq.version}/xml/features</repository>
+    <repository>mvn:org.fcrepo.camel/toolbox-features/${fcrepo-toolbox.version}/xml/features</repository>
+    <repository>mvn:org.fcrepo.camel/fcrepo-camel/${fcrepo-camel.version}/xml/features</repository>
   <feature name="fcrepo-api-x-listener" description="fcrepo-api-x-listener">
     version="${project.version}">
-    <feature version="${camel.version}">camel-jms</feature>
-    <feature version="${activemq.version}">activemq-client</feature>
+    <feature version="${activemq.version}">activemq-camel</feature>
+    <feature version="${fcrepo-toolbox.version}">fcrepo-service-activemq</feature>
+    <feature version="${fcrepo-camel.version}">fcrepo-camel</feature>
   </feature>
 </features>

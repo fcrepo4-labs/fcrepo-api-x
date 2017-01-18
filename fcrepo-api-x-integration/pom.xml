@@ -47,6 +47,7 @@
             <loader.dynamic.test.port>${loader.dynamic.test.port}</loader.dynamic.test.port>
             <project.basedir>${project.basedir}</project.basedir>
             <services.dynamic.test.port>${services.dynamic.test.port}</services.dynamic.test.port>
+            <reindexing.dynamic.test.port>${reindexing.dynamic.test.port}</reindexing.dynamic.test.port>
           </systemPropertyVariables>
         </configuration>
       </plugin>
@@ -77,6 +78,7 @@
             <portName>loader.dynamic.test.port</portName>
             <portName>fcrepo.dynamic.jms.port</portName>
             <portName>fcrepo.dynamic.stomp.port</portName>
+            <portName>reindexing.dynamic.test.port</portName>
           </portNames>
         </configuration>
         <executions>
@@ -100,7 +102,10 @@
             <containerId>jetty9x</containerId>
             <type>installed</type>
             <systemProperties>
+              <fcrepo.jms.baseUrl>http://localhost:${apix.dynamic.test.port}/${fcrepo.cxtPath}/rest</fcrepo.jms.baseUrl>
               <fcrepo.home>${project.build.directory}/fcrepo</fcrepo.home>
+              <FUSEKI_HOME>${project.build.directory}/fuseki</FUSEKI_HOME>
+              <FUSEKI_BASE>${project.build.directory}/fuseki</FUSEKI_BASE>
               <fcrepo.modeshape.configuration>classpath:/config/file-simple/repository.json</fcrepo.modeshape.configuration>
               <fcrepo.dynamic.jms.port>${fcrepo.dynamic.jms.port}</fcrepo.dynamic.jms.port>
               <fcrepo.dynamic.stomp.port>${fcrepo.dynamic.stomp.port}</fcrepo.dynamic.stomp.port>
@@ -115,6 +120,14 @@
                 <context>${fcrepo.cxtPath}</context>
               </properties>
             </deployable>
+            <dependency>
+              <groupId>org.apache.jena</groupId>
+              <artifactId>jena-fuseki-war</artifactId>
+              <type>war</type>
+              <properties>
+                <context>fuseki</context>
+              </properties>
+            </dependency>
           </deployables>
           <configuration>
             <properties>
@@ -147,6 +160,11 @@
       <testResource>
         <directory>src/test/resources/cfg</directory>
         <targetPath>cfg</targetPath>
+        <filtering>true</filtering>
+      </testResource>
+      <testResource>
+        <directory>src/test/resources/fuseki</directory>
+        <targetPath>${project.build.directory}/fuseki</targetPath>
         <filtering>true</filtering>
       </testResource>
     </testResources>
@@ -215,6 +233,11 @@
       <groupId>org.jsoup</groupId>
       <artifactId>jsoup</artifactId>
       <version>1.9.2</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-osgi</artifactId>
     </dependency>
 
     <!-- For running a karaf container via pax exam -->
@@ -306,6 +329,14 @@
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
+    </dependency>
+
+    <dependency>
+      <groupId>org.apache.jena</groupId>
+      <artifactId>jena-fuseki-war</artifactId>
+      <version>2.4.1</version>
+      <type>war</type>
+      <scope>test</scope>
     </dependency>
 
     <!-- test logging -->

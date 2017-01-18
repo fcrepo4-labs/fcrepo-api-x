@@ -36,6 +36,7 @@ import javax.inject.Inject;
 
 import org.fcrepo.apix.model.components.Updateable;
 
+import org.apache.camel.CamelContext;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,6 +45,7 @@ import org.junit.runner.RunWith;
 import org.ops4j.pax.exam.Option;
 import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.MavenUrlReference;
+import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.BundleContext;
 
 /**
@@ -59,6 +61,11 @@ public class ListenerUpdateIT implements KarafIT {
 
     @Rule
     public TestName name;
+
+    // Make sure the test doesn't start before the listener context has started.
+    @Inject
+    @Filter("(role=apix-listener)")
+    CamelContext camelContext;
 
     @Override
     public String testClassName() {
@@ -83,7 +90,8 @@ public class ListenerUpdateIT implements KarafIT {
                         .classifier("features").type("xml");
 
         return Arrays.asList(
-                features(apixRepo, "fcrepo-api-x-listener"));
+                features(apixRepo, "fcrepo-api-x-listener"),
+                deployFile("cfg/org.fcrepo.camel.service.activemq.cfg"));
     }
 
     // Verify that we can add an Updateable service,
@@ -106,18 +114,21 @@ public class ListenerUpdateIT implements KarafIT {
             }
         }, new Hashtable<>());
 
-        assertTrue(attempt(3, () -> {
+        attempt(3, () -> {
+
             final URI OBJECT = client.post(objectContainer).perform().getLocation();
+
             URI uri;
-            while ((uri = objects.poll(30, TimeUnit.SECONDS)) != null) {
+            while ((uri = objects.poll(10, TimeUnit.SECONDS)) != null) {
 
                 // Skip over objects in the queue we don't care about
-                if (uri.equals(OBJECT)) {
+                if (OBJECT.equals(uri)) {
                     break;
                 }
             }
-            return uri.equals(OBJECT);
-        }));
+            assertTrue(OBJECT.equals(uri));
+            return true;
+        });
 
     }
 

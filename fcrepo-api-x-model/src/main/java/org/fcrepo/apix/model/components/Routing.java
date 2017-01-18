@@ -82,12 +82,21 @@ public interface Routing {
     public URI serviceDocFor(String resourcePath);
 
     /**
-     * Get the intercept (proxy) URI for a given resource.
+     * Get the intercept (proxy) URI for a given resource. If it already is a proxy URI, return it unmodified
      *
      * @param resource Fedora resource URI
      * @return URI that routes through the intercept(proxy) endpoint.
      */
     public URI interceptUriFor(URI resource);
+
+    /**
+     * Get the non-intercept (non-proxy) URI for the given resource. If the URI already is a non-intercept URI, return
+     * it unmodified.
+     *
+     * @param resource Possibly proxied resource URI
+     * @return URI that does not route through the intercept (proxy) endpoint.
+     */
+    public URI nonProxyURIFor(URI resource);
 
     /**
      * Get the identifying path compoment for the given fedora resource URI.

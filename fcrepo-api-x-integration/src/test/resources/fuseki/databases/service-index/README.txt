@@ -1,0 +1,1 @@
+This is the fuseki data directory for testing

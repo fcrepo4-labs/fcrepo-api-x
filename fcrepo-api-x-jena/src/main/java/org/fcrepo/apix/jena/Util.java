@@ -292,13 +292,14 @@ public abstract class Util {
     }
 
     /**
-     * Create an N-triples resource.
+     * Create an turtle resource from a text stream.
      *
      * @param uri URI of the resource
-     * @param rdf String containing n-triples.
+     * @param rdf String containing n-triples or turtle.
+     * @param name desired resource name;
      * @return web resource containing the given serialization.
      */
-    public static WebResource rdfResource(final String uri, final String rdf) {
+    public static WebResource rdfResource(final String uri, final String rdf, final String name) {
 
         return new WebResource() {
 
@@ -309,7 +310,7 @@ public abstract class Util {
 
             @Override
             public URI uri() {
-                return URI.create(uri);
+                return uri != null ? URI.create(uri) : null;
             }
 
             @Override
@@ -319,13 +320,24 @@ public abstract class Util {
 
             @Override
             public String name() {
-                return null;
+                return name;
             }
 
             @Override
             public String contentType() {
-                return "application/n-triples";
+                return "text/turtle";
             }
         };
+    }
+
+    /**
+     * Create an turtle resource from a text stream.
+     *
+     * @param uri URI of the resource
+     * @param rdf String containing n-triples or turtle.
+     * @return web resource containing the given serialization.
+     */
+    public static WebResource rdfResource(final String uri, final String rdf) {
+        return rdfResource(uri, rdf, null);
     }
 }

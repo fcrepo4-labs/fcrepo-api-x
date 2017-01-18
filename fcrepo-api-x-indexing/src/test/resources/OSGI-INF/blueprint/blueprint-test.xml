@@ -36,9 +36,6 @@
   <bean id="http" class="org.apache.camel.component.http4.HttpComponent" />
   <bean id="https" class="org.apache.camel.component.http4.HttpComponent" />
 
-  <reference id="broker" interface="org.apache.camel.Component"
-    filter="(osgi.jndi.service.name=fcrepo/Broker)" />
-
   <camelContext id="FcrepoServiceIndexer"
     xmlns="http://camel.apache.org/schema/blueprint">
     <routeBuilder ref="indexerRoutes" />
