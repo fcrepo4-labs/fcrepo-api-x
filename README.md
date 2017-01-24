@@ -19,7 +19,7 @@ API-X is distributed as OSGi bundles and provides Karaf feature descriptors, mak
 ### Manual installation in Karaf
 To do this, first, add the `fcrepo-api-x-karaf` repository in the Karaf console:
 
-    $ feature:repo-add mvn:org.fcrepo.apix/fcrepo-apix-karaf/LATEST/xml/features
+    $ feature:repo-add mvn:org.fcrepo.apix/fcrepo-api-x-karaf/LATEST/xml/features
 
 Then, run
 
