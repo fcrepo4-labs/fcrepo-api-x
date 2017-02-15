@@ -16,7 +16,7 @@
       <cm:property name="loader.host" value="0.0.0.0" />
       <cm:property name="loader.port" value="32080" />
       <cm:property name="extension.load" value="true" />
-      <cm:property name="extension.load.maximumRediveries"
+      <cm:property name="extension.load.maximumRedeliveries"
         value="60" />
       <cm:property name="useInterceptURIs" value="true" />
     </cm:default-properties>
@@ -55,7 +55,7 @@
       <from uri="timer:register?repeatCount=1&amp;delay=10000" />
       <onException>
         <exception>java.lang.Exception</exception>
-        <redeliveryPolicy maximumRedeliveries="{{extension.load.maximumRediveries}}"
+        <redeliveryPolicy maximumRedeliveries="{{extension.load.maximumRedeliveries}}"
           logRetryAttempted="true" retryAttemptedLogLevel="INFO" />
       </onException>
       <setHeader headerName="Content-Type">
