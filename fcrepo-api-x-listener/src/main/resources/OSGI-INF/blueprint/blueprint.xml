@@ -20,7 +20,7 @@
   <reference id="broker" interface="org.apache.camel.Component"
     filter="(osgi.jndi.service.name=fcrepo/Broker)" />
 
-  <reference id="routing" interface="org.fcrepo.apix.model.components.Routing" />
+  <reference id="routing" interface="org.fcrepo.apix.model.components.RoutingFactory" />
 
   <reference-list id="toUpdate" member-type="service-object"
     interface="org.fcrepo.apix.model.components.Updateable"
