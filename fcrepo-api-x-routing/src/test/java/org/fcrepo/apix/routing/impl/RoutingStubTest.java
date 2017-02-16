@@ -34,6 +34,7 @@ public class RoutingStubTest {
 
     @Before
     public void setUp() {
+        toTest.setScheme("http");
         toTest.setHost("www.example.org");
         toTest.setPort(8080);
         toTest.setInterceptPath("/intercept/path");
@@ -48,10 +49,10 @@ public class RoutingStubTest {
     public void testBaseUriPortPresence() {
 
         toTest.setPort(80);
-        assertEquals("http://www.example.org/", toTest.baseURI().toString());
+        assertEquals("http://www.example.org/", toTest.exposedBaseURI().toString());
 
         toTest.setPort(8080);
-        assertEquals("http://www.example.org:8080/", toTest.baseURI().toString());
+        assertEquals("http://www.example.org:8080/", toTest.exposedBaseURI().toString());
     }
 
     @Test

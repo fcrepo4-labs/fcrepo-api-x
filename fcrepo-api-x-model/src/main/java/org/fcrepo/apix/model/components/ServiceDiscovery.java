@@ -33,9 +33,10 @@ public interface ServiceDiscovery {
      * Produce a service document for the given resource
      *
      * @param resource A repository resource URI
+     * @param routing the {@code Routing} for the repository {@code resource}
      * @param contentType Desired media types, or null if any serialization is acceptable.
      * @return Serialized service document
      */
-    WebResource getServiceDocumentFor(URI resource, String... contentType);
+    WebResource getServiceDocumentFor(URI resource, Routing routing, String... contentType);
 
 }

@@ -69,8 +69,6 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
 
     private ExtensionBinding extensionBinding;
 
-    private Routing routing;
-
     private boolean useRelativeURIs = false;
 
     private boolean useInterceptedURIs = false;
@@ -83,16 +81,6 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
     @Reference
     public void setExtensionBinding(final ExtensionBinding binding) {
         this.extensionBinding = binding;
-    }
-
-    /**
-     * Set the routing component.
-     *
-     * @param routing The routing component.
-     */
-    @Reference
-    public void setRouting(final Routing routing) {
-        this.routing = routing;
     }
 
     /**
@@ -114,10 +102,10 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
     }
 
     @Override
-    public WebResource getServiceDocumentFor(final URI resource, final String... contentType) {
+    public WebResource getServiceDocumentFor(final URI resource, final Routing routing, final String... contentType) {
 
         try {
-            final ServiceDocumentImpl doc = new ServiceDocumentImpl(resource, pickMediaType(contentType));
+            final ServiceDocumentImpl doc = new ServiceDocumentImpl(resource, pickMediaType(contentType), routing);
 
             extensionBinding.getExtensionsFor(resource).stream()
                     .filter(Extension::isExposing)
@@ -144,11 +132,14 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
 
         final String base;
 
-        ServiceDocumentImpl(final URI uri, final Lang rdfLang) {
+        final Routing routing;
+
+        ServiceDocumentImpl(final URI uri, final Lang rdfLang, final Routing routing) {
             this.resourceURI = uri.toString();
             this.proxyURI = useInterceptedURIs ? routing.interceptUriFor(uri).toString() : uri.toString();
             this.lang = rdfLang;
             this.base = useRelativeURIs ? "" : routing.serviceDocFor(uri).toString();
+            this.routing = routing;
             self = doc.getResource(base);
 
             services = doc.createResource(base + "#services");
@@ -159,6 +150,7 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
         }
 
         private void expose(final ServiceExposureSpec spec) {
+            final URI uri = URI.create(resourceURI);
             final Resource serviceInstance = doc.createResource(base + "#" + UUID.randomUUID().toString());
             services.addProperty(doc.getProperty(ORE_AGGREGATES), serviceInstance);
 
@@ -170,7 +162,7 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
                     doc.getResource(spec.exposedService().toString()));
 
             serviceInstance.addProperty(doc.getProperty(PROP_HAS_ENDPOINT),
-                    doc.getResource(routing.endpointFor(spec, URI.create(resourceURI)).toString()));
+                    doc.getResource(routing.endpointFor(spec, uri).toString()));
 
             if (RESOURCE.equals(spec.scope())) {
                 serviceInstance.addProperty(doc.getProperty(PROP_IS_FUNCTION_OF),
@@ -209,8 +201,8 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
             writer.setProperty("allowBadURIs", "true");
 
             if (useRelativeURIs && Lang.NTRIPLES.equals(lang)) {
-
-                final String serviceDocURI = routing.serviceDocFor(URI.create(resourceURI)).toString();
+                final URI uri = URI.create(resourceURI);
+                final String serviceDocURI = routing.serviceDocFor(uri).toString();
 
                 doc.listSubjects()
                         .andThen(
