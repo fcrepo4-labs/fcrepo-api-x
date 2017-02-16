@@ -70,6 +70,13 @@
       <plugin>
         <groupId>org.codehaus.mojo</groupId>
         <artifactId>build-helper-maven-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>reserve-port</id>
+            <phase>pre-integration-test</phase>
+            <goals>
+              <goal>reserve-network-port</goal>
+            </goals>
         <configuration>
           <portNames>
             <portName>apix.dynamic.test.port</portName>
@@ -81,13 +88,6 @@
             <portName>reindexing.dynamic.test.port</portName>
           </portNames>
         </configuration>
-        <executions>
-          <execution>
-            <id>reserve-port</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>reserve-network-port</goal>
-            </goals>
           </execution>
         </executions>
       </plugin>
