@@ -15,8 +15,6 @@
 
     <cm:default-properties>
       <cm:property name="error.maxRedeliveries" value="10" />
-      <cm:property name="apix.baseUrl"
-        value="http://localhost:8080/fcrepo/rest?throwExceptionOnFailure=false" />
       <cm:property name="service.index.stream" value="broker:topic:fedora" />
       <cm:property name="service.reindex.stream" value="broker:queue:service.reindex" />
       <cm:property name="triplestore.baseUrl"
