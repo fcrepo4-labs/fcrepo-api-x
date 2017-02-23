@@ -146,7 +146,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
                 // This is annoying, no easy way around
                 .doTry()
-                .to("{{apix.baseUrl}}")
+                .to("http://get-servicedoc-uri")
                 .doCatch(HttpOperationFailedException.class)
                 .to("direct:410")
                 .doFinally()
@@ -184,7 +184,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .removeHeaders("CamelHttp*")
                 .setHeader(Exchange.HTTP_URI, bodyAs(URI.class))
                 .setBody(constant(null))
-                .to("http://localhost")
+                .to("http://perform-index")
                 .setHeader(FCREPO_NAMED_GRAPH, header(Exchange.HTTP_URI))
                 .removeHeaders("CamelHttp*")
                 .process(SPARQL_UPDATE_PROCESSOR)

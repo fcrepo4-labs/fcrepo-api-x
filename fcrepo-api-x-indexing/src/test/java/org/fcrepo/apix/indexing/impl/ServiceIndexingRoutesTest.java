@@ -100,7 +100,6 @@ public class ServiceIndexingRoutesTest extends CamelBlueprintTestSupport {
     protected String setConfigAdminInitialConfiguration(final Properties props) {
         props.put("service.index.stream", "direct:test_index");
         props.put("service.reindex.stream", REINDEX_STREAM);
-        props.put("apix.baseUrl", "direct:apix-head");
         props.put("reindexing.service.uri", "mock:reindex");
         props.put("triplestore.baseUrl", "mock:triplestore");
         props.put("ldp.path.extension.container", EXTENSION_BASEURI);
@@ -120,6 +119,15 @@ public class ServiceIndexingRoutesTest extends CamelBlueprintTestSupport {
 
         dataset.addNamedModel("test:unaffected", a);
         dataset.addNamedModel(SERVICE_DOC_URI, b);
+    }
+
+    /**
+     * Advise routes before the camel context starts
+     * @throws Exception
+     */
+    @Override
+    public void doPostSetup() throws Exception {
+        super.doPostSetup();
 
         // Skip the event processor parsing, this test uses the final headers and NOT raw repository event json.
         context.getRouteDefinition("from-index-stream").adviceWith(context, new AdviceWithRouteBuilder() {
@@ -137,11 +145,19 @@ public class ServiceIndexingRoutesTest extends CamelBlueprintTestSupport {
 
             @Override
             public void configure() throws Exception {
-                interceptSendToEndpoint("http://localhost").skipSendToOriginalEndpoint().process(ex -> {
+                interceptSendToEndpoint("http://perform-index").skipSendToOriginalEndpoint().process(ex -> {
                     assertEquals(URI.create(SERVICE_DOC_URI), ex.getIn().getHeader(Exchange.HTTP_URI));
                     ex.getIn().setBody(serviceDocumentBody);
                     ex.getIn().setHeader("Content-Type", "text/turtle");
                 }).to("log:foo");
+            }
+        });
+
+        context.getRouteDefinition("get-servicedoc-uri").adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                interceptSendToEndpoint("http://get-servicedoc-uri")
+                        .skipSendToOriginalEndpoint().to("direct:apix-head");
             }
         });
 

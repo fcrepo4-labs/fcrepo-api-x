@@ -50,7 +50,7 @@ import javax.inject.Inject;
 import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.Registry;
-import org.fcrepo.apix.model.components.Routing;
+import org.fcrepo.apix.model.components.RoutingFactory;
 import org.fcrepo.apix.model.components.ServiceRegistry;
 import org.fcrepo.client.FcrepoResponse;
 
@@ -89,6 +89,8 @@ public class LoaderIT extends ServiceBasedTest {
 
     final URI SERVICE_ONT = URI.create("http://example.org/LoaderIT/ont");
 
+    final URI REQUEST_URI = URI.create(apixBaseURI);
+
     final AtomicReference<Object> optionsResponse = new AtomicReference<>();
 
     final AtomicReference<Object> serviceResponse = new AtomicReference<>();
@@ -114,7 +116,7 @@ public class LoaderIT extends ServiceBasedTest {
     }
 
     @Inject
-    Routing routing;
+    RoutingFactory routing;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -179,7 +181,7 @@ public class LoaderIT extends ServiceBasedTest {
         // Verify that extension works!
 
         // Get the intercept/proxy URI for a fedora container
-        final URI container = routing.interceptUriFor(objectContainer);
+        final URI container = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         // Deposit an object into the container
         final URI deposited = client.post(container).slug("LoaderIT_htmlMinimalTest")
@@ -211,7 +213,7 @@ public class LoaderIT extends ServiceBasedTest {
         // Verify that extension works!
 
         // Get the intercept/proxy URI for a fedora container
-        final URI container = routing.interceptUriFor(objectContainer);
+        final URI container = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         // Deposit an object into the container
         final URI deposited = client.post(container).slug("LoaderIT_definedServiceTest")
@@ -246,7 +248,7 @@ public class LoaderIT extends ServiceBasedTest {
         // Verify that extension works!
 
         // Get the intercept/proxy URI for a fedora container
-        final URI container = routing.interceptUriFor(objectContainer);
+        final URI container = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         // Deposit an object into the container, as a text/plain binary
         final URI deposited = client.post(container).slug("LoaderIT_" + name.getMethodName())

@@ -35,7 +35,7 @@ import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.Initializer;
 import org.fcrepo.apix.model.components.Initializer.Initialization;
 import org.fcrepo.apix.model.components.ResourceNotFoundException;
-import org.fcrepo.apix.model.components.Routing;
+import org.fcrepo.apix.model.components.RoutingFactory;
 import org.fcrepo.apix.model.components.Updateable;
 
 import org.slf4j.Logger;
@@ -53,7 +53,7 @@ public class ExposedServiceUriAnalyzer implements Updateable {
 
     private ExtensionRegistry extensions;
 
-    private Routing routing;
+    private RoutingFactory routing;
 
     private String exposePath;
 
@@ -99,7 +99,7 @@ public class ExposedServiceUriAnalyzer implements Updateable {
      *
      * @param routing The routing component
      */
-    public void setRouting(final Routing routing) {
+    public void setRouting(final RoutingFactory routing) {
         this.routing = routing;
     }
 
@@ -207,7 +207,7 @@ public class ExposedServiceUriAnalyzer implements Updateable {
                     ? rawPath.substring(0, rawPath.indexOf(exposeSegment) - 1)
                     : null;
 
-            final URI exposedServiceURI = routing.endpointFor(extension.exposed(), resourcePath);
+            final URI exposedServiceURI = routing.of(requestURI).endpointFor(extension.exposed(), resourcePath);
 
             return new ServiceExposingBinding(
                     extension,

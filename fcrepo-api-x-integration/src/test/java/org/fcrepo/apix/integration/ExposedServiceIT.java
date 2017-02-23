@@ -43,6 +43,7 @@ import javax.inject.Inject;
 
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
+import org.fcrepo.apix.model.components.RoutingFactory;
 import org.fcrepo.apix.model.components.ServiceDiscovery;
 import org.fcrepo.apix.model.components.ServiceRegistry;
 import org.fcrepo.apix.model.components.Updateable;
@@ -79,6 +80,8 @@ public class ExposedServiceIT implements KarafIT {
     final String serviceEndpoint = "http://127.0.0.1:" + System.getProperty("services.dynamic.test.port") +
             "/ExposedServiceIT";
 
+    URI requestURI = URI.create(apixBaseURI);
+
     URI exposedServiceEndpoint;
 
     private final Message responseFromService = new DefaultMessage();
@@ -100,6 +103,9 @@ public class ExposedServiceIT implements KarafIT {
 
     @Inject
     BundleContext bundleContext;
+
+    @Inject
+    RoutingFactory routingFactory;
 
     @Override
     public String testClassName() {
@@ -254,7 +260,8 @@ public class ExposedServiceIT implements KarafIT {
                 .forEach(Updateable::update);
 
         // Look at the service document to discover the exposed URI
-        try (WebResource resource = discovery.getServiceDocumentFor(object, "text/turtle")) {
+        try (WebResource resource = discovery
+                .getServiceDocumentFor(object, routingFactory.of(requestURI), "text/turtle")) {
             final Model doc = parse(resource);
 
             final String sparql = "CONSTRUCT { ?endpoint <test:/endpointFor> ?serviceInstance . } WHERE { " +
@@ -286,7 +293,8 @@ public class ExposedServiceIT implements KarafIT {
                 .forEach(Updateable::update);
 
         // Look at the service document to discover the exposed URI
-        try (WebResource resource = discovery.getServiceDocumentFor(object, "text/turtle")) {
+        try (WebResource resource = discovery
+                .getServiceDocumentFor(object, routingFactory.of(requestURI), "text/turtle")) {
             final Model doc = parse(resource);
 
             final String sparql = "CONSTRUCT { ?endpoint <test:/endpointFor> ?serviceInstance . } WHERE { " +
@@ -310,7 +318,8 @@ public class ExposedServiceIT implements KarafIT {
                 .forEach(Updateable::update);
 
         // Look at the service document to discover the exposed URI
-        try (WebResource resource = discovery.getServiceDocumentFor(object, "text/turtle")) {
+        try (WebResource resource = discovery
+                .getServiceDocumentFor(object, routingFactory.of(requestURI), "text/turtle")) {
             final Model doc = parse(resource);
 
             final String sparql = "CONSTRUCT { ?endpoint <test:/endpointFor> ?serviceInstance . } WHERE { " +

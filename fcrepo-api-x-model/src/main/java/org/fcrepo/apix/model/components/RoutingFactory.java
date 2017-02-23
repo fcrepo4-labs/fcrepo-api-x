@@ -15,28 +15,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.fcrepo.apix.model.components;
 
 import java.net.URI;
 
-import org.fcrepo.apix.model.WebResource;
-
 /**
- * Service discovery component
+ * Produces {@link Routing} instances for requested resources.
  *
- * @author apb@jhu.edu
+ * @author Elliot Metsger (emetsger@jhu.edu)
  */
-public interface ServiceDiscovery {
+public interface RoutingFactory {
 
     /**
-     * Produce a service document for the given resource
+     * Answers a {@link Routing} for the requested resource.
      *
-     * @param resource A repository resource URI
-     * @param routing the {@code Routing} for the repository {@code resource}
-     * @param contentType Desired media types, or null if any serialization is acceptable.
-     * @return Serialized service document
+     * @param requestUri the URI of the requested resource
+     * @return the {@code Routing}
      */
-    WebResource getServiceDocumentFor(URI resource, Routing routing, String... contentType);
+    Routing of(URI requestUri);
 
 }

@@ -27,6 +27,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
@@ -38,6 +39,7 @@ import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.Routing;
+import org.fcrepo.apix.model.components.RoutingFactory;
 import org.fcrepo.apix.routing.impl.ExposedServiceUriAnalyzer.ServiceExposingBinding;
 
 import org.junit.Before;
@@ -53,7 +55,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 public class ExposedServiceUriAnalyzerTest {
 
     @Mock
-    Routing routing;
+    RoutingFactory routing;
 
     @Mock
     ExtensionRegistry extensisons;
@@ -102,7 +104,9 @@ public class ExposedServiceUriAnalyzerTest {
         when(extension1Spec.exposedAt()).thenReturn(extension1ExposedAt);
         when(extension1Spec.scope()).thenReturn(Scope.RESOURCE);
 
-        when(routing.endpointFor(any(ServiceExposureSpec.class), any(String.class))).thenAnswer(i -> {
+        when(routing.of(any())).thenReturn(mock(Routing.class));
+
+        when(routing.of(any()).endpointFor(any(ServiceExposureSpec.class), any(String.class))).thenAnswer(i -> {
             final ServiceExposureSpec spec = i.getArgumentAt(0, ServiceExposureSpec.class);
             final String path = i.getArgumentAt(1, String.class);
 

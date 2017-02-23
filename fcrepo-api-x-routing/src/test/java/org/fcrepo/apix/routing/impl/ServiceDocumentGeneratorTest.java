@@ -44,13 +44,13 @@ import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
 import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionBinding;
-import org.fcrepo.apix.model.components.Routing;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
+import org.fcrepo.apix.model.components.Routing;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -133,12 +133,13 @@ public class ServiceDocumentGeneratorTest {
         when(UNREGISTERED_SERVICE_SPEC.scope()).thenReturn(Scope.RESOURCE);
         when(UNREGISTERED_SERVICE_SPEC.exposedService()).thenReturn(UNREGISTERED_SERVICE_URI);
 
-        when(routing.endpointFor(REPOSITORY_SCOPE_SPEC, RESOURCE_URI)).thenReturn(REPOSITORY_SCOPE_ENDPOINT_URI);
+        when(routing.endpointFor(REPOSITORY_SCOPE_SPEC, RESOURCE_URI))
+                .thenReturn(REPOSITORY_SCOPE_ENDPOINT_URI);
         when(routing.endpointFor(RESOURCE_SCOPE_SPEC, RESOURCE_URI)).thenReturn(RESOURCE_SCOPE_ENDPOINT_URI);
-        when(routing.endpointFor(UNREGISTERED_SERVICE_SPEC, RESOURCE_URI)).thenReturn(UNREGISTERED_ENDPOINT_URI);
+        when(routing.endpointFor(UNREGISTERED_SERVICE_SPEC, RESOURCE_URI))
+                .thenReturn(UNREGISTERED_ENDPOINT_URI);
         when(routing.serviceDocFor(RESOURCE_URI)).thenReturn(URI.create(""));
 
-        toTest.setRouting(routing);
         toTest.setExtensionBinding(binding);
     }
 
@@ -149,7 +150,7 @@ public class ServiceDocumentGeneratorTest {
                 Arrays.asList(EXPOSING_EXTENSION_RESOURCE_SCOPED, EXPOSING_EXTENSION_UNREGISTERED,
                         EXPOSING_EXTENSION_REPOSITORY_SCOPED));
 
-        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle"));
+        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, routing, "text/turtle"));
 
         final String sparql = "CONSTRUCT { ?service <test:/rel> ?serviceInstance . } WHERE { " +
                 String.format("?serviceInstance <%s> <%s> . ", PROP_IS_FUNCTION_OF, RESOURCE_URI) +
@@ -169,7 +170,7 @@ public class ServiceDocumentGeneratorTest {
         final String SERVICE_DOC_URI = "test:/doc";
         when(routing.serviceDocFor(RESOURCE_URI)).thenReturn(URI.create(SERVICE_DOC_URI));
 
-        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle"));
+        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, routing, "text/turtle"));
 
         assertTrue(doc.contains(
                 doc.getResource(SERVICE_DOC_URI),
@@ -183,7 +184,7 @@ public class ServiceDocumentGeneratorTest {
         when(routing.serviceDocFor(RESOURCE_URI)).thenReturn(URI.create(SERVICE_DOC_URI));
         toTest.setRelativeURIs(true);
 
-        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle"));
+        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, routing, "text/turtle"));
 
         assertTrue(doc.contains(
                 null,
@@ -195,12 +196,13 @@ public class ServiceDocumentGeneratorTest {
                         Resource::getURI).toList();
         assertEquals(1, subjects.size());
 
-        assertFalse(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle").representation(),
-                "utf8").contains(SERVICE_DOC_URI));
+        assertFalse(IOUtils.toString(
+                    toTest.getServiceDocumentFor(RESOURCE_URI, routing, "text/turtle").representation(), "utf8")
+                .contains(SERVICE_DOC_URI));
 
         toTest.setRelativeURIs(false);
 
-        assertTrue(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle").representation(),
+        assertTrue(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, routing, "text/turtle").representation(),
                 "utf8").contains(SERVICE_DOC_URI));
     }
 
@@ -212,13 +214,13 @@ public class ServiceDocumentGeneratorTest {
 
         toTest.setRelativeURIs(true);
 
-        assertTrue(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, "application/n-triples")
+        assertTrue(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, routing, "application/n-triples")
                 .representation(),
                 "utf8").contains(SERVICE_DOC_URI));
 
         toTest.setRelativeURIs(false);
 
-        assertTrue(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, "application/n-triples")
+        assertTrue(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, routing, "application/n-triples")
                 .representation(),
                 "utf8").contains(SERVICE_DOC_URI));
     }
@@ -231,7 +233,7 @@ public class ServiceDocumentGeneratorTest {
                 Arrays.asList(EXPOSING_EXTENSION_RESOURCE_SCOPED, EXPOSING_EXTENSION_UNREGISTERED,
                         EXPOSING_EXTENSION_REPOSITORY_SCOPED, INTERCEPTING_EXTENSION));
 
-        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle"));
+        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, routing, "text/turtle"));
 
         final String sparql = "CONSTRUCT { ?service <test:/isPresentFromInstance> ?serviceInstance . } WHERE { " +
                 String.format("?serviceInstance <%s> <%s> . ", RDF_TYPE, CLASS_SERVICE_INSTANCE) +
@@ -254,7 +256,7 @@ public class ServiceDocumentGeneratorTest {
                 Arrays.asList(EXPOSING_EXTENSION_RESOURCE_SCOPED, EXPOSING_EXTENSION_UNREGISTERED,
                         EXPOSING_EXTENSION_REPOSITORY_SCOPED, INTERCEPTING_EXTENSION));
 
-        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle"));
+        final Model doc = parse(toTest.getServiceDocumentFor(RESOURCE_URI, routing, "text/turtle"));
 
         final String sparql = "CONSTRUCT { ?endpoint <test:/endpointFor> ?serviceInstance . } WHERE { " +
                 String.format("?serviceInstance <%s> <%s> . ", RDF_TYPE, CLASS_SERVICE_INSTANCE) +
@@ -272,7 +274,7 @@ public class ServiceDocumentGeneratorTest {
     // Verify that a specific serialization can be produced by specifying content type
     @Test
     public void contentTypeTest() throws Exception {
-        final WebResource serviceDoc = toTest.getServiceDocumentFor(RESOURCE_URI, "application/rdf+xml");
+        final WebResource serviceDoc = toTest.getServiceDocumentFor(RESOURCE_URI, routing, "application/rdf+xml");
 
         final Model doc = ModelFactory.createDefaultModel().read(serviceDoc.representation(), Lang.RDFXML.getName());
 
@@ -286,7 +288,7 @@ public class ServiceDocumentGeneratorTest {
     // Verify that a reasonable default content type is chosen
     @Test
     public void defaultContentTypeTest() throws Exception {
-        final WebResource serviceDoc = toTest.getServiceDocumentFor(RESOURCE_URI, "not/supported");
+        final WebResource serviceDoc = toTest.getServiceDocumentFor(RESOURCE_URI, routing, "not/supported");
 
         assertEquals("text/turtle", serviceDoc.contentType());
 
@@ -298,6 +300,6 @@ public class ServiceDocumentGeneratorTest {
 
         when(binding.getExtensionsFor(RESOURCE_URI)).thenReturn(new ArrayList<>());
 
-        toTest.getServiceDocumentFor(RESOURCE_URI, "text/turtle");
+        toTest.getServiceDocumentFor(RESOURCE_URI, routing, "text/turtle");
     }
 }

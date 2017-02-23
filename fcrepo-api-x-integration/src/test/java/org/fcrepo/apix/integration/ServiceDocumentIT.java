@@ -33,9 +33,9 @@ import javax.inject.Inject;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.Registry;
-import org.fcrepo.apix.model.components.Routing;
 
 import org.apache.jena.rdf.model.Model;
+import org.fcrepo.apix.model.components.RoutingFactory;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -50,6 +50,8 @@ import org.ops4j.pax.exam.util.Filter;
 @RunWith(PaxExam.class)
 public class ServiceDocumentIT implements KarafIT {
 
+    private static final URI REQUEST_URI = URI.create(apixBaseURI);
+
     @Inject
     @Filter("(org.fcrepo.apix.registry.role=default)")
     Registry repository;
@@ -58,7 +60,7 @@ public class ServiceDocumentIT implements KarafIT {
     ExtensionRegistry extensionRegistry;
 
     @Inject
-    Routing routing;
+    RoutingFactory routing;
 
     @Rule
     public TestName name = new TestName();
@@ -82,7 +84,7 @@ public class ServiceDocumentIT implements KarafIT {
     @Test
     public void emptyServiceDocumentTest() throws Exception {
 
-        final URI object = routing.interceptUriFor(serviceContainer);
+        final URI object = routing.of(REQUEST_URI).interceptUriFor(serviceContainer);
         final URI serviceDocURI = client.head(object).perform().getLinkHeaders("service").get(0);
 
         try (WebResource resource = repository.get(serviceDocURI)) {
@@ -104,7 +106,7 @@ public class ServiceDocumentIT implements KarafIT {
         extensionRegistry.put(testResource(
                 "objects/extension_serviceDocumentIT.ttl"));
 
-        final URI container = routing.interceptUriFor(objectContainer);
+        final URI container = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         final URI object = postFromTestResource("objects/object_serviceDocumentIT.ttl", container);
 

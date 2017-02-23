@@ -41,7 +41,7 @@ import javax.inject.Inject;
 
 import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Extension.Scope;
-import org.fcrepo.apix.model.components.Routing;
+import org.fcrepo.apix.model.components.RoutingFactory;
 import org.fcrepo.client.FcrepoResponse;
 
 import org.apache.camel.CamelContext;
@@ -75,11 +75,13 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
 
     static final AtomicInteger objectCounter = new AtomicInteger(0);
 
+    static final URI requestURI = URI.create(apixBaseURI);
+
     @Rule
     public TestName name = new TestName();
 
     @Inject
-    public Routing routing;
+    public RoutingFactory routing;
 
     @Inject
     @Filter("(role=FcrepoServiceIndexer)")
@@ -160,7 +162,7 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
         final Extension extension = newExtension(name).withScope(Scope.RESOURCE).create();
 
         // Just post an empty object
-        final URI object = client.post(routing.interceptUriFor(objectContainer)).perform().getUrl();
+        final URI object = client.post(routing.of(requestURI).interceptUriFor(objectContainer)).perform().getUrl();
 
         // Make sure the extension is not in service doc.
         attempt(60, () -> assertSparqlNotBound(object, extension));
@@ -186,7 +188,7 @@ public class KarafServiceIndexingIT extends ServiceBasedTest {
 
     URI createObjectMatching(final Extension extension) throws Exception {
 
-        try (FcrepoResponse response = client.post(routing.interceptUriFor(objectContainer))
+        try (FcrepoResponse response = client.post(routing.of(requestURI).interceptUriFor(objectContainer))
                 .body(IOUtils.toInputStream(
                         String.format("<> a <%s> .", extension.bindingClass()), "utf8"),
                         "text/turtle").slug(objectName()).perform()) {

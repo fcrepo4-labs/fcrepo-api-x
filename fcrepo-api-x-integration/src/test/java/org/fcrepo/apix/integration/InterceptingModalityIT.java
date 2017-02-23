@@ -29,7 +29,7 @@ import java.net.URI;
 
 import javax.inject.Inject;
 
-import org.fcrepo.apix.model.components.Routing;
+import org.fcrepo.apix.model.components.RoutingFactory;
 import org.fcrepo.client.FcrepoClient;
 import org.fcrepo.client.FcrepoOperationFailedException;
 import org.fcrepo.client.FcrepoResponse;
@@ -51,8 +51,10 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
 
     final String TEST_OBJECT_TYPE = "test:InterceptingModalityIT#object";
 
+    final URI REQUEST_URI = URI.create(apixBaseURI);
+
     @Inject
-    Routing routing;
+    RoutingFactory routing;
 
     @Rule
     public TestName name = new TestName();
@@ -78,10 +80,12 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
 
         final URI object = client.post(objectContainer).slug(testMethodName()).perform().getLocation();
 
-        final FcrepoResponse response = client.get(routing.interceptUriFor(object)).perform();
+        final FcrepoResponse response = client.get(
+                routing.of(REQUEST_URI).interceptUriFor(object)).perform();
 
         assertEquals(1, response.getLinkHeaders("service").size());
-        assertEquals(routing.serviceDocFor(object), response.getLinkHeaders("service").get(0));
+        assertEquals(routing.of(REQUEST_URI).serviceDocFor(object),
+                response.getLinkHeaders("service").get(0));
     }
 
     // Verify that if an intercepting extension throws a 4xx code, it aborts the request and returns service response.
@@ -97,7 +101,7 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         responseFromService.setHeader(Exchange.HTTP_RESPONSE_CODE, RESPONSE_CODE);
         responseFromService.setHeader("Location", LOCATION);
 
-        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+        final URI objectContainer_intercept = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         final URI object = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
                 objectContainer_intercept);
@@ -113,7 +117,7 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
         registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
 
-        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+        final URI objectContainer_intercept = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         // Have our extension service set an implausible If-Match header for the request
         onServiceRequest(ex -> {
@@ -138,7 +142,7 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
         registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
 
-        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+        final URI objectContainer_intercept = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         // Have our extension service set an implausible If-Match header for the request
         onServiceRequest(ex -> {
@@ -164,7 +168,7 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
         registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
 
-        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+        final URI objectContainer_intercept = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         final String TYPE = "test:" + name.getMethodName();
 
@@ -194,7 +198,7 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
         registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
 
-        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+        final URI objectContainer_intercept = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
         final String TEST_HEADER = "testHeader";
         final String TEST_HEADER_VALUE = "testHeaderValue";
 
@@ -220,7 +224,7 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
         registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
 
-        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+        final URI objectContainer_intercept = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         final String BODY = "theBody";
 
@@ -245,7 +249,7 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
         registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
 
-        final URI objectContainer_intercept = routing.interceptUriFor(objectContainer);
+        final URI objectContainer_intercept = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         // Give our request a specific body
         onServiceRequest(ex -> {

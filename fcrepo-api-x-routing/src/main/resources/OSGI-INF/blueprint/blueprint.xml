@@ -13,9 +13,8 @@
   <cm:property-placeholder persistent-id="org.fcrepo.apix.routing"
     update-strategy="reload">
     <cm:default-properties>
-      <cm:property name="apix.host" value="localhost" />
-      <cm:property name="apix.port" value="8081" />
       <cm:property name="apix.listen.host" value="0.0.0.0" />
+      <cm:property name="apix.port" value="8081" />
       <cm:property name="apix.discoveryPath" value="discovery" />
       <cm:property name="apix.exposePath" value="services" />
       <cm:property name="apix.interceptPath" value="fcrepo/rest" />
@@ -42,8 +41,6 @@
   <bean id="https" class="org.apache.camel.component.http4.HttpComponent" />
 
   <bean id="routingStub" class="org.fcrepo.apix.routing.impl.RoutingStub">
-    <property name="host" value="${apix.host}" />
-    <property name="port" value="${apix.port}" />
     <property name="discoveryPath" value="${apix.discoveryPath}" />
     <property name="exposePath" value="${apix.exposePath}" />
     <property name="interceptPath" value="${apix.interceptPath}" />
@@ -80,10 +77,9 @@
     <property name="extensionBinding" ref="extensionBinding" />
     <property name="relativeURIs" value="${discovery.relativeURIs}" />
     <property name="interceptURIs" value="${discovery.interceptURIs}" />
-    <property name="routing" ref="routingStub" />
   </bean>
 
-  <service id="routing" interface="org.fcrepo.apix.model.components.Routing"
+  <service id="routingFactory" interface="org.fcrepo.apix.model.components.RoutingFactory"
     ref="routingStub" />
 
   <service id="serviceDiscovery"

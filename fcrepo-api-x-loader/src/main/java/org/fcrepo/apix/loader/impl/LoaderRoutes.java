@@ -25,11 +25,11 @@ import java.io.InputStream;
 import java.net.URI;
 
 import org.fcrepo.apix.model.WebResource;
-import org.fcrepo.apix.model.components.Routing;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
+import org.fcrepo.apix.model.components.RoutingFactory;
 
 /**
  * Routes which provide an HTTP api to the extension loader.
@@ -48,9 +48,11 @@ public class LoaderRoutes extends RouteBuilder {
 
     private static final String ROUTE_OPTIONS = "direct:options";
 
+    private static final String LOADER_REQUEST_URI = "ApixLoaderRequestUri";
+
     private boolean useInterceptURIs;
 
-    private Routing routing;
+    private RoutingFactory routing;
 
     LoaderService loaderService;
 
@@ -77,7 +79,7 @@ public class LoaderRoutes extends RouteBuilder {
      *
      * @param routing Routing component.
      */
-    public void setRouting(final Routing routing) {
+    public void setRouting(final RoutingFactory routing) {
         this.routing = routing;
     }
 
@@ -113,7 +115,8 @@ public class LoaderRoutes extends RouteBuilder {
                 .otherwise().to(ROUTE_LOAD);
 
         from(ROUTE_LOAD).id("load-service-uri")
-                .removeHeaders("*", HEADER_SERVICE_URI).setBody(constant(null))
+                .setHeader(LOADER_REQUEST_URI, header(Exchange.HTTP_URL))
+                .removeHeaders("*", HEADER_SERVICE_URI, LOADER_REQUEST_URI).setBody(constant(null))
                 .setHeader(Exchange.HTTP_METHOD, constant("OPTIONS"))
                 .setHeader(Exchange.HTTP_URI, header(HEADER_SERVICE_URI))
                 .setHeader("Accept", constant("text/turtle"))
@@ -136,7 +139,9 @@ public class LoaderRoutes extends RouteBuilder {
         ex.getOut().setHeader(HTTP_RESPONSE_CODE, 303);
 
         if (useInterceptURIs) {
-            ex.getOut().setHeader("Location", routing.interceptUriFor(location));
+            ex.getOut().setHeader("Location",
+                    routing.of(URI.create(ex.getIn().getHeader(LOADER_REQUEST_URI, String.class)))
+                    .interceptUriFor(location));
         } else {
             ex.getOut().setHeader("Location", location);
         }

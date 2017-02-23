@@ -25,8 +25,9 @@ import static org.fcrepo.camel.FcrepoHeaders.FCREPO_URI;
 import java.net.URI;
 import java.util.List;
 
-import org.fcrepo.apix.model.components.Routing;
+import org.fcrepo.apix.model.components.RoutingFactory;
 import org.fcrepo.apix.model.components.Updateable;
+import org.fcrepo.camel.FcrepoHeaders;
 import org.fcrepo.camel.processor.EventProcessor;
 
 import org.apache.camel.Processor;
@@ -47,7 +48,7 @@ public class UpdateListener extends RouteBuilder {
 
     private static final String TYPE_REPOSITORY_RESOURCE = "http://fedora.info/definitions/v4/repository#Resource";
 
-    private Routing routing;
+    private RoutingFactory routing;
 
     /**
      * Set the list of services to update
@@ -63,7 +64,7 @@ public class UpdateListener extends RouteBuilder {
      *
      * @param routing Routing impl.
      */
-    public void setRouting(final Routing routing) {
+    public void setRouting(final RoutingFactory routing) {
         this.routing = routing;
     }
 
@@ -88,7 +89,7 @@ public class UpdateListener extends RouteBuilder {
     }
 
     private final Processor USE_FCREPO_URIS = ex -> {
-        ex.getIn().setHeader(FCREPO_URI,
-                routing.nonProxyURIFor(URI.create(ex.getIn().getHeader(FCREPO_URI, String.class))));
+        final URI fcrepoUri = URI.create(ex.getIn().getHeader(FcrepoHeaders.FCREPO_URI, String.class));
+        ex.getIn().setHeader(FcrepoHeaders.FCREPO_URI, routing.of(fcrepoUri).nonProxyURIFor(fcrepoUri));
     };
 }

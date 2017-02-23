@@ -41,7 +41,7 @@ import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.ServiceInstance;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ResourceNotFoundException;
-import org.fcrepo.apix.model.components.Routing;
+import org.fcrepo.apix.model.components.RoutingFactory;
 import org.fcrepo.apix.model.components.ServiceDiscovery;
 import org.fcrepo.apix.model.components.ServiceInstanceRegistry;
 import org.fcrepo.apix.model.components.ServiceRegistry;
@@ -95,7 +95,7 @@ public class RoutingImpl extends RouteBuilder {
 
     private ServiceRegistry serviceRegistry;
 
-    private Routing routing;
+    private RoutingFactory routing;
 
     private String interceptPath;
 
@@ -142,7 +142,7 @@ public class RoutingImpl extends RouteBuilder {
      *
      * @param routing routing.
      */
-    public void setRouting(final Routing routing) {
+    public void setRouting(final RoutingFactory routing) {
         this.routing = routing;
     }
 
@@ -268,13 +268,14 @@ public class RoutingImpl extends RouteBuilder {
         // resource URI is only conveyed for resource-scope services
         if (Scope.RESOURCE.equals(binding.extension.exposed().scope())) {
 
-            ex.getIn().setHeader(HTTP_HEADER_APIX_RESOURCE_URI, routing.interceptUriFor(
+            ex.getIn().setHeader(HTTP_HEADER_APIX_RESOURCE_URI, routing.of(requestUri(ex)).interceptUriFor(
                     binding.repositoryResourceURI));
             ex.getIn().setHeader(HTTP_HEADER_REPOSITORY_RESOURCE_URI, binding.repositoryResourceURI);
             ex.getIn().setHeader(HTTP_HEADER_REPOSITORY_RESOURCE_PATH, "/" + binding.resourcePath);
         } else {
             ex.getIn().setHeader(HTTP_HEADER_REPOSITORY_ROOT_URI, fcrepoBaseURI);
-            ex.getIn().setHeader(HTTP_HEADER_APIX_ROOT_URI, routing.interceptUriFor(fcrepoBaseURI));
+            ex.getIn().setHeader(HTTP_HEADER_APIX_ROOT_URI,
+                    routing.of(requestUri(ex)).interceptUriFor(fcrepoBaseURI));
         }
     });
 
@@ -283,7 +284,8 @@ public class RoutingImpl extends RouteBuilder {
         final URI resource = fcrepoResourceFromPath(ex.getIn().getHeader(Exchange.HTTP_PATH,
                 String.class));
 
-        try (WebResource serviceDoc = serviceDiscovery.getServiceDocumentFor(resource, accept)) {
+        try (WebResource serviceDoc = serviceDiscovery
+                .getServiceDocumentFor(resource, routing.of(requestUri(ex)), accept)) {
             ex.getOut().setBody(IOUtils.toByteArray(serviceDoc.representation()));
             ex.getOut().setHeader(Exchange.CONTENT_TYPE, serviceDoc.contentType());
         }
@@ -335,7 +337,7 @@ public class RoutingImpl extends RouteBuilder {
             rawLinkHeaders.add((String) linkHeader);
         }
 
-        rawLinkHeaders.add(String.format("<%s>; rel=\"service\"", routing.serviceDocFor(
+        rawLinkHeaders.add(String.format("<%s>; rel=\"service\"", routing.of(requestUri(ex)).serviceDocFor(
                 fcrepoResourceFromPath(ex.getIn().getHeader(Exchange.HTTP_PATH, String.class)))));
 
         ex.getIn().setHeader("Link", rawLinkHeaders);
@@ -349,6 +351,10 @@ public class RoutingImpl extends RouteBuilder {
         } else {
             return append(fcrepoBaseURI, resourcePath);
         }
+    }
+
+    private static URI requestUri(final Exchange ex) {
+        return URI.create(ex.getIn().getHeader(Exchange.HTTP_URL, String.class));
     }
 
     private static <T> T exactlyOne(final Collection<T> of, final String errMsg) {

@@ -18,30 +18,27 @@
 
 package org.fcrepo.apix.routing.impl;
 
-import static org.fcrepo.apix.routing.Util.append;
-
 import java.net.URI;
-
-import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
-import org.fcrepo.apix.model.components.ResourceNotFoundException;
-import org.fcrepo.apix.model.components.Routing;
 
 /**
  * @author apb@jhu.edu
  */
-public class RoutingStub implements Routing {
+public class RoutingStub extends RoutingPrototype {
+
+    private String scheme;
 
     private String host;
 
     private int port;
 
-    private String discoveryPath;
-
-    private String exposePath;
-
-    private String interceptPath;
-
-    private URI fcrepoBaseURI;
+    /**
+     * Set the API-X scheme.
+     *
+     * @param scheme typically http or https
+     */
+    public void setScheme(final String scheme) {
+        this.scheme = scheme;
+    }
 
     /**
      * Set the API-X host.
@@ -61,120 +58,11 @@ public class RoutingStub implements Routing {
         this.port = port;
     }
 
-    /**
-     * Set the API-X service path.
-     * <p>
-     * Used for providing access to service document resources, as in
-     * <code>http://${apix.host}:${apix.port}/${apix.svcPath}/path/to/object</code>
-     * </p>
-     *
-     * @param path The path segment.
-     */
-    public void setDiscoveryPath(final String path) {
-        this.discoveryPath = path;
-    }
-
-    /**
-     * Set the intercept path segment
-     *
-     * @param path intercept path segment
-     */
-    public void setInterceptPath(final String path) {
-        this.interceptPath = path;
-    }
-
-    /**
-     * Set Fedora's baseURI.
-     *
-     * @param uri the base URI.
-     */
-    public void setFcrepoBaseURI(final URI uri) {
-        this.fcrepoBaseURI = uri;
-    }
-
-    /**
-     * Set the API-X Service Exposure path.
-     * <p>
-     * This establishes a baseURI for exposed services;
-     * <code>http://${apix.host}:${apix.port}/${apix.svcPath}/path/to/object/${exposedAt}</code>
-     * </p>
-     *
-     * @param path The path segment.
-     */
-    public void setExposePath(final String path) {
-        this.exposePath = path;
-    }
-
-    @Override
-    public URI endpointFor(final ServiceExposureSpec spec, final String path) {
-        switch (spec.scope()) {
-        case EXTERNAL:
-            return spec.exposedAt();
-        case REPOSITORY:
-            return append(baseURI(), exposePath, "", spec.exposedAt().getPath());
-        case RESOURCE:
-            return append(baseURI(), exposePath, path, spec.exposedAt());
-        default:
-            throw new RuntimeException("Unknown service exposure scope " + spec.scope());
-        }
-    }
-
-    @Override
-    public URI endpointFor(final ServiceExposureSpec spec, final URI onResource) {
-        return endpointFor(spec, resourcePath(onResource));
-    }
-
-    @Override
-    public URI serviceDocFor(final URI resource) {
-        return serviceDocFor(resourcePath(resource));
-    }
-
-    @Override
-    public URI serviceDocFor(final String resourcePath) {
-        return append(baseURI(), discoveryPath, resourcePath);
-    }
-
-    @Override
-    public String resourcePath(final URI resourceURI) {
-
-        final String r = resourceURI.toString();
-
-        if (r.startsWith(fcrepoBaseURI.toString())) {
-            return "/" + fcrepoBaseURI.relativize(resourceURI).getPath();
-        }
-
-        final URI interceptBase = append(baseURI(), interceptPath);
-
-        if (r.startsWith(interceptBase.toString())) {
-            return "/" + interceptBase.relativize(resourceURI).getPath();
-        } else {
-            throw new ResourceNotFoundException(String.format(
-                    "%s is not in the repository or intercept domain (%s, %s)", r, fcrepoBaseURI, interceptBase));
-        }
-
-    }
-
-    @Override
-    public URI interceptUriFor(final URI resource) {
-        if (resource.getPath().startsWith(interceptPath.toString())) {
-            return resource;
-        }
-        return append(baseURI(), interceptPath, resourcePath(resource));
-    }
-
-    @Override
-    public URI nonProxyURIFor(final URI resource) {
-        if (resource.getPath().startsWith(fcrepoBaseURI.toString())) {
-            return resource;
-        }
-        return append(fcrepoBaseURI, resourcePath(resource));
-    }
-
-    URI baseURI() {
+    URI exposedBaseURI() {
         if (port == 80) {
-            return URI.create(String.format("http://%s/", host));
+            return URI.create(String.format("%s://%s/", scheme, host));
         }
-        return URI.create(String.format("http://%s:%s/", host, port));
+        return URI.create(String.format("%s://%s:%s/", scheme, host, port));
     }
 
 }
