@@ -12,6 +12,8 @@
   <cm:property-placeholder persistent-id="org.fcrepo.apix.jena"
     update-strategy="reload">
     <cm:default-properties>
+      <cm:property name="httpclient.osgi.jndi.service.name"
+        value="apix/default-httpclient" />
       <cm:property name="registry.extension.ldp.container"
         value="http://localhost:8080/fcrepo/rest/apix/extensions" />
       <cm:property name="registry.ontology.ldp.container"
@@ -35,8 +37,13 @@
   <reference id="underlyingRegistryDelegate" filter="(org.fcrepo.apix.registry.role=default)"
     interface="org.fcrepo.apix.model.components.Registry" />
 
-  <reference id="httpClient" ext:proxy-method="classes"
-    interface="org.apache.http.impl.client.CloseableHttpClient" />
+  <bean id="httpClientFetcher" class="org.fcrepo.apix.jena.impl.HttpClientFetcher">
+    <property name="serviceName" value="${httpclient.osgi.jndi.service.name}" />
+    <property name="bundleContext" ref="blueprintBundleContext" />
+  </bean>
+
+  <bean id="httpClient" factory-ref="httpClientFetcher"
+    factory-method="getClient" />
 
   <bean id="initMgr" class="org.fcrepo.apix.jena.impl.InitMgr" />
 
