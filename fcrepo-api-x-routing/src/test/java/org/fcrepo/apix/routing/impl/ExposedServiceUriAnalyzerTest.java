@@ -158,8 +158,26 @@ public class ExposedServiceUriAnalyzerTest {
 
         assertNotNull(binding);
         assertEquals(extension1, binding.extension);
+        assertEquals(path, binding.resourcePath);
         assertTrue(binding.repositoryResourceURI.toString().startsWith(fcrepoBaseURI.toString()));
+        assertEquals(path, binding.repositoryResourceURI.toString().replace(fcrepoBaseURI.toString(), ""));
+    }
+
+    @Test
+    public void rootResourceRelativeTest() {
+        final String path = "";
+
+        final ServiceExposingBinding binding = toTest.match(exposureURI(path, extension1ExposedAt));
+
+        System.out.println(exposureURI(path, extension1ExposedAt));
+
+        assertNotNull(binding);
+        assertEquals(extension1, binding.extension);
+        assertEquals(path, binding.resourcePath);
+        assertTrue(binding.repositoryResourceURI.toString().startsWith(fcrepoBaseURI.toString()));
+        System.out.println(binding.repositoryResourceURI);
         assertTrue(binding.repositoryResourceURI.toString().endsWith(path));
+        assertEquals(path, binding.repositoryResourceURI.toString().replace(fcrepoBaseURI.toString(), ""));
     }
 
     // Verifies that repository resources with trailing slashes are reflected correctly in the matching resource URI
@@ -170,9 +188,11 @@ public class ExposedServiceUriAnalyzerTest {
         final ServiceExposingBinding binding = toTest.match(exposureURI(path, extension1ExposedAt));
 
         assertNotNull(binding);
+        assertEquals(path, binding.resourcePath);
         assertEquals(extension1, binding.extension);
         assertTrue(binding.repositoryResourceURI.toString().startsWith(fcrepoBaseURI.toString()));
         assertTrue(binding.repositoryResourceURI.toString().endsWith(path));
+        assertEquals(path, binding.repositoryResourceURI.toString().replace(fcrepoBaseURI.toString() + "/", ""));
     }
 
     // Verifies that repository resources with no trailing slashes are reflected correctly in matching resource URI
@@ -183,23 +203,32 @@ public class ExposedServiceUriAnalyzerTest {
         final ServiceExposingBinding binding = toTest.match(exposureURI(path, extension1ExposedAt));
 
         assertNotNull(binding);
+        assertEquals(path, binding.resourcePath);
         assertEquals(extension1, binding.extension);
         assertTrue(binding.repositoryResourceURI.toString().startsWith(fcrepoBaseURI.toString()));
         assertTrue(binding.repositoryResourceURI.toString().endsWith(path));
+        assertEquals(path, binding.repositoryResourceURI.toString().replace(fcrepoBaseURI.toString() + "/", ""));
     }
 
     // Verifies that additional path elements after exposedAt key are OK.
     @Test
     public void additionalPathTest() {
-        final String path = "some/path";
+        final String path = "some/path/";
+
+        System.out.println("URI: " + exposureURIPlus(path, extension1ExposedAt,
+                "additional/path"));
 
         final ServiceExposingBinding binding = toTest.match(exposureURIPlus(path, extension1ExposedAt,
                 "additional/path"));
 
         assertNotNull(binding);
         assertEquals(extension1, binding.extension);
+        assertEquals(path, binding.resourcePath);
         assertTrue(binding.repositoryResourceURI.toString().startsWith(fcrepoBaseURI.toString()));
+        System.out.println("Path: " + path);
+        System.out.println("Resource: " + binding.repositoryResourceURI.toString());
         assertTrue(binding.repositoryResourceURI.toString().endsWith(path));
+        assertEquals(path, binding.repositoryResourceURI.toString().replace(fcrepoBaseURI.toString() + "/", ""));
     }
 
     // Verifies that update() pulls in registry updates.

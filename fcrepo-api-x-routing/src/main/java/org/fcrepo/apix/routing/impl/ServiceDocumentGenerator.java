@@ -58,6 +58,8 @@ import org.apache.jena.util.ResourceUtils;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Generates service documents for resources.
@@ -66,6 +68,8 @@ import org.osgi.service.component.annotations.Reference;
  */
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class ServiceDocumentGenerator implements ServiceDiscovery {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceDocumentGenerator.class);
 
     private ExtensionBinding extensionBinding;
 
@@ -168,7 +172,6 @@ public class ServiceDocumentGenerator implements ServiceDiscovery {
                 serviceInstance.addProperty(doc.getProperty(PROP_IS_FUNCTION_OF),
                         doc.getProperty(proxyURI));
             }
-
         }
 
         @Override

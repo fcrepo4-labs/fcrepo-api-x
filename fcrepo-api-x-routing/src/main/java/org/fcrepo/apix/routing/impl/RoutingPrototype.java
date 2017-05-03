@@ -137,6 +137,9 @@ public abstract class RoutingPrototype implements RoutingFactory, Routing {
             case REPOSITORY:
                 return append(exposedBaseURI(), exposePath, "", spec.exposedAt().getPath());
             case RESOURCE:
+                if (path == null || path.equals("")) {
+                    return append(exposedBaseURI(), exposePath, spec.exposedAt());
+                }
                 return append(exposedBaseURI(), exposePath, path, spec.exposedAt());
             default:
                 throw new RuntimeException("Unknown service exposure scope " + spec.scope());

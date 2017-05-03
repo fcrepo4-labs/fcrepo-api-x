@@ -127,6 +127,7 @@ public class LoaderService {
         // If the document defines an extension, load it as such. Otherwise, add to the
         // service registry;
         if (extensionCount == 1) {
+            LOG.info("Loading extension definition");
             depositedResource = extensionRegistry.put(
                     WebResource.of(
                             new ByteArrayInputStream(body),
@@ -134,6 +135,7 @@ public class LoaderService {
                             findMatchingExtension(model), extensionName(model)),
                     useBinary(model));
         } else if (definedServiceCount > 0) {
+            LOG.info("Adding new service to registry");
             depositedResource = serviceRegistry.put(
                     WebResource.of(new ByteArrayInputStream(body), resource.contentType()));
         } else {
@@ -150,8 +152,10 @@ public class LoaderService {
         // URI to the instance, otherwise, just return the extension or service URI as appropriate.
         if (allServices.size() == 1) {
             final Service service = serviceRegistry.getService(allServices.iterator().next());
+            LOG.info("Adding instance <> of service <>", resource.uri(), service.canonicalURI());
             addInstance(resource.uri(), service);
         } else {
+            LOG.info("Extension does not define a service, so not adding any");
             return depositedResource;
         }
 

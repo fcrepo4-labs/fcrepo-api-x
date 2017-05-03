@@ -88,6 +88,11 @@ public interface KarafIT {
 
     URI ontologyContainer = URI.create(System.getProperty("registry.ontology.container", ""));
 
+    /**
+     * Karaf config.
+     *
+     * @return Karaf config.
+     */
     // What really sucks about pax exam is that this is called *ONLY ONCE, EVER*,
     // yet Karaf is entirely re-deployed from scratch *EVERY TEST*. There is no straightforward
     // way to configure separate service, ontology, or extension registry containers on a per-test basis.
@@ -182,23 +187,46 @@ public interface KarafIT {
 
     }
 
-    /*
+    /**
      * Use this to add additional karaf config options, or return an empty array for none
+     *
+     * @return list of Karaf options.
      */
     public default List<Option> additionalKarafConfig() {
         return new ArrayList<>();
     }
 
+    /**
+     * The test class name.
+     *
+     * @return test class name
+     */
     public String testClassName();
 
+    /**
+     * The test method name.
+     *
+     * @return Test method name.
+     */
     public String testMethodName();
 
+    /**
+     * Karaf version.
+     *
+     * @return
+     */
     public static String karafVersion() {
         final ConfigurationManager cm = new ConfigurationManager();
         final String karafVersion = cm.getProperty("pax.exam.karaf.version", "4.0.0");
         return karafVersion;
     }
 
+    /**
+     * Deploy a configuration with the given classpath.
+     *
+     * @param path the path in the classpath.
+     * @return
+     */
     public default Option deployFile(String path) {
         try {
             return replaceConfigurationFile("etc/" + new File(path).getName(),
@@ -234,6 +262,14 @@ public interface KarafIT {
         }
     }
 
+    /**
+     * Post from test resource in the classpath
+     *
+     * @param filePath Path in the classpath
+     * @param intoContainer Container to deposit into.
+     * @return URI of new container.
+     * @throws Exception if fail.
+     */
     public default URI postFromTestResource(final String filePath, final URI intoContainer) throws Exception {
 
         try (final WebResource object = testResource(filePath);
@@ -245,12 +281,31 @@ public interface KarafIT {
         }
     }
 
+    /**
+     * POST from a test resource in the classpath.
+     *
+     * @param filePath path in the classpath.
+     * @param intoContainer container URI
+     * @param contentType mime type
+     * @return URI of created resource
+     * @throws Exception if fail.
+     */
     public default URI postFromTestResource(final String filePath, final URI intoContainer, final String contentType)
             throws Exception {
         return postFromTestResource(filePath, intoContainer, contentType,
                 String.format("%s_%s", testMethodName(), getBaseName(filePath)));
     }
 
+    /**
+     * POST content into a container from the classpath.
+     *
+     * @param filePath path in the classpath
+     * @param intoContainer container URI
+     * @param contentType mime type
+     * @param slug slug name
+     * @return URI of created resource
+     * @throws Exception if fail.
+     */
     public default URI postFromTestResource(final String filePath, final URI intoContainer,
             final String contentType, final String slug) throws Exception {
         try (final WebResource object = testResource(filePath, contentType);
@@ -262,6 +317,16 @@ public interface KarafIT {
         }
     }
 
+    /**
+     * POST content into a container from a stream
+     *
+     * @param in The stream
+     * @param intoContainer The container URI
+     * @param contentType mime type
+     * @param slug Slug name
+     * @return URI of created resource
+     * @throws Exception if fail
+     */
     public default URI postFromStream(final InputStream in, final URI intoContainer, final String contentType,
             final String slug) throws Exception {
         try (final WebResource object = WebResource.of(in, contentType);
@@ -273,6 +338,13 @@ public interface KarafIT {
         }
     }
 
+    /**
+     * Attempt a task a given number of times.
+     *
+     * @param times number of times
+     * @param it the task
+     * @return the result.
+     */
     public static <T> T attempt(final int times, final Callable<T> it) {
 
         Throwable caught = null;

@@ -25,11 +25,13 @@ import java.io.InputStream;
 import java.net.URI;
 
 import org.fcrepo.apix.model.WebResource;
+import org.fcrepo.apix.model.components.RoutingFactory;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.fcrepo.apix.model.components.RoutingFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Routes which provide an HTTP api to the extension loader.
@@ -55,6 +57,8 @@ public class LoaderRoutes extends RouteBuilder {
     private RoutingFactory routing;
 
     LoaderService loaderService;
+
+    private static final Logger LOG = LoggerFactory.getLogger(LoaderRoutes.class);
 
     /**
      * Set the loader service.
@@ -120,6 +124,7 @@ public class LoaderRoutes extends RouteBuilder {
                 .setHeader(Exchange.HTTP_METHOD, constant("OPTIONS"))
                 .setHeader(Exchange.HTTP_URI, header(HEADER_SERVICE_URI))
                 .setHeader("Accept", constant("text/turtle"))
+                .process(e -> LOG.info("Execution OPTIONS to service URI {}", e.getIn().getHeader(Exchange.HTTP_URI)))
                 .to("jetty:http://localhost")
                 .process(DEPOSIT_OBJECTS)
                 .setHeader(HTTP_RESPONSE_CODE, constant(303));
@@ -141,7 +146,7 @@ public class LoaderRoutes extends RouteBuilder {
         if (useInterceptURIs) {
             ex.getOut().setHeader("Location",
                     routing.of(URI.create(ex.getIn().getHeader(LOADER_REQUEST_URI, String.class)))
-                    .interceptUriFor(location));
+                            .interceptUriFor(location));
         } else {
             ex.getOut().setHeader("Location", location);
         }
