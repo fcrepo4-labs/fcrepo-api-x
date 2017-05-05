@@ -20,6 +20,7 @@ package org.fcrepo.apix.jena.impl;
 
 import java.util.Collection;
 
+import org.apache.http.client.HttpClient;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
@@ -60,21 +61,30 @@ public class HttpClientFetcher {
 
     /**
      * Get an httpClient from the OSGi registry.
+     * <p>
+     * TODO HttpResponse from do not implement AutoCloseable for backward compatibility reasons. Since we want to use
+     * try-with-resources, we cast to CloseableHttpClient and hope for the best.
+     * </p>
      *
      * @return the client
      * @throws Exception thrown when exactly one matching client cannot be retrieved.
      */
     public CloseableHttpClient getClient() throws Exception {
 
-        final Collection<ServiceReference<CloseableHttpClient>> refs = bundleContext.getServiceReferences(
-                CloseableHttpClient.class, String.format("(osgi.jndi.service.name=%s)", serviceName));
+        final Collection<ServiceReference<HttpClient>> refs = bundleContext.getServiceReferences(
+                HttpClient.class, String.format("(osgi.jndi.service.name=%s)", serviceName));
 
         if (refs.size() != 1) {
-            throw new RuntimeException("Expecting to find exactly one CloseableHttpClient with " +
+            throw new RuntimeException("Expecting to find exactly one HttpClient with " +
                     "osgi.jndi.service.name=" + serviceName + "instead, found " + refs.size());
         }
 
-        return bundleContext.getService(refs.iterator().next());
+        try {
+            return (CloseableHttpClient) bundleContext.getService(refs.iterator().next());
+        } catch (final ClassCastException e) {
+            throw new RuntimeException(
+                    "Expected HttpClient from service registry to be an instance of CloseableHttpClient", e);
+        }
     }
 
 }

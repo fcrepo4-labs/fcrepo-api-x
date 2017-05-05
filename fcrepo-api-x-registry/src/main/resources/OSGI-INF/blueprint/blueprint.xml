@@ -28,7 +28,7 @@
 
 
   <service id="httpClient-default-service" ref="httpClient-default"
-    interface="org.apache.http.impl.client.CloseableHttpClient">
+    interface="org.apache.http.client.HttpClient">
     <service-properties>
       <entry key="osgi.jndi.service.name" value="apix/default-httpclient" />
     </service-properties>
