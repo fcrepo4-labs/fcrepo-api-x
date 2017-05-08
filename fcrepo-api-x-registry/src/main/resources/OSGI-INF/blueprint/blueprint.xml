@@ -12,6 +12,7 @@
   <cm:property-placeholder persistent-id="org.fcrepo.apix.registry.http"
     update-strategy="reload">
     <cm:default-properties>
+      <cm:property name="httpclient.osgi.jndi.service.name" value=""/>
       <cm:property name="timeout.connect.ms" value="1000" />
       <cm:property name="timeout.socket.ms" value="1000" />
     </cm:default-properties>
@@ -26,6 +27,12 @@
   <bean id="httpClient-default" factory-ref="httpClientFactory"
     factory-method="getClient" />
 
+  <bean id="httpClientFetcher" class="org.fcrepo.apix.registry.HttpClientFetcher">
+    <property name="defaultClient" ref="httpClient-default" />
+    <property name="serviceName" value="${httpclient.osgi.jndi.service.name}" />
+    <property name="bundleContext" ref="blueprintBundleContext" />
+  </bean>
+
 
   <service id="httpClient-default-service" ref="httpClient-default"
     interface="org.apache.http.client.HttpClient">
@@ -37,6 +44,9 @@
   <bean id="httpRegistryImpl" class="org.fcrepo.apix.registry.impl.HttpRegistry">
     <property name="httpClient" ref="httpClient-default" />
   </bean>
+
+  <service id="httpClientFetcherService" interface="org.fcrepo.apix.registry.HttpClientFetcher"
+    ref="httpClientFetcher" />
 
   <service id="httpRegistry" ref="httpRegistryImpl"
     interface="org.fcrepo.apix.model.components.Registry">

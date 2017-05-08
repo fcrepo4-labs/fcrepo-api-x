@@ -16,7 +16,7 @@
  * limitations under the License.
  */
 
-package org.fcrepo.apix.jena.impl;
+package org.fcrepo.apix.registry;
 
 import java.util.Collection;
 
@@ -40,6 +40,15 @@ public class HttpClientFetcher {
     private String serviceName;
 
     private BundleContext bundleContext;
+
+    private CloseableHttpClient defaultClient;
+
+    /**
+     * Set the default http client, if none specified.
+     */
+    public void setDefaultClient(final CloseableHttpClient client) {
+        this.defaultClient = client;
+    }
 
     /**
      * Set the osgi.jndi.service.name to retrieve an HttpClient.
@@ -70,6 +79,10 @@ public class HttpClientFetcher {
      * @throws Exception thrown when exactly one matching client cannot be retrieved.
      */
     public CloseableHttpClient getClient() throws Exception {
+
+        if (serviceName == null || serviceName.equals("")) {
+            return defaultClient;
+        }
 
         final Collection<ServiceReference<HttpClient>> refs = bundleContext.getServiceReferences(
                 HttpClient.class, String.format("(osgi.jndi.service.name=%s)", serviceName));
