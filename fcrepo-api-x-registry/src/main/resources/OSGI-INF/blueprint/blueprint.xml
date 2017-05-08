@@ -32,17 +32,12 @@
     <property name="serviceName" value="${httpclient.osgi.jndi.service.name}" />
     <property name="bundleContext" ref="blueprintBundleContext" />
   </bean>
-
-
-  <service id="httpClient-default-service" ref="httpClient-default"
-    interface="org.apache.http.client.HttpClient">
-    <service-properties>
-      <entry key="osgi.jndi.service.name" value="apix/default-httpclient" />
-    </service-properties>
-  </service>
+  
+  <bean id="httpClient" factory-ref="httpClientFetcher"
+    factory-method="getClient" />
 
   <bean id="httpRegistryImpl" class="org.fcrepo.apix.registry.impl.HttpRegistry">
-    <property name="httpClient" ref="httpClient-default" />
+    <property name="httpClient" ref="httpClient" />
   </bean>
 
   <service id="httpClientFetcherService" interface="org.fcrepo.apix.registry.HttpClientFetcher"
