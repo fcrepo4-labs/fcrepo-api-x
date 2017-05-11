@@ -22,6 +22,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -36,10 +37,13 @@ import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.OntologyService;
 import org.fcrepo.apix.model.components.Registry;
 import org.fcrepo.apix.model.components.ResourceNotFoundException;
-import org.fcrepo.client.FcrepoClient;
-import org.fcrepo.client.FcrepoResponse;
+import org.fcrepo.client.FcrepoLink;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.Header;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpHead;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
@@ -58,18 +62,24 @@ import org.slf4j.LoggerFactory;
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE)
 public class RuntimeExtensionBinding implements ExtensionBinding {
 
-    private static final URI NON_RDF_SOURCE = URI.create("http://www.w3.org/ns/ldp#NonRDFSource");
-
     private static final Logger LOG = LoggerFactory.getLogger(RuntimeExtensionBinding.class);
 
-    // TODO: Inject this
-    private static final FcrepoClient client = FcrepoClient.client().throwExceptionOnFailure().build();
+    private CloseableHttpClient httpClient;
 
     private ExtensionRegistry extensionRegistry;
 
     private OntologyService ontologySvc;
 
     private Registry registry;
+
+    /**
+     * Set the http client
+     *
+     * @param client client;
+     */
+    public void setHttpClient(final CloseableHttpClient client) {
+        this.httpClient = client;
+    }
 
     /**
      * Set the underlying registry containing extensions that may be bound.
@@ -170,33 +180,37 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
         }
 
         // Use object contents for reasoning, or if binary the binary's description
-        try (FcrepoResponse head = client.head(resourceURI).perform()) {
-            if (head.getLinkHeaders("type").contains(NON_RDF_SOURCE)) {
-                final List<URI> describedby = head.getLinkHeaders("describedby");
+        try (final CloseableHttpResponse response = httpClient.execute(new HttpHead(resourceURI))) {
+            final List<FcrepoLink> describedByLinks =
+                    Arrays.asList(response.getHeaders("Link")).stream().map(Header::getValue)
+                            .map(FcrepoLink::new)
+                            .filter(l -> "describedby".equals(l.getRel()))
+                            .collect(Collectors.toList());
 
-                if (describedby.size() > 1) {
+            if (!describedByLinks.isEmpty()) {
+                if (describedByLinks.size() > 1) {
                     throw new RuntimeException(
                             String.format("Ambiguous; more than one describes header for <%s>", resourceURI));
-                } else if (describedby.size() == 0) {
-                    LOG.warn("No rdf description for binary <{}>", resourceURI);
-                    return Collections.emptyList();
                 }
 
-                LOG.debug("Using <{}> for inference about binary <{}>", describedby.get(0), resourceURI);
+                LOG.debug("Using <{}> for inference about binary <{}>", describedByLinks.get(0).getUri(),
+                        resourceURI);
 
-                try (WebResource resource = registry.get(describedby.get(0))) {
+                try (WebResource resource = registry.get(describedByLinks.get(0).getUri())) {
                     return getExtensionsFor(WebResource.of(
                             resource.representation(),
                             resource.contentType(),
                             resourceURI, null), from);
                 }
+
             } else {
                 try (WebResource resource = registry.get(resourceURI)) {
                     return getExtensionsFor(resource, from);
                 }
             }
+
         } catch (final Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Could not get triples for reasoning over " + resourceURI, e);
         }
     }
 

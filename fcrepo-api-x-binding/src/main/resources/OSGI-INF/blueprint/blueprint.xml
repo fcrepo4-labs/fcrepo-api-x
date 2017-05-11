@@ -16,10 +16,17 @@
   <reference id="delegateRegistry" interface="org.fcrepo.apix.model.components.Registry"
     filter="(org.fcrepo.apix.registry.role=default)" />
 
+  <reference id="httpClientFetcher" ext:proxy-method="classes"
+    interface="org.fcrepo.apix.registry.HttpClientFetcher" />
+
+  <bean id="httpClient" factory-ref="httpClientFetcher"
+    factory-method="getClient" />
+
   <bean id="runtimeExtensionBindingImpl" class="org.fcrepo.apix.binding.impl.RuntimeExtensionBinding">
     <property name="extensionRegistry" ref="extensionRegistry" />
     <property name="ontologyService" ref="ontologyService" />
     <property name="delegateRegistry" ref="delegateRegistry" />
+    <property name="httpClient" ref="httpClient" />
   </bean>
 
   <service id="runtimeExtensionBinding" ref="runtimeExtensionBindingImpl"
