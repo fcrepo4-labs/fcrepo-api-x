@@ -9,19 +9,34 @@
        http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0  http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
        http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
 
-  <cm:property-placeholder persistent-id="org.fcrepo.apix.registry.http"
-    update-strategy="reload">
+  <cm:property-placeholder id="conf"
+    persistent-id="org.fcrepo.apix.registry.http" update-strategy="reload">
     <cm:default-properties>
-      <cm:property name="httpclient.osgi.jndi.service.name" value=""/>
       <cm:property name="timeout.connect.ms" value="1000" />
       <cm:property name="timeout.socket.ms" value="1000" />
     </cm:default-properties>
   </cm:property-placeholder>
 
+  <bean id="configAdmin" factory-ref="conf" factory-method="getConfigAdmin" />
+
+  <bean id="configuration" factory-ref="configAdmin"
+    factory-method="getConfiguration">
+    <argument value="org.fcrepo.apix.registry.http" />
+  </bean>
+
+  <bean id="configDict" factory-ref="configuration" factory-method="getProperties" />
+
+  <reference-list id="httpClients" interface="org.apache.http.client.HttpClient" availability="optional">
+    <reference-listener bind-method="bind"
+      unbind-method="unbind" ref="httpClientFetcher">
+    </reference-listener>
+  </reference-list>
+
   <!--HttpClient -->
-  <bean id="httpClientFactory" class="org.fcrepo.apix.registry.impl.HttpClientFactory">
+  <bean id="httpClientFactory" class="org.fcrepo.apix.registry.HttpClientFactory">
     <property name="connectTimeout" value="${timeout.connect.ms}" />
     <property name="socketTimeout" value="${timeout.socket.ms}" />
+    <property name="dictionary" ref="configDict" />
   </bean>
 
   <bean id="httpClient-default" factory-ref="httpClientFactory"
@@ -29,10 +44,9 @@
 
   <bean id="httpClientFetcher" class="org.fcrepo.apix.registry.HttpClientFetcher">
     <property name="defaultClient" ref="httpClient-default" />
-    <property name="serviceName" value="${httpclient.osgi.jndi.service.name}" />
     <property name="bundleContext" ref="blueprintBundleContext" />
   </bean>
-  
+
   <bean id="httpClient" factory-ref="httpClientFetcher"
     factory-method="getClient" />
 

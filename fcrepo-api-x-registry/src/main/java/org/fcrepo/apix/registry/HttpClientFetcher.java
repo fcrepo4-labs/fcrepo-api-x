@@ -18,12 +18,22 @@
 
 package org.fcrepo.apix.registry;
 
-import java.util.Collection;
+import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 
+import org.apache.http.HttpHost;
+import org.apache.http.HttpRequest;
+import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.conn.ClientConnectionManager;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.params.HttpParams;
+import org.apache.http.protocol.HttpContext;
 import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Fetches HttpClients from the OSGi registry.
@@ -37,26 +47,25 @@ import org.osgi.framework.ServiceReference;
  */
 public class HttpClientFetcher {
 
-    private String serviceName;
+    private CloseableHttpClient defaultClient;
 
     private BundleContext bundleContext;
 
-    private CloseableHttpClient defaultClient;
+    private final AtomicReference<ServiceReference<HttpClient>> serviceClient = new AtomicReference<>();
+
+    private final AtomicReference<CloseableHttpClient> client = new AtomicReference<>();
+
+    Logger LOG = LoggerFactory.getLogger(HttpClientFetcher.class);
 
     /**
      * Set the default http client, if none specified.
      */
     public void setDefaultClient(final CloseableHttpClient client) {
         this.defaultClient = client;
-    }
-
-    /**
-     * Set the osgi.jndi.service.name to retrieve an HttpClient.
-     *
-     * @param name osgi.jndi.service.name
-     */
-    public void setServiceName(final String name) {
-        this.serviceName = name;
+        if (serviceClient.get() == null) {
+            this.client.set(defaultClient);
+            LOG.info("Set default client " + this.client.get());
+        }
     }
 
     /**
@@ -69,34 +78,78 @@ public class HttpClientFetcher {
     }
 
     /**
-     * Get an httpClient from the OSGi registry.
+     * Get an httpClient
      * <p>
-     * TODO HttpResponse from do not implement AutoCloseable for backward compatibility reasons. Since we want to use
-     * try-with-resources, we cast to CloseableHttpClient and hope for the best.
+     * Returns a proxy that matches either a default, or highest-priority HttpClient service from the OSGi service
+     * registry.
      * </p>
      *
      * @return the client
-     * @throws Exception thrown when exactly one matching client cannot be retrieved.
      */
-    public CloseableHttpClient getClient() throws Exception {
+    public CloseableHttpClient getClient() {
 
-        if (serviceName == null || serviceName.equals("")) {
-            return defaultClient;
+        return new CloseableHttpClientProxy();
+    }
+
+    private class CloseableHttpClientProxy extends CloseableHttpClient {
+
+        @Override
+        public ClientConnectionManager getConnectionManager() {
+            return client.get().getConnectionManager();
         }
 
-        final Collection<ServiceReference<HttpClient>> refs = bundleContext.getServiceReferences(
-                HttpClient.class, String.format("(osgi.jndi.service.name=%s)", serviceName));
-
-        if (refs.size() != 1) {
-            throw new RuntimeException("Expecting to find exactly one HttpClient with " +
-                    "osgi.jndi.service.name=" + serviceName + "instead, found " + refs.size());
+        @Override
+        public HttpParams getParams() {
+            return client.get().getParams();
         }
 
-        try {
-            return (CloseableHttpClient) bundleContext.getService(refs.iterator().next());
-        } catch (final ClassCastException e) {
-            throw new RuntimeException(
-                    "Expected HttpClient from service registry to be an instance of CloseableHttpClient", e);
+        @Override
+        public void close() throws IOException {
+            client.get().close();
+        }
+
+        @Override
+        protected CloseableHttpResponse doExecute(final HttpHost host, final HttpRequest req, final HttpContext cxt)
+                throws IOException, ClientProtocolException {
+            LOG.info("Executing with client " + client.get());
+            return client.get().execute(host, req, cxt);
+        }
+
+    }
+
+    /**
+     * React to a newly bound service reference.
+     *
+     * @param clientRef
+     */
+    public synchronized void bind(final ServiceReference<HttpClient> clientRef) {
+        LOG.info("Got new HttpClient service.");
+        if (serviceClient.get() == null || clientRef.compareTo(serviceClient.get()) > 0) {
+            serviceClient.set(clientRef);
+            client.set((CloseableHttpClient) bundleContext.getService(clientRef));
+            LOG.info("Using new HttpClient service " + client.get());
+        } else {
+            LOG.info("HttpClient service is lower priority.  Ignoring.");
+        }
+    }
+
+    /**
+     * Unbind a service reference.
+     *
+     * @param clientRef to be unbound.
+     * @throws Exception
+     */
+    public synchronized void unbind(final ServiceReference<HttpClient> clientRef) throws Exception {
+        if (clientRef != null && clientRef.equals(serviceClient.get())) {
+            client.set(defaultClient);
+            serviceClient.set(null);
+
+            for (final ServiceReference<HttpClient> ref : bundleContext.getServiceReferences(HttpClient.class,
+                    null)) {
+                if (!ref.equals(clientRef)) {
+                    bind(ref);
+                }
+            }
         }
     }
 
