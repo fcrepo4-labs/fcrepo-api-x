@@ -123,7 +123,7 @@ public class ServiceIndexingRoutesTest extends CamelBlueprintTestSupport {
 
     /**
      * Advise routes before the camel context starts
-     * 
+     *
      * @throws Exception
      */
     @Override
@@ -158,7 +158,7 @@ public class ServiceIndexingRoutesTest extends CamelBlueprintTestSupport {
 
             @Override
             public void configure() throws Exception {
-                interceptSendToEndpoint("fcrepo:get-servicedoc-uri")
+                interceptSendToEndpoint("http://get-servicedoc-uri*")
                         .skipSendToOriginalEndpoint().to("direct:apix-head");
             }
         });

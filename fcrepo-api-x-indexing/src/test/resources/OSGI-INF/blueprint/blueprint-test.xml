@@ -34,6 +34,12 @@
   <bean id="http" class="org.apache.camel.component.http4.HttpComponent" />
   <bean id="https" class="org.apache.camel.component.http4.HttpComponent" />
 
+  <bean id="httpClientBuilder" class="org.apache.http.impl.client.HttpClientBuilder"
+    factory-method="create" />
+    
+  <bean id="httpClient" factory-ref="httpClientBuilder"
+    factory-method="build" />
+
   <camelContext id="FcrepoServiceIndexer"
     xmlns="http://camel.apache.org/schema/blueprint">
     <routeBuilder ref="indexerRoutes" />

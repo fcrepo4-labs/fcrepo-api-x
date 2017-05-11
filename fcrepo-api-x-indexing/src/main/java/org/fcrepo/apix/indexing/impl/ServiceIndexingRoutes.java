@@ -33,17 +33,18 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.fcrepo.camel.processor.EventProcessor;
 import org.fcrepo.client.FcrepoLink;
-import org.fcrepo.client.FcrepoOperationFailedException;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.http.common.HttpOperationFailedException;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
@@ -147,8 +148,8 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
                 // This is annoying, no easy way around
                 .doTry()
-                .to("fcrepo:get-servicedoc-uri")
-                .doCatch(FcrepoOperationFailedException.class)
+                .to("http://get-servicedoc-uri?httpClient=#httpClient")
+                .doCatch(HttpOperationFailedException.class)
                 .to("direct:410")
                 .doFinally()
                 .process(GET_SERVICE_DOC_HEADER);
@@ -156,10 +157,10 @@ public class ServiceIndexingRoutes extends RouteBuilder {
         from("direct:410")
                 .id("handle-error")
                 .choice()
-                .when(e -> e.getProperty(Exchange.EXCEPTION_CAUGHT, FcrepoOperationFailedException.class)
+                .when(e -> e.getProperty(Exchange.EXCEPTION_CAUGHT, HttpOperationFailedException.class)
                         .getStatusCode() != 410)
                 .process(e -> {
-                    throw e.getProperty(Exchange.EXCEPTION_CAUGHT, FcrepoOperationFailedException.class);
+                    throw e.getProperty(Exchange.EXCEPTION_CAUGHT, HttpOperationFailedException.class);
                 });
 
         from(ROUTE_INDEX_PREPARE)
@@ -208,7 +209,12 @@ public class ServiceIndexingRoutes extends RouteBuilder {
     @SuppressWarnings("unchecked")
     static final Processor GET_SERVICE_DOC_HEADER = ex -> {
 
-        LOG.info("Getting serice doc header");
+        final StringBuilder headers = new StringBuilder();
+        for (final Map.Entry<String, Object> entry : ex.getIn().getHeaders().entrySet()) {
+            headers.append(entry + "\n");
+        }
+
+        LOG.info("Getting serice doc header from " + headers.toString());
 
         final Set<String> rawLinkHeaders = new HashSet<>();
 
@@ -237,7 +243,8 @@ public class ServiceIndexingRoutes extends RouteBuilder {
         final Model model = ModelFactory.createDefaultModel();
 
         RDFDataMgr.read(model, ex.getIn().getBody(InputStream.class),
-                contentTypeToLang(parse(ex.getIn().getHeader(Exchange.CONTENT_TYPE, String.class)).getMimeType()));
+                contentTypeToLang(parse(ex.getIn().getHeader(Exchange.CONTENT_TYPE, String.class))
+                        .getMimeType()));
 
         model.write(serializedGraph, "N-TRIPLE");
 
