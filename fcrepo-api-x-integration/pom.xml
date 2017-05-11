@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <parent>
     <groupId>org.fcrepo.apix</groupId>
@@ -73,21 +74,41 @@
         <executions>
           <execution>
             <id>reserve-port</id>
-            <phase>pre-integration-test</phase>
+            <phase>generate-resources</phase>
             <goals>
               <goal>reserve-network-port</goal>
             </goals>
-        <configuration>
-          <portNames>
-            <portName>apix.dynamic.test.port</portName>
-            <portName>fcrepo.dynamic.test.port</portName>
-            <portName>services.dynamic.test.port</portName>
-            <portName>loader.dynamic.test.port</portName>
-            <portName>fcrepo.dynamic.jms.port</portName>
-            <portName>fcrepo.dynamic.stomp.port</portName>
-            <portName>reindexing.dynamic.test.port</portName>
-          </portNames>
-        </configuration>
+            <configuration>
+              <portNames>
+                <portName>apix.dynamic.test.port</portName>
+                <portName>fcrepo.dynamic.test.port</portName>
+                <portName>services.dynamic.test.port</portName>
+                <portName>loader.dynamic.test.port</portName>
+                <portName>fcrepo.dynamic.jms.port</portName>
+                <portName>fcrepo.dynamic.stomp.port</portName>
+                <portName>reindexing.dynamic.test.port</portName>
+              </portNames>
+            </configuration>
+          </execution>
+        </executions>
+      </plugin>
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <executions>
+          <execution>
+            <id>createHomes</id>
+            <phase>process-resources</phase>
+            <configuration>
+              <tasks>
+                <mkdir dir="${project.build.directory}/fuseki" />
+                <mkdir dir="${project.build.directory}/fcrepo" />
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
           </execution>
         </executions>
       </plugin>
@@ -99,7 +120,7 @@
         <configuration>
           <!-- Container configuration -->
           <container>
-            <containerId>jetty9x</containerId>
+            <containerId>tomcat8x</containerId>
             <type>installed</type>
             <systemProperties>
               <fcrepo.jms.baseUrl>http://localhost:${apix.dynamic.test.port}/${fcrepo.cxtPath}/rest</fcrepo.jms.baseUrl>
@@ -120,20 +141,31 @@
                 <context>${fcrepo.cxtPath}</context>
               </properties>
             </deployable>
-            <dependency>
+  
+            <deployable>
               <groupId>org.apache.jena</groupId>
               <artifactId>jena-fuseki-war</artifactId>
               <type>war</type>
               <properties>
                 <context>fuseki</context>
               </properties>
-            </dependency>
+            </deployable>
           </deployables>
           <configuration>
             <properties>
               <!-- <cargo.jvmargs>-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=5005</cargo.jvmargs> -->
               <cargo.servlet.port>${fcrepo.dynamic.test.port}</cargo.servlet.port>
             </properties>
+            <configfiles>
+              <configfile>
+                <file>${project.basedir}/src/test/resources/tomcat-users.xml</file>
+                <todir>conf</todir>
+              </configfile>
+              <configfile>
+                <file>${project.basedir}/src/test/resources/web.xml</file>
+                <todir>conf</todir>
+              </configfile>
+            </configfiles>
           </configuration>
         </configuration>
         <executions>

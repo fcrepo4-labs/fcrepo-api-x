@@ -73,7 +73,10 @@ public interface KarafIT {
 
     File testResources = new File(System.getProperty("project.basedir"), "src/test/resources");
 
-    FcrepoClient client = FcrepoClient.client().throwExceptionOnFailure().build();
+    FcrepoClient client = FcrepoClient.client()
+            .throwExceptionOnFailure()
+            .credentials("fedoraAdmin", "secret3")
+            .build();
 
     URI testContainer = URI.create(System.getProperty("test.container", ""));
 
@@ -100,6 +103,11 @@ public interface KarafIT {
                         .artifactId("fcrepo-api-x-karaf").versionAsInProject()
                         .classifier("features").type("xml");
 
+        final MavenArtifactUrlReference testBundle = maven()
+                .groupId("org.fcrepo.apix")
+                .artifactId("fcrepo-api-x-test")
+                .versionAsInProject();
+
         // This dependency is not in any features files, so we have to add it manually.
         final MavenArtifactUrlReference fcrepoClient = maven().groupId("org.fcrepo.client")
                 .artifactId("fcrepo-java-client")
@@ -125,6 +133,7 @@ public interface KarafIT {
 
             keepRuntimeFolder(),
 
+            mavenBundle(testBundle),
             features(apixRepo, "fcrepo-api-x-model"),
             features(apixRepo, "fcrepo-api-x-registry"),
             features(apixRepo, "fcrepo-api-x-jena"),
@@ -162,7 +171,8 @@ public interface KarafIT {
             deployFile("cfg/org.fcrepo.apix.registry.http.cfg"),
             deployFile("cfg/org.fcrepo.apix.routing.cfg"),
             deployFile("cfg/org.fcrepo.apix.listener.cfg"),
-            deployFile("cfg/org.fcrepo.apix.loader.cfg")
+            deployFile("cfg/org.fcrepo.apix.loader.cfg"),
+            deployFile("cfg/org.fcrepo.apix.test.cfg")
         };
 
         options.addAll(Arrays.asList(defaultOptions));

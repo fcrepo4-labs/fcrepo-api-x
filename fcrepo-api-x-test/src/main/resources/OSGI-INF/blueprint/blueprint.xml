@@ -10,8 +10,41 @@
        http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0  http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
        http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
 
-  <camel:camelContext id="testContext" />
 
+  <cm:property-placeholder id="conf"
+    persistent-id="org.fcrepo.apix.test" update-strategy="reload">
+    <cm:default-properties>
+      <cm:property name="timeout.connect.ms" value="1000" />
+      <cm:property name="timeout.socket.ms" value="1000" />
+    </cm:default-properties>
+  </cm:property-placeholder>
+
+  <bean id="configAdmin" factory-ref="conf" factory-method="getConfigAdmin" />
+
+  <bean id="configuration" factory-ref="configAdmin"
+    factory-method="getConfiguration">
+    <argument value="org.fcrepo.apix.test" />
+  </bean>
+
+  <bean id="configDict" factory-ref="configuration" factory-method="getProperties" />
+
+  <bean id="httpClientFactory" class="org.fcrepo.apix.registry.HttpClientFactory">
+    <property name="connectTimeout" value="${timeout.connect.ms}" />
+    <property name="socketTimeout" value="${timeout.socket.ms}" />
+    <property name="properties" ref="configDict" />
+  </bean>
+
+  <bean id="httpClient-test" factory-ref="httpClientFactory"
+    factory-method="getClient" />
+
+  <service interface="org.apache.http.client.HttpClient" ref="httpClient-test">
+    <service-properties>
+      <entry key="osgi.jndi.service.name" value="test/httpClient" />
+    </service-properties>
+  </service>
+
+  <camel:camelContext id="testContext" />
+  
   <service interface="org.apache.camel.CamelContext" ref="testContext">
     <service-properties>
       <entry key="role" value="test" />
