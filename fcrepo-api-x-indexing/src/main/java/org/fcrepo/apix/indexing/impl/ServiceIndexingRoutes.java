@@ -38,12 +38,12 @@ import java.util.stream.Collectors;
 
 import org.fcrepo.camel.processor.EventProcessor;
 import org.fcrepo.client.FcrepoLink;
+import org.fcrepo.client.FcrepoOperationFailedException;
 
 import org.apache.camel.Exchange;
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
-import org.apache.camel.http.common.HttpOperationFailedException;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.RDFDataMgr;
@@ -113,6 +113,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
         from("{{service.index.stream}}")
                 .routeId("from-index-stream")
                 .to(ROUTE_EVENT_PROCESOR)
+                .log(LoggingLevel.INFO, LOG, "Got message")
 
                 // At the moment, this seems to be the only way to filter out messages for "hash resources"
                 .filter(not(header(FCREPO_URI).contains("#")))
@@ -146,8 +147,8 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
                 // This is annoying, no easy way around
                 .doTry()
-                .to("http://get-servicedoc-uri")
-                .doCatch(HttpOperationFailedException.class)
+                .to("fcrepo:get-servicedoc-uri")
+                .doCatch(FcrepoOperationFailedException.class)
                 .to("direct:410")
                 .doFinally()
                 .process(GET_SERVICE_DOC_HEADER);
@@ -155,10 +156,10 @@ public class ServiceIndexingRoutes extends RouteBuilder {
         from("direct:410")
                 .id("handle-error")
                 .choice()
-                .when(e -> e.getProperty(Exchange.EXCEPTION_CAUGHT, HttpOperationFailedException.class)
+                .when(e -> e.getProperty(Exchange.EXCEPTION_CAUGHT, FcrepoOperationFailedException.class)
                         .getStatusCode() != 410)
                 .process(e -> {
-                    throw e.getProperty(Exchange.EXCEPTION_CAUGHT, HttpOperationFailedException.class);
+                    throw e.getProperty(Exchange.EXCEPTION_CAUGHT, FcrepoOperationFailedException.class);
                 });
 
         from(ROUTE_INDEX_PREPARE)
@@ -207,6 +208,8 @@ public class ServiceIndexingRoutes extends RouteBuilder {
     @SuppressWarnings("unchecked")
     static final Processor GET_SERVICE_DOC_HEADER = ex -> {
 
+        LOG.info("Getting serice doc header");
+
         final Set<String> rawLinkHeaders = new HashSet<>();
 
         final Object linkHeader = ex.getIn().getHeader("Link");
@@ -221,6 +224,8 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .map(FcrepoLink::new)
                 .filter(l -> l.getRel().equals("service"))
                 .map(l -> l.getUri()).collect(Collectors.toList());
+
+        LOG.info("Service doc header is " + services);
 
         ex.getIn().setHeader(HEADER_SERVICE_DOC, services);
     };

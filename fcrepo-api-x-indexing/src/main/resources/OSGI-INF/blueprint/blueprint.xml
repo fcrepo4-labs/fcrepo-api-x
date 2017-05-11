@@ -34,6 +34,9 @@
   <bean id="http" class="org.apache.camel.component.http4.HttpComponent" />
   <bean id="https" class="org.apache.camel.component.http4.HttpComponent" />
 
+  <reference id="fcrepo" interface="org.apache.camel.Component"
+    filter="(osgi.jndi.service.name=fcrepo/Camel)" />
+
   <reference id="broker" interface="org.apache.camel.Component"
     filter="(osgi.jndi.service.name=fcrepo/Broker)" />
 
