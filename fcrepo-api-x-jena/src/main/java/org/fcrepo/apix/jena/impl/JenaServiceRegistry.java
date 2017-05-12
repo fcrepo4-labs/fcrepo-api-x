@@ -64,9 +64,11 @@ import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.slf4j.Logger;
@@ -184,7 +186,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
             patch.setHeader(HttpHeaders.CONTENT_TYPE, SPARQL_UPDATE);
             patch.setEntity(new InputStreamEntity(patchAddService(uri)));
 
-            try (CloseableHttpResponse resp = client.execute(patch)) {
+            try (CloseableHttpResponse resp = execute(patch)) {
                 LOG.info("Adding service {} to registry {}", uri, registryContainer);
             }
         } catch (final Exception e) {
@@ -216,7 +218,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
                 "objects/service-instance-registry.ttl")));
 
         final URI uri;
-        try (CloseableHttpResponse resp = client.execute(post)) {
+        try (CloseableHttpResponse resp = execute(post)) {
             uri = URI.create(resp.getFirstHeader(HttpHeaders.LOCATION).getValue());
         } catch (final Exception e) {
             throw new RuntimeException("Could not create service instance registry", e);
@@ -228,7 +230,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
                 "INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
                 PROP_IS_SERVICE_INSTANCE_OF, service.uri(), CLASS_SERVICE_INSTANCE), UTF_8));
 
-        try (CloseableHttpResponse resp = client.execute(patch)) {
+        try (CloseableHttpResponse resp = execute(patch)) {
             LOG.info("Updating instance registry for {}", service.uri());
         } catch (final Exception e) {
             throw new RuntimeException("Could not update service instance registry", e);
@@ -270,7 +272,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
                         "INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
                         PROP_HAS_ENDPOINT, endpoint, CLASS_SERVICE_INSTANCE), UTF_8));
 
-                try (CloseableHttpResponse resp = client.execute(patch)) {
+                try (CloseableHttpResponse resp = execute(patch)) {
                     LOG.info("Adding endpoint <{}> to <{}>", endpoint, registryURI);
                 } catch (final Exception e) {
                     throw new RuntimeException(String.format("Failed adding endpoint <%s> to <%s>", endpoint,
@@ -404,6 +406,25 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
             LOG.warn("Could not resolve service for " + uri, e);
             return Stream.of();
         }
+    }
+
+    private CloseableHttpResponse execute(final HttpUriRequest req) throws Exception {
+
+        final CloseableHttpResponse resp = client.execute(req);
+
+        final int statusCode = resp.getStatusLine().getStatusCode();
+        if (statusCode < 200 || statusCode >= 300) {
+            String body;
+            try {
+                body = EntityUtils.toString(resp.getEntity());
+            } catch (final IOException e) {
+                body = e.getMessage();
+            }
+            throw new RuntimeException(String.format("Unexpected status code %s when interacting wirth <%s>: %s",
+                    statusCode, req.getURI(), body));
+        }
+
+        return resp;
     }
 
 }

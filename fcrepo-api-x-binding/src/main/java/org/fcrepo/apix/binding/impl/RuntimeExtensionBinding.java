@@ -181,6 +181,13 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
 
         // Use object contents for reasoning, or if binary the binary's description
         try (final CloseableHttpResponse response = httpClient.execute(new HttpHead(resourceURI))) {
+
+            if (response.getStatusLine().getStatusCode() != 200) {
+                throw new RuntimeException(String.format("Got unexpected status code %s in HEAD to <%s>",
+                        response.getStatusLine().getStatusCode(),
+                        resourceURI));
+            }
+
             final List<FcrepoLink> describedByLinks =
                     Arrays.asList(response.getHeaders("Link")).stream().map(Header::getValue)
                             .map(FcrepoLink::new)
