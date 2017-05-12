@@ -114,7 +114,6 @@ public class ServiceIndexingRoutes extends RouteBuilder {
         from("{{service.index.stream}}")
                 .routeId("from-index-stream")
                 .to(ROUTE_EVENT_PROCESOR)
-                .log(LoggingLevel.INFO, LOG, "Got message")
 
                 // At the moment, this seems to be the only way to filter out messages for "hash resources"
                 .filter(not(header(FCREPO_URI).contains("#")))
@@ -177,7 +176,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .routeId("perform-delete")
                 .setHeader(FCREPO_NAMED_GRAPH, bodyAs(URI.class))
                 .process(SPARQL_DELETE_PROCESSOR)
-                .log(LoggingLevel.INFO, LOG,
+                .log(LoggingLevel.DEBUG, LOG,
                         "Deleting service doc of ${headers[CamelFcrepoUri]}")
                 .to("{{triplestore.baseUrl}}");
 
@@ -190,7 +189,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .setHeader(FCREPO_NAMED_GRAPH, header(Exchange.HTTP_URI))
                 .removeHeaders("CamelHttp*")
                 .process(SPARQL_UPDATE_PROCESSOR)
-                .log(LoggingLevel.INFO, LOG,
+                .log(LoggingLevel.DEBUG, LOG,
                         "Indexing service doc of ${headers[CamelFcrepoUri]}")
                 .to("{{triplestore.baseUrl}}");
 
@@ -214,7 +213,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
             headers.append(entry + "\n");
         }
 
-        LOG.info("Getting serice doc header from " + headers.toString());
+        LOG.debug("Getting serice doc header from " + headers.toString());
 
         final Set<String> rawLinkHeaders = new HashSet<>();
 
@@ -230,8 +229,6 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .map(FcrepoLink::new)
                 .filter(l -> l.getRel().equals("service"))
                 .map(l -> l.getUri()).collect(Collectors.toList());
-
-        LOG.info("Service doc header is " + services);
 
         ex.getIn().setHeader(HEADER_SERVICE_DOC, services);
     };

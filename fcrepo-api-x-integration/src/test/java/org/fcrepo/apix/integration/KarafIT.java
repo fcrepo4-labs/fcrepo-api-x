@@ -127,7 +127,7 @@ public interface KarafIT {
             karafDistributionConfiguration().frameworkUrl(karafUrl)
                     .unpackDirectory(new File("target", "exam")).useDeployFolder(false),
             // KarafDistributionOption.configureConsole().ignoreLocalConsole(),
-            logLevel(LogLevel.INFO),
+            logLevel(LogLevel.WARN),
 
             // KarafDistributionOption.debugConfiguration("5005", true),
 
