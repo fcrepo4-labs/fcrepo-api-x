@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.jena.impl;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.fcrepo.apix.jena.Util.objectResourceOf;
 import static org.fcrepo.apix.jena.Util.objectResourcesOf;
 import static org.fcrepo.apix.jena.Util.parse;
@@ -32,7 +33,6 @@ import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_SERVICE_INSTANCE
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_SERVICE_INSTANCE_REGISTRY;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_IS_SERVICE_INSTANCE_OF;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
@@ -58,10 +58,17 @@ import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.ServiceInstanceRegistry;
 import org.fcrepo.apix.model.components.ServiceRegistry;
 import org.fcrepo.apix.model.components.Updateable;
-import org.fcrepo.client.FcrepoClient;
-import org.fcrepo.client.FcrepoOperationFailedException;
 
 import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpHeaders;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPatch;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.util.EntityUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Resource;
 import org.slf4j.Logger;
@@ -76,7 +83,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     private URI registryContainer;
 
-    private FcrepoClient client;
+    private CloseableHttpClient client;
 
     private Initializer initializer;
 
@@ -84,12 +91,14 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     private static final Logger LOG = LoggerFactory.getLogger(JenaServiceRegistry.class);
 
+    private static final String SPARQL_UPDATE = "application/sparql-update";
+
     /**
      * Set the Fedora client.
      *
      * @param client the client
      */
-    public void setFcrepoClient(final FcrepoClient client) {
+    public void setHttpClient(final CloseableHttpClient client) {
         this.client = client;
     }
 
@@ -172,7 +181,14 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
         init.await();
         try {
             LOG.debug("Registering service {} ", uri);
-            this.client.patch(registryContainer).body(patchAddService(uri)).perform().close();
+
+            final HttpPatch patch = new HttpPatch(registryContainer);
+            patch.setHeader(HttpHeaders.CONTENT_TYPE, SPARQL_UPDATE);
+            patch.setEntity(new InputStreamEntity(patchAddService(uri)));
+
+            try (CloseableHttpResponse resp = execute(patch)) {
+                LOG.info("Adding service {} to registry {}", uri, registryContainer);
+            }
         } catch (final Exception e) {
             throw new RuntimeException(String.format("Could not add <%s> to service registry <%s>", uri,
                     registryContainer), e);
@@ -195,20 +211,32 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     public ServiceInstanceRegistry createInstanceRegistry(final Service service) {
         init.await();
         LOG.debug("POST: Creating service instance registry");
-        try {
-            final URI uri = client.post(service.uri()).body(this.getClass().getResourceAsStream(
-                    "objects/service-instance-registry.ttl")).perform().getLocation();
 
-            client.patch(uri).body(
-                    new ByteArrayInputStream(
-                            String.format(
-                                    "INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
-                                    PROP_IS_SERVICE_INSTANCE_OF, service.uri(), CLASS_SERVICE_INSTANCE).getBytes()))
-                    .perform();
-            return instancesOf(getService(service.uri()));
-        } catch (final FcrepoOperationFailedException e) {
-            throw new RuntimeException(e);
+        final HttpPost post = new HttpPost(service.uri());
+        post.setHeader(HttpHeaders.CONTENT_TYPE, "text/turtle");
+        post.setEntity(new InputStreamEntity(this.getClass().getResourceAsStream(
+                "objects/service-instance-registry.ttl")));
+
+        final URI uri;
+        try (CloseableHttpResponse resp = execute(post)) {
+            uri = URI.create(resp.getFirstHeader(HttpHeaders.LOCATION).getValue());
+        } catch (final Exception e) {
+            throw new RuntimeException("Could not create service instance registry", e);
         }
+
+        final HttpPatch patch = new HttpPatch(uri);
+        patch.setHeader(HttpHeaders.CONTENT_TYPE, SPARQL_UPDATE);
+        patch.setEntity(new StringEntity(String.format(
+                "INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
+                PROP_IS_SERVICE_INSTANCE_OF, service.uri(), CLASS_SERVICE_INSTANCE), UTF_8));
+
+        try (CloseableHttpResponse resp = execute(patch)) {
+            LOG.info("Updating instance registry for {}", service.uri());
+        } catch (final Exception e) {
+            throw new RuntimeException("Could not update service instance registry", e);
+        }
+
+        return instancesOf(getService(service.uri()));
     }
 
     @Override
@@ -237,17 +265,21 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
             @Override
             public URI addEndpoint(final URI endpoint) {
                 LOG.debug("PATCH: Adding endpoint <{}> to <{}>", endpoint, registryURI);
-                try {
-                    client.patch(registryURI).body(
-                            new ByteArrayInputStream(
-                                    String.format(
-                                            "INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
-                                            PROP_HAS_ENDPOINT, endpoint, CLASS_SERVICE_INSTANCE).getBytes()))
-                            .perform();
-                    return registryURI;
-                } catch (final FcrepoOperationFailedException e) {
-                    throw new RuntimeException(e);
+
+                final HttpPatch patch = new HttpPatch(registryURI);
+                patch.setHeader(HttpHeaders.CONTENT_TYPE, SPARQL_UPDATE);
+                patch.setEntity(new StringEntity(String.format(
+                        "INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
+                        PROP_HAS_ENDPOINT, endpoint, CLASS_SERVICE_INSTANCE), UTF_8));
+
+                try (CloseableHttpResponse resp = execute(patch)) {
+                    LOG.info("Adding endpoint <{}> to <{}>", endpoint, registryURI);
+                } catch (final Exception e) {
+                    throw new RuntimeException(String.format("Failed adding endpoint <%s> to <%s>", endpoint,
+                            registryURI), e);
                 }
+
+                return registryURI;
             }
         };
     }
@@ -374,6 +406,25 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
             LOG.warn("Could not resolve service for " + uri, e);
             return Stream.of();
         }
+    }
+
+    private CloseableHttpResponse execute(final HttpUriRequest req) throws Exception {
+
+        final CloseableHttpResponse resp = client.execute(req);
+
+        final int statusCode = resp.getStatusLine().getStatusCode();
+        if (statusCode < 200 || statusCode >= 300) {
+            String body;
+            try {
+                body = EntityUtils.toString(resp.getEntity());
+            } catch (final IOException e) {
+                body = e.getMessage();
+            }
+            throw new RuntimeException(String.format("Unexpected status code %s when interacting wirth <%s>: %s",
+                    statusCode, req.getURI(), body));
+        }
+
+        return resp;
     }
 
 }

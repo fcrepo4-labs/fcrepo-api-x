@@ -23,7 +23,6 @@ import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 import static org.apache.http.HttpStatus.SC_GONE;
 import static org.apache.http.HttpStatus.SC_NOT_FOUND;
 import static org.apache.http.HttpStatus.SC_OK;
-import static org.osgi.service.component.annotations.ConfigurationPolicy.REQUIRE;
 
 import java.io.FilterInputStream;
 import java.io.IOException;
@@ -45,8 +44,6 @@ import org.apache.http.client.methods.HttpHead;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +52,6 @@ import org.slf4j.LoggerFactory;
  *
  * @author apb@jhu.edu
  */
-@Component(configurationPolicy = REQUIRE)
 public class HttpRegistry implements Registry {
 
     private static final Logger LOG = LoggerFactory.getLogger(HttpRegistry.class);
@@ -65,11 +61,10 @@ public class HttpRegistry implements Registry {
     static final String RDF_MEDIA_TYPES = "application/rdf+xml, text/turtle";
 
     /**
-     * Set the underlying httpClient impl
+     * Set the underlying httpClient used by this registry.
      *
-     * @param client the HttpClient implementation
+     * @param client closeable http client.
      */
-    @Reference
     public void setHttpClient(final CloseableHttpClient client) {
         this.client = client;
     }

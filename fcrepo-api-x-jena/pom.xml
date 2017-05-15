@@ -48,11 +48,6 @@
       <artifactId>jena-osgi</artifactId>
     </dependency>
 
-    <dependency>
-      <groupId>org.fcrepo.client</groupId>
-      <artifactId>fcrepo-java-client</artifactId>
-    </dependency>
-
     <!-- For OSGi -->
     <dependency>
       <groupId>com.github.andrewoma.dexx</groupId>

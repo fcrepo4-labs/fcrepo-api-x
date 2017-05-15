@@ -18,12 +18,12 @@
 
     <activemq.version>5.14.1</activemq.version>
     <camel.version>2.18.1</camel.version>
-    <cargo.version>1.5.0</cargo.version>
+    <cargo.version>1.6.3</cargo.version>
     <checkstyle.plugin.version>2.17</checkstyle.plugin.version>
     <commons-io.version>2.5</commons-io.version>
     <docker>false</docker>
     <dexx-collection.version>0.6</dexx-collection.version>
-    <fcrepo.version>4.7.0</fcrepo.version>
+    <fcrepo.version>4.7.2</fcrepo.version>
     <fcrepo-camel.version>4.5.0</fcrepo-camel.version>
     <fcrepo-toolbox.version>4.7.0</fcrepo-toolbox.version>
     <fcrepo-build-tools.version>4.4.2</fcrepo-build-tools.version>
@@ -34,6 +34,7 @@
     <junit.version>4.12</junit.version>
     <karaf.version>4.0.7</karaf.version>
     <license.plugin.version>2.11</license.plugin.version>
+    <logback.version>1.2.3</logback.version>
     <maven-antrun-plugin.version>1.8</maven-antrun-plugin.version>
     <maven-bundle-plugin.version>3.2.0</maven-bundle-plugin.version>
     <maven-exec-plugin.version>1.4.0</maven-exec-plugin.version>

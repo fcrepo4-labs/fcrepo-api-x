@@ -26,6 +26,12 @@
 
   </cm:property-placeholder>
 
+  <reference id="httpClientFetcher" ext:proxy-method="classes"
+    interface="org.fcrepo.apix.registry.HttpClientFetcher" />
+    
+  <bean id="httpClient" factory-ref="httpClientFetcher"
+    factory-method="getClient" />
+
   <bean id="indexerRoutes" class="org.fcrepo.apix.indexing.impl.ServiceIndexingRoutes">
     <property name="extensionContainer" value="${ldp.path.extension.container}" />
     <property name="reindexStream" value="${service.reindex.stream}" />
@@ -33,6 +39,7 @@
 
   <bean id="http" class="org.apache.camel.component.http4.HttpComponent" />
   <bean id="https" class="org.apache.camel.component.http4.HttpComponent" />
+
 
   <reference id="broker" interface="org.apache.camel.Component"
     filter="(osgi.jndi.service.name=fcrepo/Broker)" />

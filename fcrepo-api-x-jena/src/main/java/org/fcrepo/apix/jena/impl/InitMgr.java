@@ -27,6 +27,9 @@ import java.util.concurrent.TimeoutException;
 
 import org.fcrepo.apix.model.components.Initializer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Simple threaded initialization initializer.
  * <p>
@@ -37,6 +40,8 @@ import org.fcrepo.apix.model.components.Initializer;
  * @author apb@jhu.edu
  */
 public class InitMgr implements Initializer {
+
+    static final Logger LOG = LoggerFactory.getLogger(InitMgr.class);
 
     long retryWait = 1000;
 
@@ -66,6 +71,7 @@ public class InitMgr implements Initializer {
                         success = true;
                     } catch (final Exception e) {
                         try {
+                            LOG.info("Caught exception while initializing.  Trying again in {} ms", retryWait, e);
                             Thread.sleep(retryWait);
                         } catch (final InterruptedException i) {
                             Thread.currentThread().interrupt();

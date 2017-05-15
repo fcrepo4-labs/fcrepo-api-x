@@ -35,16 +35,13 @@
   <reference id="underlyingRegistryDelegate" filter="(org.fcrepo.apix.registry.role=default)"
     interface="org.fcrepo.apix.model.components.Registry" />
 
-  <reference id="httpClient" ext:proxy-method="classes"
-    interface="org.apache.http.impl.client.CloseableHttpClient" />
+  <reference id="httpClientFetcher" ext:proxy-method="classes"
+    interface="org.fcrepo.apix.registry.HttpClientFetcher" />
+
+  <bean id="httpClient" factory-ref="httpClientFetcher"
+    factory-method="getClient" />
 
   <bean id="initMgr" class="org.fcrepo.apix.jena.impl.InitMgr" />
-
-  <bean id="fcrepoClientBuilder" class="org.fcrepo.client.FcrepoClient"
-    factory-method="client" />
-
-  <bean id="fcrepoClient" factory-ref="fcrepoClientBuilder"
-    factory-method="build" />
 
   <bean id="ldpExtensionRegistryDelegate" class="org.fcrepo.apix.jena.impl.LdpContainerRegistry"
     init-method="init" destroy-method="shutdown">
@@ -103,7 +100,7 @@
 
   <bean id="jenaServiceRegistryImpl" class="org.fcrepo.apix.jena.impl.JenaServiceRegistry"
     init-method="init" destroy-method="shutdown">
-    <property name="fcrepoClient" ref="fcrepoClient" />
+    <property name="httpClient" ref="httpClient" />
     <property name="registryContainer" value="${registry.service.ldp.container}" />
     <property name="registryDelegate" ref="ldpServiceRegistryDelegate" />
     <property name="initializer" ref="initMgr" />

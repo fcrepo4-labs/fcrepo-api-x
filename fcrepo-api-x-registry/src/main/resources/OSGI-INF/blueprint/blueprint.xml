@@ -9,34 +9,53 @@
        http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0  http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
        http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
 
-  <cm:property-placeholder persistent-id="org.fcrepo.apix.registry.http"
-    update-strategy="reload">
+  <cm:property-placeholder id="conf"
+    persistent-id="org.fcrepo.apix.registry.http" update-strategy="reload">
     <cm:default-properties>
       <cm:property name="timeout.connect.ms" value="1000" />
       <cm:property name="timeout.socket.ms" value="1000" />
     </cm:default-properties>
   </cm:property-placeholder>
 
+  <bean id="configAdmin" factory-ref="conf" factory-method="getConfigAdmin" />
+
+  <bean id="configuration" factory-ref="configAdmin"
+    factory-method="getConfiguration">
+    <argument value="org.fcrepo.apix.registry.http" />
+  </bean>
+
+  <bean id="configDict" factory-ref="configuration" factory-method="getProperties" />
+
+  <reference-list id="httpClients" interface="org.apache.http.client.HttpClient" availability="optional">
+    <reference-listener bind-method="bind"
+      unbind-method="unbind" ref="httpClientFetcher">
+    </reference-listener>
+  </reference-list>
+
   <!--HttpClient -->
-  <bean id="httpClientFactory" class="org.fcrepo.apix.registry.impl.HttpClientFactory">
+  <bean id="httpClientFactory" class="org.fcrepo.apix.registry.HttpClientFactory">
     <property name="connectTimeout" value="${timeout.connect.ms}" />
     <property name="socketTimeout" value="${timeout.socket.ms}" />
+    <property name="dictionary" ref="configDict" />
   </bean>
 
   <bean id="httpClient-default" factory-ref="httpClientFactory"
     factory-method="getClient" />
 
+  <bean id="httpClientFetcher" class="org.fcrepo.apix.registry.HttpClientFetcher">
+    <property name="defaultClient" ref="httpClient-default" />
+    <property name="bundleContext" ref="blueprintBundleContext" />
+  </bean>
 
-  <service id="httpClient-default-service" ref="httpClient-default"
-    interface="org.apache.http.impl.client.CloseableHttpClient">
-    <service-properties>
-      <entry key="role" value="registry-default" />
-    </service-properties>
-  </service>
+  <bean id="httpClient" factory-ref="httpClientFetcher"
+    factory-method="getClient" />
 
   <bean id="httpRegistryImpl" class="org.fcrepo.apix.registry.impl.HttpRegistry">
-    <property name="httpClient" ref="httpClient-default" />
+    <property name="httpClient" ref="httpClient" />
   </bean>
+
+  <service id="httpClientFetcherService" interface="org.fcrepo.apix.registry.HttpClientFetcher"
+    ref="httpClientFetcher" />
 
   <service id="httpRegistry" ref="httpRegistryImpl"
     interface="org.fcrepo.apix.model.components.Registry">

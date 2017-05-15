@@ -27,12 +27,8 @@ import static org.fcrepo.apix.model.Ontologies.Apix.PROP_EXPOSES_SERVICE_AT;
 import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE_INSTANCE;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_CANONICAL;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_ENDPOINT;
-import static org.ops4j.pax.exam.CoreOptions.maven;
-import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 
 import java.net.URI;
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -53,8 +49,6 @@ import org.apache.camel.impl.DefaultMessage;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
 import org.junit.rules.TestName;
-import org.ops4j.pax.exam.Option;
-import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.BundleContext;
 
@@ -89,15 +83,6 @@ public abstract class ServiceBasedTest implements KarafIT {
     protected final Message requestToService = new DefaultMessage();
 
     private Processor processFromTest;
-
-    @Override
-    public List<Option> additionalKarafConfig() {
-        final MavenArtifactUrlReference testBundle = maven()
-                .groupId("org.fcrepo.apix")
-                .artifactId("fcrepo-api-x-test")
-                .versionAsInProject();
-        return Arrays.asList(mavenBundle(testBundle));
-    }
 
     @Before
     public void start() throws Exception {

@@ -170,7 +170,7 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
 
         final URI objectContainer_intercept = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
-        final String TYPE = "test:" + name.getMethodName();
+        final String TYPE = "karafIT:" + name.getMethodName();
 
         // Give our request a specific body
         onServiceRequest(ex -> {
@@ -185,11 +185,15 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         final URI container = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
                 objectContainer_intercept);
 
-        final URI newObject = FcrepoClient.client().build().post(container)
+        final URI newObject = client.post(container)
                 .body(IOUtils.toInputStream("<> a test:nothing .", "UTF-8"), "text/turtle")
                 .perform().getLocation();
 
-        assertTrue(IOUtils.toString(client.get(newObject).perform().getBody(), "UTF-8").contains(TYPE));
+        try (FcrepoResponse response = client.get(newObject).accept("application/n-triples").perform()) {
+            final String body = IOUtils.toString(response.getBody(), "UTF-8");
+            assertTrue(body, body
+                    .contains(TYPE));
+        }
 
     }
 

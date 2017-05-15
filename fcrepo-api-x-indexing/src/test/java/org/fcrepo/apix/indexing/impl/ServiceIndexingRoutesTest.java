@@ -123,6 +123,7 @@ public class ServiceIndexingRoutesTest extends CamelBlueprintTestSupport {
 
     /**
      * Advise routes before the camel context starts
+     *
      * @throws Exception
      */
     @Override
@@ -154,9 +155,10 @@ public class ServiceIndexingRoutesTest extends CamelBlueprintTestSupport {
         });
 
         context.getRouteDefinition("get-servicedoc-uri").adviceWith(context, new AdviceWithRouteBuilder() {
+
             @Override
             public void configure() throws Exception {
-                interceptSendToEndpoint("http://get-servicedoc-uri")
+                interceptSendToEndpoint("http://get-servicedoc-uri*")
                         .skipSendToOriginalEndpoint().to("direct:apix-head");
             }
         });

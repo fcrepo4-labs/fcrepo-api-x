@@ -33,6 +33,7 @@ import java.net.URI;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -146,7 +147,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
                 // This is annoying, no easy way around
                 .doTry()
-                .to("http://get-servicedoc-uri")
+                .to("http://get-servicedoc-uri?httpClient=#httpClient")
                 .doCatch(HttpOperationFailedException.class)
                 .to("direct:410")
                 .doFinally()
@@ -175,7 +176,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .routeId("perform-delete")
                 .setHeader(FCREPO_NAMED_GRAPH, bodyAs(URI.class))
                 .process(SPARQL_DELETE_PROCESSOR)
-                .log(LoggingLevel.INFO, LOG,
+                .log(LoggingLevel.DEBUG, LOG,
                         "Deleting service doc of ${headers[CamelFcrepoUri]}")
                 .to("{{triplestore.baseUrl}}");
 
@@ -188,7 +189,7 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .setHeader(FCREPO_NAMED_GRAPH, header(Exchange.HTTP_URI))
                 .removeHeaders("CamelHttp*")
                 .process(SPARQL_UPDATE_PROCESSOR)
-                .log(LoggingLevel.INFO, LOG,
+                .log(LoggingLevel.DEBUG, LOG,
                         "Indexing service doc of ${headers[CamelFcrepoUri]}")
                 .to("{{triplestore.baseUrl}}");
 
@@ -206,6 +207,13 @@ public class ServiceIndexingRoutes extends RouteBuilder {
 
     @SuppressWarnings("unchecked")
     static final Processor GET_SERVICE_DOC_HEADER = ex -> {
+
+        final StringBuilder headers = new StringBuilder();
+        for (final Map.Entry<String, Object> entry : ex.getIn().getHeaders().entrySet()) {
+            headers.append(entry + "\n");
+        }
+
+        LOG.debug("Getting serice doc header from " + headers.toString());
 
         final Set<String> rawLinkHeaders = new HashSet<>();
 
@@ -232,7 +240,8 @@ public class ServiceIndexingRoutes extends RouteBuilder {
         final Model model = ModelFactory.createDefaultModel();
 
         RDFDataMgr.read(model, ex.getIn().getBody(InputStream.class),
-                contentTypeToLang(parse(ex.getIn().getHeader(Exchange.CONTENT_TYPE, String.class)).getMimeType()));
+                contentTypeToLang(parse(ex.getIn().getHeader(Exchange.CONTENT_TYPE, String.class))
+                        .getMimeType()));
 
         model.write(serializedGraph, "N-TRIPLE");
 
