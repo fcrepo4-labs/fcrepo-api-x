@@ -203,15 +203,23 @@ public class ExposedServiceUriAnalyzer implements Updateable {
             final String exposeSegment = matches.get(0);
             final Extension extension = endpoints.get(exposeSegment);
 
-            final String resourcePath = Scope.RESOURCE.equals(extension.exposed().scope())
-                    ? rawPath.substring(0, rawPath.indexOf(exposeSegment) - 1)
-                    : null;
+            final int exposeStart = rawPath.indexOf(exposeSegment);
+
+            String resourcePath = "";
+
+            if (exposeStart > 0) {
+                resourcePath = rawPath.substring(0, exposeStart - 1);
+            }
+
+            LOG.debug("ANALYZER: Resource path '{}'", resourcePath);
 
             final URI exposedServiceURI = routing.of(requestURI).endpointFor(extension.exposed(), resourcePath);
 
+            LOG.debug("ANALYZER Service URI {}", exposedServiceURI);
+
             return new ServiceExposingBinding(
                     extension,
-                    resourcePath != null ? append(fcrepoBaseURI, resourcePath) : null,
+                    resourceUri(URI.create(fcrepoBaseURI), resourcePath),
                     exposedServiceURI,
                     resourcePath,
                     requestURI.toString().replace(exposedServiceURI.toString(), ""));
@@ -220,6 +228,16 @@ public class ExposedServiceUriAnalyzer implements Updateable {
             throw new ResourceNotFoundException(String.format(
                     "Request URI '%s' does not route to any exposed services", requestURI));
         }
+    }
+
+    private URI resourceUri(final URI baseUri, final String path) {
+        if (path == null) {
+            return null;
+        } else if (path.equals("")) {
+            return baseUri;
+        }
+
+        return append(fcrepoBaseURI, path);
     }
 
     public class ServiceExposingBinding {

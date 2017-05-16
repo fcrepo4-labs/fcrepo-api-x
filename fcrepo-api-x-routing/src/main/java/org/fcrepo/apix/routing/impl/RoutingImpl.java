@@ -174,6 +174,7 @@ public class RoutingImpl extends RouteBuilder {
         // It would be nice to use the rest DSL to do the service doc, if that is at all possible
 
         from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.discoveryPath}}?matchOnUriPrefix=true")
+                .routeId("service-doc-endpoint")
                 .process(WRITE_SERVICE_DOC);
 
         from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.exposePath}}" +
