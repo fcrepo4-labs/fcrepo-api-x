@@ -169,13 +169,10 @@ public class ExposedServiceUriAnalyzerTest {
 
         final ServiceExposingBinding binding = toTest.match(exposureURI(path, extension1ExposedAt));
 
-        System.out.println(exposureURI(path, extension1ExposedAt));
-
         assertNotNull(binding);
         assertEquals(extension1, binding.extension);
         assertEquals(path, binding.resourcePath);
         assertTrue(binding.repositoryResourceURI.toString().startsWith(fcrepoBaseURI.toString()));
-        System.out.println(binding.repositoryResourceURI);
         assertTrue(binding.repositoryResourceURI.toString().endsWith(path));
         assertEquals(path, binding.repositoryResourceURI.toString().replace(fcrepoBaseURI.toString(), ""));
     }
@@ -215,9 +212,6 @@ public class ExposedServiceUriAnalyzerTest {
     public void additionalPathTest() {
         final String path = "some/path/";
 
-        System.out.println("URI: " + exposureURIPlus(path, extension1ExposedAt,
-                "additional/path"));
-
         final ServiceExposingBinding binding = toTest.match(exposureURIPlus(path, extension1ExposedAt,
                 "additional/path"));
 
@@ -225,8 +219,6 @@ public class ExposedServiceUriAnalyzerTest {
         assertEquals(extension1, binding.extension);
         assertEquals(path, binding.resourcePath);
         assertTrue(binding.repositoryResourceURI.toString().startsWith(fcrepoBaseURI.toString()));
-        System.out.println("Path: " + path);
-        System.out.println("Resource: " + binding.repositoryResourceURI.toString());
         assertTrue(binding.repositoryResourceURI.toString().endsWith(path));
         assertEquals(path, binding.repositoryResourceURI.toString().replace(fcrepoBaseURI.toString() + "/", ""));
     }
