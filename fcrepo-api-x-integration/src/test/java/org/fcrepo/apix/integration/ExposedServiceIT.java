@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.integration;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.fcrepo.apix.jena.Util.parse;
 import static org.fcrepo.apix.jena.Util.query;
 import static org.fcrepo.apix.jena.Util.subjectsOf;
@@ -70,6 +71,8 @@ import org.ops4j.pax.exam.junit.PaxExam;
 import org.ops4j.pax.exam.options.MavenArtifactUrlReference;
 import org.ops4j.pax.exam.util.Filter;
 import org.osgi.framework.BundleContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author apb@jhu.edu
@@ -87,6 +90,8 @@ public class ExposedServiceIT implements KarafIT {
     private final Message responseFromService = new DefaultMessage();
 
     private final Message requestToService = new DefaultMessage();
+
+    Logger LOG = LoggerFactory.getLogger(ExposedServiceIT.class);
 
     @Inject
     ServiceDiscovery discovery;
@@ -170,7 +175,7 @@ public class ExposedServiceIT implements KarafIT {
         client.patch(serviceURI).body(
                 IOUtils.toInputStream(
                         String.format("INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
-                                PROP_HAS_ENDPOINT, serviceEndpoint, CLASS_SERVICE_INSTANCE), "UTF-8")).perform();
+                                PROP_HAS_ENDPOINT, serviceEndpoint, CLASS_SERVICE_INSTANCE), UTF_8)).perform();
 
         // Create the object
         final URI object = postFromTestResource("objects/object_ExposedServiceIT.ttl", objectContainer);
@@ -179,6 +184,14 @@ public class ExposedServiceIT implements KarafIT {
 
         // Make sure the repository resource URI is relayed to our service, in the expected header.
         assertEquals(object.toString(), requestToService.getHeader(HTTP_HEADER_REPOSITORY_RESOURCE_URI));
+
+        // Now an edge case - make the root resource have the service
+        final URI root = URI.create(fcrepoBaseURI);
+
+        client.patch(root).body(IOUtils.toInputStream(
+                "INSERT { <> a <test:ExposedServiceIT#resourceScoped>. } WHERE {}", UTF_8)).perform().close();;
+        commonTests(root);
+
     }
 
     @Test
@@ -195,7 +208,7 @@ public class ExposedServiceIT implements KarafIT {
         client.patch(serviceURI).body(
                 IOUtils.toInputStream(
                         String.format("INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
-                                PROP_HAS_ENDPOINT, serviceEndpoint, CLASS_SERVICE_INSTANCE), "UTF-8")).perform();
+                                PROP_HAS_ENDPOINT, serviceEndpoint, CLASS_SERVICE_INSTANCE), UTF_8)).perform();
 
         // Create the object
         final URI object = postFromTestResource("objects/object_ExposedServiceIT_repository.ttl", objectContainer);
@@ -230,7 +243,7 @@ public class ExposedServiceIT implements KarafIT {
         client.patch(serviceURI).body(
                 IOUtils.toInputStream(
                         String.format("INSERT {?instance <%s> <%s> .} WHERE {?instance a <%s> .}",
-                                PROP_HAS_ENDPOINT, serviceEndpoint, CLASS_SERVICE_INSTANCE), "UTF-8")).perform();
+                                PROP_HAS_ENDPOINT, serviceEndpoint, CLASS_SERVICE_INSTANCE), UTF_8)).perform();
 
         // Create the object
         final URI object = postFromTestResource("objects/object_ExposedServiceIT_duplicate.ttl", objectContainer);
@@ -328,6 +341,8 @@ public class ExposedServiceIT implements KarafIT {
                     "}";
             exposedServiceEndpoint = subjectsOf(query(sparql, doc)).iterator().next();
         }
+
+        LOG.info("TEST: Got exposed service endpoint for {} as {}", object, exposedServiceEndpoint);
 
         // Specify the behaviour of the test service
         final String BODY = "Success!";
