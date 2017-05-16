@@ -120,7 +120,7 @@ public class HttpClientFactory {
         final CredentialsProvider provider = new BasicCredentialsProvider();
 
         for (final AuthSpec authSpec : getAuthSpecs()) {
-            LOG.info("Using basic auth to {}://{}:{} with client",
+            LOG.debug("Using basic auth to {}://{}:{} with client",
                     authSpec.scheme, authSpec.host, authSpec.port);
             final HttpHost host = new HttpHost(authSpec.host,
                     authSpec.port, authSpec.scheme);
@@ -149,7 +149,7 @@ public class HttpClientFactory {
                                                 .format("%s:%s", creds
                                                         .getUserPrincipal()
                                                         .getName(), creds.getPassword()).getBytes()));
-                                LOG.info("Added header {}", req.getFirstHeader(HttpHeaders.AUTHORIZATION));
+                                LOG.debug("Added auth header");
                             }
                         }
                     }

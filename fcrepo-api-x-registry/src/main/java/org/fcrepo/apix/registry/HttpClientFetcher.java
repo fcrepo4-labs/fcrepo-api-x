@@ -64,7 +64,7 @@ public class HttpClientFetcher {
         this.defaultClient = client;
         if (serviceClient.get() == null) {
             this.client.set(defaultClient);
-            LOG.info("Set default client " + this.client.get());
+            LOG.info("Set default client {}", this.client.get());
         }
     }
 
@@ -111,7 +111,7 @@ public class HttpClientFetcher {
         @Override
         protected CloseableHttpResponse doExecute(final HttpHost host, final HttpRequest req, final HttpContext cxt)
                 throws IOException, ClientProtocolException {
-            LOG.info("Executing with client " + client.get());
+            LOG.debug("Executing with client {}", client.get());
             return client.get().execute(host, req, cxt);
         }
 

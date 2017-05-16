@@ -211,7 +211,11 @@ public class ExposedServiceUriAnalyzer implements Updateable {
                 resourcePath = rawPath.substring(0, exposeStart - 1);
             }
 
+            LOG.debug("ANALYZER: Resource path '{}'", resourcePath);
+
             final URI exposedServiceURI = routing.of(requestURI).endpointFor(extension.exposed(), resourcePath);
+
+            LOG.debug("ANALYZER Service URI {}", exposedServiceURI);
 
             return new ServiceExposingBinding(
                     extension,
