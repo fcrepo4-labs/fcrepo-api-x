@@ -1,6 +1,7 @@
 # API Extension Architecture (API-X)
 
 [![Build Status](https://travis-ci.org/fcrepo4-labs/fcrepo-api-x.png?branch=master)](https://travis-ci.org/fcrepo4-labs/fcrepo-api-x)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/org.fcrepo.apix/fcrepo-api-x/badge.svg)](https://maven-badges.herokuapp.com/maven-central/org.fcrepo.apix/fcrepo-api-x/)
 
 API-X is a framework for binding services to repository objects in order to extend the functionality of a Fedora 4 repository. It provides a data model for expressing how services bind to repository resources, registries that support service discovery, and an HTTP middleware layer that exposes services as endpoints or mediates access to the repository transparently via these services.
 
