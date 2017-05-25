@@ -98,7 +98,6 @@ public class HttpClientFactory {
      */
     public CloseableHttpClient getClient() {
 
-        LOG.info("Creating client");
         final RequestConfig config = RequestConfig.custom()
                 .setConnectTimeout(connectTimeout)
                 .setSocketTimeout(socketTimeout).build();
@@ -115,7 +114,7 @@ public class HttpClientFactory {
                     authSpec.scheme), new UsernamePasswordCredentials(authSpec.username(), authSpec.passwd()));
         }
 
-        final CloseableHttpClient c = HttpClientBuilder.create().setDefaultRequestConfig(config)
+        return HttpClientBuilder.create().setDefaultRequestConfig(config)
                 .addInterceptorLast(new HttpRequestInterceptor() {
 
                     @Override
@@ -143,9 +142,6 @@ public class HttpClientFactory {
                 .setDefaultCredentialsProvider(
                         provider)
                 .build();
-
-        LOG.info("Returning client " + c);
-        return c;
     }
 
     List<AuthSpec> getAuthSpecs() {
