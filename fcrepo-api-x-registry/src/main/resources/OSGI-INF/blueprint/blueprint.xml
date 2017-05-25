@@ -19,14 +19,17 @@
 
   <bean id="configAdmin" factory-ref="conf" factory-method="getConfigAdmin" />
 
-  <bean id="configuration" factory-ref="configAdmin"
-    factory-method="getConfiguration">
+  <bean id="configHelper" class="org.fcrepo.apix.registry.ConfigHelper">
+    <property name="configurationAdmin" ref="configAdmin" />
+  </bean>
+  
+  <bean id="configProperties" factory-ref="configHelper"
+    factory-method="getProperties">
     <argument value="org.fcrepo.apix.registry.http" />
   </bean>
 
-  <bean id="configDict" factory-ref="configuration" factory-method="getProperties" />
-
-  <reference-list id="httpClients" interface="org.apache.http.client.HttpClient" availability="optional">
+  <reference-list id="httpClients" interface="org.apache.http.client.HttpClient"
+    availability="optional">
     <reference-listener bind-method="bind"
       unbind-method="unbind" ref="httpClientFetcher">
     </reference-listener>
@@ -36,7 +39,7 @@
   <bean id="httpClientFactory" class="org.fcrepo.apix.registry.HttpClientFactory">
     <property name="connectTimeout" value="${timeout.connect.ms}" />
     <property name="socketTimeout" value="${timeout.socket.ms}" />
-    <property name="dictionary" ref="configDict" />
+    <property name="properties" ref="configProperties" />
   </bean>
 
   <bean id="httpClient-default" factory-ref="httpClientFactory"
