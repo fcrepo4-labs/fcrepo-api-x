@@ -47,7 +47,7 @@ public class ConfigHelper {
     /**
      * Get properties as a map.
      * <p>
-     * Returns an empty map if ConfigurationAdmin is null, or the configuration is null, etc.
+     * Returns an empty map if configAdmin is null, or the configuration is null, etc.
      * </p>
      *
      * @param pid OSGI configAdmin pid.
