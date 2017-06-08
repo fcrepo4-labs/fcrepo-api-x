@@ -32,6 +32,7 @@ import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_ENDPOINT;
 import static org.fcrepo.apix.model.Ontologies.Service.PROP_IS_SERVICE_INSTANCE_OF;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.ops4j.pax.exam.CoreOptions.maven;
 import static org.ops4j.pax.exam.CoreOptions.mavenBundle;
 import static org.ops4j.pax.exam.karaf.options.KarafDistributionOption.features;
@@ -42,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -94,6 +96,8 @@ public class LoaderIT extends ServiceBasedTest {
     final AtomicReference<Object> optionsResponse = new AtomicReference<>();
 
     final AtomicReference<Object> serviceResponse = new AtomicReference<>();
+
+    final AtomicBoolean auth = new AtomicBoolean(false);
 
     @Rule
     public TestName name = new TestName();
@@ -149,12 +153,29 @@ public class LoaderIT extends ServiceBasedTest {
             ex.setOut(ex.getIn());
             if ("OPTIONS".equals(ex.getIn().getHeader(Exchange.HTTP_METHOD))) {
                 ex.getOut().setBody(optionsResponse.get());
+                auth.set(ex.getIn().getHeader("Authorization") != null);
             } else if ("GET".equals(ex.getIn().getHeader(Exchange.HTTP_METHOD))) {
                 ex.getOut().setBody(serviceResponse.get());
             } else {
                 ex.getOut().setHeader(Exchange.HTTP_RESPONSE_CODE, 405);
             }
         });
+    }
+
+    @Test
+    public void authTest() throws Exception {
+
+        final String SERVICE_CANONICAL = "test:" + name.getMethodName();
+        final String EXPOSED_AT = SERVICE_CANONICAL;
+
+        optionsResponse.set(triple("", RDF_TYPE, CLASS_EXTENSION) +
+                ltriple("", PROP_EXPOSES_SERVICE_AT, EXPOSED_AT) +
+                triple("", PROP_EXPOSES_SERVICE, SERVICE_CANONICAL));
+
+        attempt(60, () -> textPost(LOADER_URI, serviceEndpoint)).getHeaderValue("Location");
+
+        assertTrue(auth.get());
+
     }
 
     @Test
