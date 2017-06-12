@@ -20,8 +20,6 @@ package org.fcrepo.apix.registry;
 
 import java.io.IOException;
 import java.util.Base64;
-import java.util.Dictionary;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -94,25 +92,12 @@ public class HttpClientFactory {
     }
 
     /**
-     * Set props as a dictionary, eww.
-     *
-     * @param dict Dictionaty
-     */
-    public void setDictionary(final Dictionary<String, Object> dict) {
-        props = new HashMap<>();
-        final Enumeration<String> keys = dict.keys();
-        while (keys.hasMoreElements()) {
-            final String key = keys.nextElement();
-            props.put(key, dict.get(key).toString());
-        }
-    }
-
-    /**
      * Construct a new HttpClient.
      *
      * @return HttpClient impl.
      */
     public CloseableHttpClient getClient() {
+
         final RequestConfig config = RequestConfig.custom()
                 .setConnectTimeout(connectTimeout)
                 .setSocketTimeout(socketTimeout).build();

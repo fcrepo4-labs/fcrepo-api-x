@@ -9,5 +9,6 @@
     <feature version="${camel.version}">camel-http4</feature>
     <feature version="${fcrepo-toolbox.version}">fcrepo-reindexing</feature>
     <feature version="${fcrepo-toolbox.version}">fcrepo-service-activemq</feature>
+    <feature version="${project.version}">fcrepo-api-x-registry</feature>
   </feature>
 </features>
