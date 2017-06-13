@@ -125,7 +125,7 @@ public class LoaderRoutes extends RouteBuilder {
                 .setHeader(Exchange.HTTP_URI, header(HEADER_SERVICE_URI))
                 .setHeader("Accept", constant("text/turtle"))
                 .process(e -> LOG.info("Execution OPTIONS to service URI {}", e.getIn().getHeader(Exchange.HTTP_URI)))
-                .to("jetty:http://localhost")
+                .to("http://localhost?httpClient=#httpClient")
                 .process(DEPOSIT_OBJECTS)
                 .setHeader(HTTP_RESPONSE_CODE, constant(303));
 

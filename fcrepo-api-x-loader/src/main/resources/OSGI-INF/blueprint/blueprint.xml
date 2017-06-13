@@ -22,6 +22,15 @@
     </cm:default-properties>
   </cm:property-placeholder>
 
+  <reference id="httpClientFetcher" ext:proxy-method="classes"
+    interface="org.fcrepo.apix.registry.HttpClientFetcher" />
+
+  <bean id="httpClient" factory-ref="httpClientFetcher"
+    factory-method="getClient" />
+
+  <bean id="http" class="org.apache.camel.component.http4.HttpComponent" />
+  <bean id="https" class="org.apache.camel.component.http4.HttpComponent" />
+
   <reference id="extensionRegistry"
     interface="org.fcrepo.apix.model.components.ExtensionRegistry" />
 
@@ -31,7 +40,8 @@
   <reference id="generalRegistry" filter="(org.fcrepo.apix.registry.role=default)"
     interface="org.fcrepo.apix.model.components.Registry" />
 
-  <reference id="routing" interface="org.fcrepo.apix.model.components.RoutingFactory" />
+  <reference id="routing"
+    interface="org.fcrepo.apix.model.components.RoutingFactory" />
 
   <bean id="loaderService" class="org.fcrepo.apix.loader.impl.LoaderService">
     <property name="extensionRegistry" ref="extensionRegistry" />
