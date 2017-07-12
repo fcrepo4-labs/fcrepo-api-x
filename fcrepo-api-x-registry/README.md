@@ -41,4 +41,4 @@ Username for authentication, against a specific host, port, and scheme
 
 Password for authentication against a specific host, port, and scheme     
 
-    auth.http.8080.localhost.username = secret3
+    auth.http.8080.localhost.password = secret3
