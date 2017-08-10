@@ -27,6 +27,8 @@ public interface Ontologies {
 
     String LDP_CONTAINS = "http://www.w3.org/ns/ldp#contains";
 
+    String LDP_LDPR = "http://www.w3.org/ns/ldp#Resource";
+
     String ORE_DESCRIBES = "http://www.openarchives.org/ore/terms/describes";
 
     String ORE_AGGREGATES = "http://www.openarchives.org/ore/terms/aggregates";

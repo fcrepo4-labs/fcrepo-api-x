@@ -18,6 +18,8 @@
 
 package org.fcrepo.apix.binding.impl;
 
+import static org.fcrepo.apix.model.Ontologies.LDP_LDPR;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,6 +65,8 @@ import org.slf4j.LoggerFactory;
 public class RuntimeExtensionBinding implements ExtensionBinding {
 
     private static final Logger LOG = LoggerFactory.getLogger(RuntimeExtensionBinding.class);
+
+    private static final URI LDPR = URI.create(LDP_LDPR);
 
     private CloseableHttpClient httpClient;
 
@@ -194,6 +198,13 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
                             .filter(l -> "describedby".equals(l.getRel()))
                             .collect(Collectors.toList());
 
+            final List<URI> types =
+                    Arrays.asList(response.getHeaders("Link")).stream().map(Header::getValue)
+                            .map(FcrepoLink::new)
+                            .filter(l -> "type".equals(l.getRel()))
+                            .map(FcrepoLink::getUri)
+                            .collect(Collectors.toList());
+
             if (!describedByLinks.isEmpty()) {
                 if (describedByLinks.size() > 1) {
                     throw new RuntimeException(
@@ -210,11 +221,13 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
                             resourceURI, null), from);
                 }
 
-            } else {
+            } else if (types.contains(LDPR)) {
                 try (WebResource resource = registry.get(resourceURI)) {
                     return getExtensionsFor(resource, from);
                 }
             }
+
+            return Collections.emptyList();
 
         } catch (final Exception e) {
             throw new RuntimeException("Could not get triples for reasoning over " + resourceURI, e);
