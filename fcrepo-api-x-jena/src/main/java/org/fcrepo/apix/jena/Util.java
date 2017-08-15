@@ -20,7 +20,6 @@ package org.fcrepo.apix.jena;
 
 import static org.fcrepo.apix.model.Ontologies.RDF_TYPE;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -77,9 +76,10 @@ public abstract class Util {
 
         final Lang lang = rdfLanguage(r.contentType());
 
-        try (InputStream representation = r.representation()) {
+        try (WebResource toParse = r;
+                InputStream representation = toParse.representation()) {
             RDFDataMgr.read(model, representation, base, lang);
-        } catch (final IOException e) {
+        } catch (final Exception e) {
             throw new RuntimeException(e);
         }
 

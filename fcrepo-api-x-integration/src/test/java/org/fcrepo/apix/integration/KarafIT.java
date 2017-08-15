@@ -252,6 +252,7 @@ public interface KarafIT {
      * @param path the resource path relative to {@link #testResources}
      * @return the resulting WebResource
      */
+    @SuppressWarnings("resource")
     public default WebResource testResource(String path, String contentType) {
         final File file = new File(testResources, path);
         try {

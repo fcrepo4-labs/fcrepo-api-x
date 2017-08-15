@@ -63,79 +63,83 @@ public class LookupOntologyRegistryTest {
     // After PUTting an ontology in the registry, verify that we can retrieve it by
     // its location URI and ontology IRI.
     @Test
-    public void putAndLookupByIRITest() {
+    public void putAndLookupByIRITest() throws Exception {
 
         final URI ontologyLocationURI = URI.create("http://example.org/location");
         final URI ontologyIRI = URI.create("http://example.org/test#Ontology");
 
-        final WebResource ontologyToPersist = WebResource.of(this.getClass().getResourceAsStream(
-                "/ontologyWithIRI.ttl"), "text/turtle", ontologyLocationURI, null);
+        try (WebResource ontologyToPersist = WebResource.of(this.getClass().getResourceAsStream(
+                "/ontologyWithIRI.ttl"), "text/turtle", ontologyLocationURI, null)) {
 
-        when(delegate.put(ontologyToPersist)).thenReturn(ontologyLocationURI);
-        when(delegate.get(ontologyLocationURI)).thenReturn(ontologyToPersist);
-        when(delegate.list()).thenReturn(new ArrayList<>());
+            when(delegate.put(ontologyToPersist)).thenReturn(ontologyLocationURI);
+            when(delegate.get(ontologyLocationURI)).thenReturn(ontologyToPersist);
+            when(delegate.list()).thenReturn(new ArrayList<>());
 
-        toTest.setRegistryDelegate(delegate);
-        toTest.init();
+            toTest.setRegistryDelegate(delegate);
+            toTest.init();
 
-        toTest.put(ontologyToPersist);
+            toTest.put(ontologyToPersist);
 
-        assertEquals(ontologyToPersist, toTest.get(ontologyIRI));
-        assertEquals(toTest.get(ontologyIRI), toTest.get(ontologyLocationURI));
+            assertEquals(ontologyToPersist, toTest.get(ontologyIRI));
+            assertEquals(toTest.get(ontologyIRI), toTest.get(ontologyLocationURI));
+        }
     }
 
     // Verify that persisting an ontology whilst explicitly providing an ontology IRI works
     @Test
-    public void explicitIRITest() {
+    public void explicitIRITest() throws Exception {
 
         final URI ontologyLocationURI = URI.create("http://example.org/location");
         final URI ontologyIRI = URI.create("http://example.org/test#OntologyNoIRI");
 
-        final WebResource ontologyToPersist = new ReadableResource(this.getClass().getResourceAsStream(
-                "/ontologyWithoutIRI.ttl"), "text/turtle", null, null);
+        try (WebResource ontologyToPersist = new ReadableResource(this.getClass().getResourceAsStream(
+                "/ontologyWithoutIRI.ttl"), "text/turtle", null, null)) {
 
-        final ArrayList<URI> entries = new ArrayList<>();
+            final ArrayList<URI> entries = new ArrayList<>();
 
-        when(delegate.put(any(WebResource.class), any(Boolean.class))).then(new Answer<URI>() {
+            when(delegate.put(any(WebResource.class), any(Boolean.class))).then(new Answer<URI>() {
 
-            @Override
-            public URI answer(final InvocationOnMock invocation) throws Throwable {
+                @SuppressWarnings("resource")
+                @Override
+                public URI answer(final InvocationOnMock invocation) throws Throwable {
 
-                final WebResource submitted = ((WebResource) invocation.getArguments()[0]);
-                when(delegate.get(ontologyLocationURI)).thenReturn(submitted);
-                entries.add(ontologyLocationURI);
-                return ontologyLocationURI;
-            }
-        });
-        when(delegate.list()).thenReturn(entries);
+                    final WebResource submitted = ((WebResource) invocation.getArguments()[0]);
+                    when(delegate.get(ontologyLocationURI)).thenReturn(submitted);
+                    entries.add(ontologyLocationURI);
+                    return ontologyLocationURI;
+                }
+            });
+            when(delegate.list()).thenReturn(entries);
 
-        toTest.setRegistryDelegate(delegate);
-        toTest.init();
+            toTest.setRegistryDelegate(delegate);
+            toTest.init();
 
-        toTest.put(ontologyToPersist, ontologyIRI);
+            toTest.put(ontologyToPersist, ontologyIRI);
 
-        assertEquals(toTest.get(ontologyIRI), toTest.get(ontologyLocationURI));
+            assertEquals(toTest.get(ontologyIRI), toTest.get(ontologyLocationURI));
+        }
     }
 
     // Verifies that init() populates the registry, and we can lookup by IRI
     @Test
-    public void initializePopulateTest() {
+    public void initializePopulateTest() throws Exception {
 
         final URI ontologyLocationURI = URI.create("http://example.org/location");
         final URI ontologyIRI = URI.create("http://example.org/test#Ontology");
 
-        final WebResource ontologyToPersist = WebResource.of(this.getClass().getResourceAsStream(
-                "/ontologyWithIRI.ttl"), "text/turtle", ontologyLocationURI, null);
+        try (WebResource ontologyToPersist = WebResource.of(this.getClass().getResourceAsStream(
+                "/ontologyWithIRI.ttl"), "text/turtle", ontologyLocationURI, null)) {
 
-        when(delegate.put(any(WebResource.class))).thenReturn(ontologyLocationURI);
-        when(delegate.get(ontologyLocationURI)).thenReturn(ontologyToPersist);
-        when(delegate.list()).thenReturn(Arrays.asList(ontologyLocationURI));
+            when(delegate.put(any(WebResource.class))).thenReturn(ontologyLocationURI);
+            when(delegate.get(ontologyLocationURI)).thenReturn(ontologyToPersist);
+            when(delegate.list()).thenReturn(Arrays.asList(ontologyLocationURI));
 
-        toTest.setRegistryDelegate(delegate);
-        toTest.init();
+            toTest.setRegistryDelegate(delegate);
+            toTest.init();
 
-        assertEquals(ontologyToPersist, toTest.get(ontologyIRI));
-        assertEquals(toTest.get(ontologyIRI), toTest.get(ontologyLocationURI));
+            assertEquals(ontologyToPersist, toTest.get(ontologyIRI));
+            assertEquals(toTest.get(ontologyIRI), toTest.get(ontologyLocationURI));
+        }
     }
 
     @Test

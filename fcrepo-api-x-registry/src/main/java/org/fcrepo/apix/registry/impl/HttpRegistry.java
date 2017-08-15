@@ -165,7 +165,7 @@ public class HttpRegistry implements Registry {
             getResponse();
         }
 
-        HttpResponse getResponse() {
+        CloseableHttpResponse getResponse() {
             if (isClosed) {
                 try {
                     if (response != null) {

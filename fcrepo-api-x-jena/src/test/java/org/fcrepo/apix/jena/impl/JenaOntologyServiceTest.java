@@ -45,6 +45,7 @@ import org.junit.Test;
  *
  * @author apb@jhu.edu
  */
+@SuppressWarnings("resource")
 public class JenaOntologyServiceTest {
 
     JenaOntologyService toTest;

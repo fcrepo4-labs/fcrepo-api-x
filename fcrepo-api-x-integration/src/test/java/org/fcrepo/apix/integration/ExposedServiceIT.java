@@ -356,32 +356,35 @@ public class ExposedServiceIT implements KarafIT {
         responseFromService.setHeader(customHeader, customHeaderValue);
 
         // Perform the request!
-        final FcrepoResponse response = client.post(
-                append(exposedServiceEndpoint, String.join("?", additionalPath, query))).slug(slug).perform();
+        try (FcrepoResponse response = client.post(
+                append(exposedServiceEndpoint, String.join("?", additionalPath, query))).slug(slug).perform()) {
 
-        // Make sure the host header in the response to client matches request host from client
-        assertEquals(exposedServiceEndpoint.getAuthority(), URI.create(requestToService.getHeader(Exchange.HTTP_URL,
-                String.class)).getAuthority());
+            // Make sure the host header in the response to client matches request host from client
+            assertEquals(exposedServiceEndpoint.getAuthority(), URI.create(requestToService.getHeader(
+                    Exchange.HTTP_URL,
+                    String.class)).getAuthority());
 
-        // Make sure the body returned by the service is received
-        assertEquals(BODY, IOUtils.toString(response.getBody(), "UTF-8"));
+            // Make sure the body returned by the service is received
+            assertEquals(BODY, IOUtils.toString(response.getBody(), "UTF-8"));
 
-        // Make sure the status code is what we want
-        assertEquals(HttpStatus.SC_ACCEPTED, response.getStatusCode());
+            // Make sure the status code is what we want
+            assertEquals(HttpStatus.SC_ACCEPTED, response.getStatusCode());
 
-        // Make sure the query components are passed to the service
-        assertEquals(query, requestToService.getHeader(Exchange.HTTP_QUERY));
+            // Make sure the query components are passed to the service
+            assertEquals(query, requestToService.getHeader(Exchange.HTTP_QUERY));
 
-        // Make sure the path components are passed on
-        assertEquals(additionalPath, requestToService.getHeader(Exchange.HTTP_PATH));
+            // Make sure the path components are passed on
+            assertEquals(additionalPath, requestToService.getHeader(Exchange.HTTP_PATH));
 
-        // Make sure a client-provided header is passed along
-        assertEquals(slug, requestToService.getHeader("Slug"));
+            // Make sure a client-provided header is passed along
+            assertEquals(slug, requestToService.getHeader("Slug"));
 
-        // Make sure that a server-provided header is passed back to client
-        assertEquals(customHeaderValue, response.getHeaderValue(customHeader));
+            // Make sure that a server-provided header is passed back to client
+            assertEquals(customHeaderValue, response.getHeaderValue(customHeader));
 
-        // Make sure the exposed service URI relayed to our service, in the expected header.
-        assertEquals(exposedServiceEndpoint.toString(), requestToService.getHeader(HTTP_HEADER_EXPOSED_SERVICE_URI));
+            // Make sure the exposed service URI relayed to our service, in the expected header.
+            assertEquals(exposedServiceEndpoint.toString(), requestToService.getHeader(
+                    HTTP_HEADER_EXPOSED_SERVICE_URI));
+        }
     }
 }

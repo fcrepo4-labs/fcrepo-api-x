@@ -44,13 +44,13 @@ import org.fcrepo.apix.model.Extension.ServiceExposureSpec;
 import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionBinding;
+import org.fcrepo.apix.model.components.Routing;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.riot.Lang;
-import org.fcrepo.apix.model.components.Routing;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -197,12 +197,13 @@ public class ServiceDocumentGeneratorTest {
         assertEquals(1, subjects.size());
 
         assertFalse(IOUtils.toString(
-                    toTest.getServiceDocumentFor(RESOURCE_URI, routing, "text/turtle").representation(), "utf8")
+                toTest.getServiceDocumentFor(RESOURCE_URI, routing, "text/turtle").representation(), "utf8")
                 .contains(SERVICE_DOC_URI));
 
         toTest.setRelativeURIs(false);
 
-        assertTrue(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, routing, "text/turtle").representation(),
+        assertTrue(IOUtils.toString(toTest.getServiceDocumentFor(RESOURCE_URI, routing, "text/turtle")
+                .representation(),
                 "utf8").contains(SERVICE_DOC_URI));
     }
 
@@ -274,23 +275,25 @@ public class ServiceDocumentGeneratorTest {
     // Verify that a specific serialization can be produced by specifying content type
     @Test
     public void contentTypeTest() throws Exception {
-        final WebResource serviceDoc = toTest.getServiceDocumentFor(RESOURCE_URI, routing, "application/rdf+xml");
+        try (WebResource serviceDoc = toTest.getServiceDocumentFor(RESOURCE_URI, routing, "application/rdf+xml")) {
 
-        final Model doc = ModelFactory.createDefaultModel().read(serviceDoc.representation(), Lang.RDFXML.getName());
+            final Model doc = ModelFactory.createDefaultModel().read(serviceDoc.representation(), Lang.RDFXML
+                    .getName());
 
-        assertTrue(doc.contains(
-                null,
-                doc.getProperty(PROP_IS_SERVICE_DOCUMENT_FOR),
-                doc.getResource(RESOURCE_URI.toString())));
-
+            assertTrue(doc.contains(
+                    null,
+                    doc.getProperty(PROP_IS_SERVICE_DOCUMENT_FOR),
+                    doc.getResource(RESOURCE_URI.toString())));
+        }
     }
 
     // Verify that a reasonable default content type is chosen
     @Test
     public void defaultContentTypeTest() throws Exception {
-        final WebResource serviceDoc = toTest.getServiceDocumentFor(RESOURCE_URI, routing, "not/supported");
+        try (final WebResource serviceDoc = toTest.getServiceDocumentFor(RESOURCE_URI, routing, "not/supported")) {
 
-        assertEquals("text/turtle", serviceDoc.contentType());
+            assertEquals("text/turtle", serviceDoc.contentType());
+        }
 
     }
 

@@ -80,12 +80,13 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
 
         final URI object = client.post(objectContainer).slug(testMethodName()).perform().getLocation();
 
-        final FcrepoResponse response = client.get(
-                routing.of(REQUEST_URI).interceptUriFor(object)).perform();
+        try (final FcrepoResponse response = client.get(
+                routing.of(REQUEST_URI).interceptUriFor(object)).perform()) {
 
-        assertEquals(1, response.getLinkHeaders("service").size());
-        assertEquals(routing.of(REQUEST_URI).serviceDocFor(object),
-                response.getLinkHeaders("service").get(0));
+            assertEquals(1, response.getLinkHeaders("service").size());
+            assertEquals(routing.of(REQUEST_URI).serviceDocFor(object),
+                    response.getLinkHeaders("service").get(0));
+        }
     }
 
     // Verify that if an intercepting extension throws a 4xx code, it aborts the request and returns service response.
@@ -106,10 +107,11 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         final URI object = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
                 objectContainer_intercept);
 
-        final FcrepoResponse response = FcrepoClient.client().build().get(object).perform();
+        try (FcrepoResponse response = FcrepoClient.client().build().get(object).perform()) {
 
-        assertEquals(RESPONSE_CODE, response.getStatusCode());
-        assertEquals(LOCATION, response.getHeaderValue("Location"));
+            assertEquals(RESPONSE_CODE, response.getStatusCode());
+            assertEquals(LOCATION, response.getHeaderValue("Location"));
+        }
     }
 
     @Test
@@ -217,10 +219,11 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         final URI object = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
                 objectContainer_intercept);
 
-        final FcrepoResponse response = client.get(object).accept("application/n-triples").perform();
+        try (final FcrepoResponse response = client.get(object).accept("application/n-triples").perform()) {
 
-        assertEquals(TEST_HEADER_VALUE, response.getHeaderValue(TEST_HEADER));
-        assertTrue(IOUtils.toString(response.getBody(), "UTF-8").contains(TEST_OBJECT_TYPE));
+            assertEquals(TEST_HEADER_VALUE, response.getHeaderValue(TEST_HEADER));
+            assertTrue(IOUtils.toString(response.getBody(), "UTF-8").contains(TEST_OBJECT_TYPE));
+        }
     }
 
     @Test
@@ -242,10 +245,10 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
         final URI object = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
                 objectContainer_intercept);
 
-        final FcrepoResponse response = client.get(object).perform();
+        try (final FcrepoResponse response = client.get(object).perform()) {
 
-        assertTrue(IOUtils.toString(response.getBody(), "UTF-8").equals(BODY));
-
+            assertTrue(IOUtils.toString(response.getBody(), "UTF-8").equals(BODY));
+        }
     }
 
     @Test
