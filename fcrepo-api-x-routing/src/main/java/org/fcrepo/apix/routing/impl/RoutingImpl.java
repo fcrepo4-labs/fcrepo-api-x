@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.routing.impl;
 
+import static org.apache.camel.builder.PredicateBuilder.and;
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_APIX_RESOURCE_URI;
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_APIX_ROOT_URI;
 import static org.fcrepo.apix.model.components.Routing.HTTP_HEADER_EXPOSED_SERVICE_URI;
@@ -211,7 +212,10 @@ public class RoutingImpl extends RouteBuilder {
         from(ROUTE_INTERCEPT)
                 .routeId("execute-intercept").routeDescription("Endpoint for intercept to Fedora")
                 .to(ROUTE_INTERCEPT_INCOMING)
-                .choice().when(simple("${in.header.CamelhttpResponseCode} range '200..299'"))
+                .choice().when(
+                        and(
+                                simple("${in.header.CamelhttpResponseCode} range '200..299'"),
+                                simple("${in.header.Apix-Modality} not contains 'terminal'")))
                 .to(ROUTE_TO_FEDORA);
 
         from(ROUTE_TO_FEDORA)

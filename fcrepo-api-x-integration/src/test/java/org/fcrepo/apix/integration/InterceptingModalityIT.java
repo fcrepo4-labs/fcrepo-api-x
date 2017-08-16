@@ -196,7 +196,37 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
             assertTrue(body, body
                     .contains(TYPE));
         }
+    }
 
+    @Test
+    public void incomingTerminationTest() throws Exception {
+        registerExtension(testResource("objects/extension_InterceptingModalityIT.ttl"));
+        registerService(testResource("objects/service_InterceptingServiceIT.ttl"));
+
+        final URI objectContainer_intercept = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
+
+        final String BODY = "BODY";
+        final String CONTENT_TYPE = "test/whatever";
+
+        // Give our request a specific body
+        onServiceRequest(ex -> {
+            if (MODALITY_INTERCEPT_INCOMING.equals(ex.getIn().getHeader(HTTP_HEADER_MODALITY))) {
+                ex.getOut().setBody(BODY);
+                ex.getOut().setHeader("Content-Type", CONTENT_TYPE);
+                ex.getOut().setHeader(HTTP_HEADER_MODALITY, MODALITY_INTERCEPT_INCOMING + "; terminal");
+            } else {
+                throw new RuntimeException("Shoud never see modality other than intercepting incoming!");
+            }
+        });
+
+        final URI container = postFromTestResource("objects/object_InterceptingServiceIT.ttl",
+                objectContainer_intercept);
+
+        try (FcrepoResponse response = client.get(container).perform()) {
+            final String body = IOUtils.toString(response.getBody(), "UTF-8");
+            assertEquals(BODY, body);
+            assertEquals(response.getContentType(), CONTENT_TYPE);
+        }
     }
 
     @Test
@@ -275,4 +305,5 @@ public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT 
             assertEquals(418, e.getStatusCode());
         }
     }
+
 }
