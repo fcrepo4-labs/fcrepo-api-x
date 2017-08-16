@@ -186,7 +186,13 @@ public class RuntimeExtensionBinding implements ExtensionBinding {
         // Use object contents for reasoning, or if binary the binary's description
         try (final CloseableHttpResponse response = httpClient.execute(new HttpHead(resourceURI))) {
 
-            if (response.getStatusLine().getStatusCode() != 200) {
+            final int status = response.getStatusLine().getStatusCode();
+            if (status > 399 && status < 500) {
+                LOG.info("Got status {} on {}, skipping extensions", status, resourceURI);
+                return Collections.emptyList();
+            }
+
+            if (status != 200) {
                 throw new RuntimeException(String.format("Got unexpected status code %s in HEAD to <%s>",
                         response.getStatusLine().getStatusCode(),
                         resourceURI));
