@@ -151,9 +151,13 @@ public class LoaderService {
         // If there is unambiguously one service, then register our resource URI as an instance of it, and return a
         // URI to the instance, otherwise, just return the extension or service URI as appropriate.
         if (allServices.size() == 1) {
-            final Service service = serviceRegistry.getService(allServices.iterator().next());
-            LOG.info("Adding instance <> of service <>", resource.uri(), service.canonicalURI());
-            addInstance(resource.uri(), service);
+            try (Service service = serviceRegistry.getService(allServices.iterator().next())) {
+                LOG.info("Adding instance <> of service <>", resource.uri(), service.canonicalURI());
+                addInstance(resource.uri(), service);
+            } catch (final Exception e) {
+                throw new RuntimeException(String.format("Error getting service <%s> from registry", resource.uri()),
+                        e);
+            }
         } else {
             LOG.info("Extension does not define a service, so not adding any");
             return depositedResource;

@@ -18,26 +18,12 @@
 
 package org.fcrepo.apix.integration;
 
-import org.apache.camel.CamelContext;
-import org.apache.camel.builder.AdviceWithRouteBuilder;
-import org.apache.camel.model.ModelCamelContext;
-import org.apache.commons.io.input.NullInputStream;
-import org.apache.jena.rdf.model.ModelFactory;
-import org.apache.jena.rdf.model.ResourceFactory;
-import org.fcrepo.client.FcrepoOperationFailedException;
-import org.fcrepo.client.FcrepoResponse;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TestName;
-import org.junit.runner.RunWith;
-import org.ops4j.pax.exam.junit.PaxExam;
-import org.ops4j.pax.exam.util.Filter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
-import javax.inject.Inject;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -49,11 +35,27 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import javax.inject.Inject;
+
+import org.fcrepo.client.FcrepoOperationFailedException;
+import org.fcrepo.client.FcrepoResponse;
+
+import org.apache.camel.CamelContext;
+import org.apache.camel.builder.AdviceWithRouteBuilder;
+import org.apache.camel.model.ModelCamelContext;
+import org.apache.commons.io.input.NullInputStream;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.rdf.model.ResourceFactory;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.TestName;
+import org.junit.runner.RunWith;
+import org.ops4j.pax.exam.junit.PaxExam;
+import org.ops4j.pax.exam.util.Filter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Integration tests relating to streaming content proxied by API-X
@@ -104,7 +106,7 @@ public class StreamingIT implements KarafIT {
     }
 
     /**
-     * Creates a container and a binary resource of 2MiB + 1 bytes long.  Retrieves checksum of the resource.
+     * Creates a container and a binary resource of 2MiB + 1 bytes long. Retrieves checksum of the resource.
      *
      * @throws FcrepoOperationFailedException if unexpected things go wrong
      * @throws IOException if unexpected things go wrong
@@ -116,11 +118,11 @@ public class StreamingIT implements KarafIT {
 
         // Create container if it doesn't already exist
         if (!resourceExists(binaryContainer)) {
-            try (FcrepoResponse r = client.put(binaryContainer)
-                    .body(
-                            new FileInputStream(
-                                    new File(testResources, "objects/binary_container.ttl")), "text/turtle")
-                    .perform()) {
+            try (FileInputStream body = new FileInputStream(
+                    new File(testResources, "objects/binary_container.ttl"));
+                    FcrepoResponse r = client.put(binaryContainer)
+                            .body(body, "text/turtle")
+                            .perform()) {
                 assertEquals("Failed to create binary container '" + binaryContainer + "'",
                         201, r.getStatusCode());
             }
@@ -130,11 +132,11 @@ public class StreamingIT implements KarafIT {
         final URI expectedBinaryResource = appendToPath(binaryContainer, "large-binary");
         if (!resourceExists(expectedBinaryResource)) {
             LOG.warn("Expected resource did not exist {}", expectedBinaryResource);
-            try {
+            try (InputStream body = new NullInputStream((2 * 1024 * 1024) + 1)) {
                 binaryResource = postFromStream(
-                        new NullInputStream((2 * 1024 * 1024) + 1), binaryContainer,
+                        body, binaryContainer,
                         "application/octet-stream", "large-binary");
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 fail(String.format("Failed to create binary LDPR: %s", e.getMessage()));
             }
         } else {
@@ -147,7 +149,7 @@ public class StreamingIT implements KarafIT {
                         .get(appendToPath(binaryResource, "/fcr:metadata"))
                         .accept("application/rdf+xml")
                         .perform().getBody(),
-                            null)
+                        null)
                 .listObjectsOfProperty(
                         ResourceFactory
                                 .createProperty("http://www.loc.gov/premis/rdf/v1#", "hasMessageDigest"))
@@ -169,7 +171,7 @@ public class StreamingIT implements KarafIT {
     }
 
     /**
-     * Verify the binary can be retrieved from Fedora.  The request should <em>not</em> be intercepted.
+     * Verify the binary can be retrieved from Fedora. The request should <em>not</em> be intercepted.
      *
      * @throws Exception if unexpected things go wrong
      */
@@ -179,6 +181,7 @@ public class StreamingIT implements KarafIT {
         // Record 'true' if the intercepting route is triggered
         final AtomicBoolean intercepted = new AtomicBoolean(false);
         ctx.getRouteDefinition(INTERCEPT_ROUTE_ID).adviceWith((ModelCamelContext) ctx, new AdviceWithRouteBuilder() {
+
             @Override
             public void configure() throws Exception {
                 weaveAddFirst().process((ex) -> intercepted.set(true));
@@ -190,7 +193,7 @@ public class StreamingIT implements KarafIT {
         final String actualDigest;
 
         try (FcrepoResponse r = client.get(binaryResource).perform();
-             DigestInputStream body = new DigestInputStream(r.getBody(), sha1)) {
+                DigestInputStream body = new DigestInputStream(r.getBody(), sha1)) {
             actualSize = drain(body);
             actualDigest = asHex(body.getMessageDigest().digest());
         }
@@ -205,8 +208,8 @@ public class StreamingIT implements KarafIT {
     }
 
     /**
-     * Verify the binary can be retrieved through the API-X proxy.  The request should be intercepted and proxied
-     * by API-X.
+     * Verify the binary can be retrieved through the API-X proxy. The request should be intercepted and proxied by
+     * API-X.
      *
      * @throws Exception if unexpected things go wrong
      */
@@ -216,6 +219,7 @@ public class StreamingIT implements KarafIT {
         // Record 'true' if the intercepting route is triggered
         final AtomicBoolean intercepted = new AtomicBoolean(false);
         ctx.getRouteDefinition(INTERCEPT_ROUTE_ID).adviceWith((ModelCamelContext) ctx, new AdviceWithRouteBuilder() {
+
             @Override
             public void configure() throws Exception {
                 weaveAddFirst().process((ex) -> intercepted.set(true));
@@ -228,7 +232,7 @@ public class StreamingIT implements KarafIT {
 
         final URI proxiedResource = proxied(binaryResource);
         try (FcrepoResponse r = KarafIT.attempt(30, () -> client.get(proxiedResource).perform());
-             DigestInputStream body = new DigestInputStream(r.getBody(), sha1)) {
+                DigestInputStream body = new DigestInputStream(r.getBody(), sha1)) {
             actualSize = drain(body);
             actualDigest = asHex(body.getMessageDigest().digest());
         }
@@ -254,7 +258,7 @@ public class StreamingIT implements KarafIT {
             if (r.getStatusCode() == 200) {
                 return true;
             }
-        } catch (FcrepoOperationFailedException e) {
+        } catch (final FcrepoOperationFailedException e) {
             // Probably the resource doesn't exist.
             LOG.debug("Error retrieving resource '" + resource + "': " + e.getMessage(), e);
         }
@@ -312,9 +316,9 @@ public class StreamingIT implements KarafIT {
     }
 
     /**
-     * Appends the path to the URI.  All other components of the URI are preserved.
+     * Appends the path to the URI. All other components of the URI are preserved.
      *
-     * @param uri      the URI with the path being appended to
+     * @param uri the URI with the path being appended to
      * @param toAppend the path to be appended to the URI
      * @return a new URI with a path component ending with {@code toAppend}
      * @throws URISyntaxException
@@ -336,9 +340,8 @@ public class StreamingIT implements KarafIT {
      * @return true if the supplied URI will be proxied by API-X, false otherwise
      */
     private static boolean isProxied(final URI uri) {
-        return uri.getScheme().equals(APIX_BASE_URI.getScheme())
-                && uri.getHost().equals(APIX_BASE_URI.getHost())
-                && uri.getPort() == APIX_BASE_URI.getPort();
+        return uri.getScheme().equals(APIX_BASE_URI.getScheme()) && uri.getHost().equals(APIX_BASE_URI.getHost()) &&
+                uri.getPort() == APIX_BASE_URI.getPort();
     }
 
 }

@@ -292,11 +292,12 @@ public class LoaderIT extends ServiceBasedTest {
 
         // Now update it without issue
         optionsResponse.set(optionsResponse.get() + triple("", RDF_TYPE, TEST_TYPE));
-        final FcrepoResponse response = textPost(LOADER_URI, serviceEndpoint);
-        assertEquals(origLocation, response.getHeaderValue("Location"));
+        try (FcrepoResponse response = textPost(LOADER_URI, serviceEndpoint)) {
+            assertEquals(origLocation, response.getHeaderValue("Location"));
 
-        // Now assure that our new triple is present in its representation
-        IOUtils.toString(response.getBody(), "utf8").contains(TEST_TYPE);
+            // Now assure that our new triple is present in its representation
+            IOUtils.toString(response.getBody(), "utf8").contains(TEST_TYPE);
+        }
     }
 
     @Test
@@ -323,19 +324,20 @@ public class LoaderIT extends ServiceBasedTest {
         // Now alter the content of the available extension doc, the loader should slurp up the
         // changes
         optionsResponse.set(optionsResponse.get() + triple("", RDF_TYPE, TEST_TYPE));
-        final FcrepoResponse response = textPost(LOADER_URI, serviceEndpoint);
+        try (final FcrepoResponse response = textPost(LOADER_URI, serviceEndpoint)) {
 
-        // Make sure the extension document URI didn't change (i.e. we're working with one
-        // persisted extension doc, rather than creating a new one each time.
-        assertEquals(uri, response.getHeaderValue("Location"));
+            // Make sure the extension document URI didn't change (i.e. we're working with one
+            // persisted extension doc, rather than creating a new one each time.
+            assertEquals(uri, response.getHeaderValue("Location"));
 
-        // Now, verify that the extension doc has our new statement
-        IOUtils.toString(response.getBody(), "utf8").contains(TEST_TYPE);
+            // Now, verify that the extension doc has our new statement
+            IOUtils.toString(response.getBody(), "utf8").contains(TEST_TYPE);
 
-        update();
+            update();
 
-        // Make sure we only have ONE entry in the service registry for our service
-        assertEquals(1, countServiceRegistryEntries(SERVICE_CANONICAL_URI));
+            // Make sure we only have ONE entry in the service registry for our service
+            assertEquals(1, countServiceRegistryEntries(SERVICE_CANONICAL_URI));
+        }
     }
 
     private final FcrepoResponse textPost(final String uri, final String content) throws Exception {

@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author apb@jhu.edu
  */
+@SuppressWarnings("deprecation")
 public class HttpClientFetcher {
 
     private CloseableHttpClient defaultClient;

@@ -46,6 +46,7 @@ import org.junit.Test;
 public class RuntimeExtensionBindingTest {
 
     // Basic verification that binding works as expected. ITs will exercise this more thoroughly.
+    @SuppressWarnings("resource")
     @Test
     @Ignore
     public void bindingTest() {

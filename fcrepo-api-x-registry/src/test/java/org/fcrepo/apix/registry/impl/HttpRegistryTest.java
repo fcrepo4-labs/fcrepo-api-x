@@ -65,11 +65,12 @@ public class HttpRegistryTest {
 
         final URI uri = URI.create("http://test");
         final String content = "CONTENT";
-        final InputStream stream = IOUtils.toInputStream(content, "UTF-8");
+        try (InputStream stream = IOUtils.toInputStream(content, "UTF-8")) {
 
-        toTest.setHttpClient(mockClient(uri, stream, "text/turte", SC_OK));
+            toTest.setHttpClient(mockClient(uri, stream, "text/turte", SC_OK));
 
-        assertEquals(content, IOUtils.toString(toTest.get(uri).representation(), "UTF-8"));
+            assertEquals(content, IOUtils.toString(toTest.get(uri).representation(), "UTF-8"));
+        }
     }
 
     // Verify that Content-Type is conveyed

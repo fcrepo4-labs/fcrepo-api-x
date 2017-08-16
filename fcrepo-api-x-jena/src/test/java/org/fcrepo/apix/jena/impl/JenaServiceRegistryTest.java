@@ -96,7 +96,7 @@ public class JenaServiceRegistryTest {
     }
 
     @Test
-    public void canonicalLookupTest() {
+    public void canonicalLookupTest() throws Exception {
         final String CANONICAL = "http://example.org/canonical/service";
         final String SERVICE = "http://repository.local/service#uri";
         final URI SERVICE_URI = URI.create(SERVICE);
@@ -112,14 +112,16 @@ public class JenaServiceRegistryTest {
 
         toTest.update();
 
-        final Service svc = toTest.getService(URI.create(CANONICAL));
+        try (Service svc = toTest.getService(URI.create(CANONICAL))) {
 
-        assertNotNull(svc);
-        assertEquals(svc.canonicalURI().toString(), CANONICAL);
-        assertEquals(svc.uri(), SERVICE_URI);
+            assertNotNull(svc);
+            assertEquals(svc.canonicalURI().toString(), CANONICAL);
+            assertEquals(svc.uri(), SERVICE_URI);
+        }
     }
 
     // Verifies that 'instancesOf' returns services instances for LdpServiceInstanceRegistries
+    @SuppressWarnings("resource")
     @Test
     public void instancesOfTest() {
         final String SERVICE_INSTANCE_1 = "http://example.org/service#instance1";

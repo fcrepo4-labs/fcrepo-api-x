@@ -214,10 +214,14 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
             req.getOut().setHeaders(req.getIn().getHeaders());
             req.getOut().getHeaders().putAll(respHeaders);
 
-            final PeekInputStream serviceResponse = new PeekInputStream(resp.getIn().getBody(InputStream.class));
+            try (final PeekInputStream serviceResponse = new PeekInputStream(resp.getIn().getBody(
+                    InputStream.class))) {
 
-            if (serviceResponse.hasContent()) {
-                req.getOut().setBody(serviceResponse);
+                if (serviceResponse.hasContent()) {
+                    req.getOut().setBody(serviceResponse);
+                }
+            } catch (final IOException e) {
+                throw new RuntimeException("Error retrieving service response", e);
             }
         }
 
@@ -239,10 +243,13 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
         if (resp.getIn().getHeader(Exchange.HTTP_RESPONSE_CODE, Integer.class) < 299) {
             req.getOut().getHeaders().putAll(respHeaders);
 
-            final PeekInputStream responseBody = new PeekInputStream(resp.getIn().getBody(InputStream.class));
+            try (final PeekInputStream responseBody = new PeekInputStream(resp.getIn().getBody(InputStream.class))) {
 
-            if (responseBody.hasContent()) {
-                req.getOut().setBody(responseBody);
+                if (responseBody.hasContent()) {
+                    req.getOut().setBody(responseBody);
+                }
+            } catch (final IOException e) {
+                throw new RuntimeException("Error retrieving response body", e);
             }
         } else {
             // I think we can only log this, we can't abort the request at this point.
