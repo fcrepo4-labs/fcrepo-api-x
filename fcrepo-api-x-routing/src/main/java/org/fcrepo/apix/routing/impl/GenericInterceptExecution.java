@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.routing.impl;
 
+import static org.apache.camel.builder.PredicateBuilder.and;
 import static org.fcrepo.apix.routing.Util.append;
 import static org.fcrepo.apix.routing.Util.interceptingServiceInstance;
 
@@ -152,7 +153,10 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
         from(ROUTE_PERFORM_INCOMING)
                 .choice().when(simple("${in.headers.CamelApixServiceEndpoints.size} > 0"))
                 .to(ROUTE_INVOKE_SERVICE)
-                .choice().when(simple("${in.header.CamelhttpResponseCode} range '200..299'"))
+                .choice().when(
+                        and(
+                                simple("${in.header.CamelhttpResponseCode} range '200..299'"),
+                                simple("${in.header.Apix-Modality} not contains 'terminal'")))
                 .to(ROUTE_PERFORM_INCOMING)
                 .end();
 
