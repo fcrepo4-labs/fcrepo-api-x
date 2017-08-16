@@ -27,7 +27,7 @@
     <fcrepo-camel.version>4.5.0</fcrepo-camel.version>
     <fcrepo-toolbox.version>4.7.2</fcrepo-toolbox.version>
     <fcrepo-build-tools.version>4.4.2</fcrepo-build-tools.version>
-    <fcrepo.client.version>0.2.1</fcrepo.client.version>
+    <fcrepo.client.version>0.3.0</fcrepo.client.version>
     <httpclient.version>4.5.2</httpclient.version>
     <httpcore.version>4.4.5</httpcore.version>
     <jena.version>3.1.1</jena.version>
