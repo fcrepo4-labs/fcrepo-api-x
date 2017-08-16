@@ -4,7 +4,7 @@
   <parent>
     <groupId>org.fcrepo</groupId>
     <artifactId>fcrepo-parent</artifactId>
-    <version>4.7.0</version>
+    <version>4.7.4</version>
   </parent>
 
   <groupId>org.fcrepo.apix</groupId>
@@ -23,7 +23,7 @@
     <commons-io.version>2.5</commons-io.version>
     <docker>false</docker>
     <dexx-collection.version>0.6</dexx-collection.version>
-    <fcrepo.version>4.7.3</fcrepo.version>
+    <fcrepo.version>4.7.4</fcrepo.version>
     <fcrepo-camel.version>4.5.0</fcrepo-camel.version>
     <fcrepo-toolbox.version>4.7.2</fcrepo-toolbox.version>
     <fcrepo-build-tools.version>4.4.2</fcrepo-build-tools.version>
