@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.integration;
 
+import static org.fcrepo.apix.integration.KarafIT.attempt;
 import static org.fcrepo.apix.jena.Util.parse;
 import static org.fcrepo.apix.model.Ontologies.RDF_TYPE;
 import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE_INSTANCE;
@@ -33,9 +34,9 @@ import javax.inject.Inject;
 import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.Registry;
+import org.fcrepo.apix.model.components.RoutingFactory;
 
 import org.apache.jena.rdf.model.Model;
-import org.fcrepo.apix.model.components.RoutingFactory;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -85,7 +86,7 @@ public class ServiceDocumentIT implements KarafIT {
     public void emptyServiceDocumentTest() throws Exception {
 
         final URI object = routing.of(REQUEST_URI).interceptUriFor(serviceContainer);
-        final URI serviceDocURI = client.head(object).perform().getLinkHeaders("service").get(0);
+        final URI serviceDocURI = attempt(60, () -> client.head(object).perform().getLinkHeaders("service").get(0));
 
         try (WebResource resource = repository.get(serviceDocURI)) {
             final Model doc = parse(resource);
@@ -108,7 +109,7 @@ public class ServiceDocumentIT implements KarafIT {
 
         final URI container = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
-        final URI object = postFromTestResource("objects/object_serviceDocumentIT.ttl", container);
+        final URI object = attempt(60, () -> postFromTestResource("objects/object_serviceDocumentIT.ttl", container));
 
         final URI serviceDocURI = client.head(object).perform().getLinkHeaders("service").get(0);
 

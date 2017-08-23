@@ -140,9 +140,9 @@ public class LoaderService {
                     WebResource.of(new ByteArrayInputStream(body), resource.contentType()));
         } else {
             throw new RuntimeException(String.format(
-                    "Cannot load resource.  Does not describe exactly one extension (%d), " +
+                    "Cannot load resource <%s>.  Does not describe exactly one extension (%d), " +
                             "or define any services:\n===\n%s\n===",
-                    extensionCount, new String(body)));
+                    resource.uri(), extensionCount, new String(body)));
         }
 
         // Now, see if we need to register a service instance.

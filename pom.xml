@@ -17,7 +17,7 @@
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
     <activemq.version>5.14.5</activemq.version>
-    <camel.version>2.18.4</camel.version>
+    <camel.version>2.19.2</camel.version>
     <cargo.version>1.6.3</cargo.version>
     <checkstyle.plugin.version>2.17</checkstyle.plugin.version>
     <commons-io.version>2.5</commons-io.version>
@@ -108,7 +108,7 @@
         <plugin>
           <groupId>org.apache.karaf.tooling</groupId>
           <artifactId>karaf-maven-plugin</artifactId>
-          <version>${karaf.version}</version>
+          <version>4.0.9</version>
           <extensions>true</extensions>
           <executions>
             <execution>

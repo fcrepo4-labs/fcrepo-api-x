@@ -343,7 +343,6 @@ public class LoaderIT extends ServiceBasedTest {
     private final FcrepoResponse textPost(final String uri, final String content) throws Exception {
 
         final String body = content;
-
         return client.post(URI.create(uri)).body(new ByteArrayInputStream(body.getBytes()),
                 "text/plain").perform();
     }
