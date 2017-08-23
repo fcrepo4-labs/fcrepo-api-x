@@ -4,6 +4,7 @@
 *.iws
 *.iml
 .idea
+.vscode/
 target/
 *.swp
 *.log

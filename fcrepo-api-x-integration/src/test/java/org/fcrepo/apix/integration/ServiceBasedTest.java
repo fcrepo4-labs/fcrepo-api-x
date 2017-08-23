@@ -132,8 +132,9 @@ public abstract class ServiceBasedTest implements KarafIT {
 
             @Override
             public void configure() throws Exception {
+
                 from("jetty:" + serviceEndpoint +
-                        "?matchOnUriPrefix=true")
+                        "?matchOnUriPrefix=true&optionsEnabled=true")
                                 .routeId(SERVICE_ROUTE_ID)
                                 .process(ex -> {
                                     requestToService.copyFrom(ex.getIn());

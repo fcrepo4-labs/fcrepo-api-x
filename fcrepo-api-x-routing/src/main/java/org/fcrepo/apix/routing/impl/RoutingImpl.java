@@ -174,14 +174,16 @@ public class RoutingImpl extends RouteBuilder {
 
         // It would be nice to use the rest DSL to do the service doc, if that is at all possible
 
-        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.discoveryPath}}?matchOnUriPrefix=true")
-                .routeId("service-doc-endpoint")
-                .process(WRITE_SERVICE_DOC);
+        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.discoveryPath}}" +
+                "?matchOnUriPrefix=true&optionsEnabled=true")
+                        .routeId("service-doc-endpoint")
+                        .process(WRITE_SERVICE_DOC);
 
         from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.exposePath}}" +
                 "?matchOnUriPrefix=true" +
                 "&bridgeEndpoint=true" +
-                "&disableStreamCache=true")
+                "&disableStreamCache=true" +
+                "&optionsEnabled=true")
                         .routeId("endpoint-expose").routeDescription("Endpoint for exposed service mediation")
                         .process(ANALYZE_URI)
                         .choice()
@@ -191,7 +193,8 @@ public class RoutingImpl extends RouteBuilder {
         from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.proxyPath}}?" +
                 "matchOnUriPrefix=true" +
                 "&bridgeEndpoint=true" +
-                "&disableStreamCache=true")
+                "&disableStreamCache=true" +
+                "&optionsEnabled=true")
                         .routeId("endpoint-proxy").routeDescription("Endpoint for proxy to Fedora")
 
                         .choice()

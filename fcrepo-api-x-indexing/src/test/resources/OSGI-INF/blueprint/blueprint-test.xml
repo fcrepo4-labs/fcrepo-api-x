@@ -45,7 +45,7 @@
     <routeBuilder ref="indexerRoutes" />
   </camelContext>
 
-  <service interface="org.apache.camel.CamelContext" ref="FcrepoServiceIndexer">
+  <service interface="org.apache.camel.model.ModelCamelContext" ref="FcrepoServiceIndexer">
     <service-properties>
       <entry key="role" value="FcrepoServiceIndexer" />
     </service-properties>
