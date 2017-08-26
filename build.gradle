@@ -6,142 +6,171 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
+        classpath "com.bmuschko:gradle-nexus-plugin:2.3.1"
     }
 }
 
 plugins {
-    id 'com.github.hierynomus.license' version '0.13.1'
-    id 'net.researchgate.release' version '2.6.0'
-    id 'io.codearte.nexus-staging' version '0.9.0'
-    id 'com.palantir.docker' version '0.13.0'
+    id "com.github.hierynomus.license" version "0.13.1"
+    id "net.researchgate.release" version "2.6.0"
+    id "io.codearte.nexus-staging" version "0.9.0"
+    id "com.palantir.docker" version "0.13.0"
 }
 
-allprojects {
-    apply plugin: 'maven'
+ext {
+    vendor = 'pandorasystems'
+    homepage = 'http://cool.pandora'
+    docURL = 'https://github.com/pan-dora/pandora-demo/wiki'
+    license = 'Apache 2'
+}
 
-    group = 'cool.pandora'
+
+configurations {
+    buildToolsConfig
+}
+
+def homeDir = System.getProperty("user.home")
+def mavenLocal = new File(homeDir, ".m2/repository/org/fcrepo/apix")
+
+docker {
+    name "${vendor}/apix"
+    tags "${version}"
+    dockerfile file('docker/Dockerfile')
+    files "${rootDir}/docker/cfg", "${rootDir}/docker/entrypoint.sh", "${rootDir}/docker/docker-healthcheck.sh"
+    copySpec.from("${buildDir}/maven").into("repository/org/fcrepo/apix")
+    pull true
+    noCache true
+}
+
+task copyTask(type: Copy) {
+    from mavenLocal
+    into "${rootProject.buildDir}/maven"
+}
+
+docker.dependsOn copyTask
+
+configure(allprojects) { project ->
+    apply plugin: "maven"
+    apply plugin: "java"
+
+    group = "cool.pandora"
 
     repositories {
         jcenter()
         mavenCentral()
-        mavenLocal()
+        maven { url file('pax-exam').toURL() }
     }
 
-    gradle.projectsEvaluated {
-        tasks.withType(JavaCompile) {
-            options.compilerArgs.add("-Xlint:unchecked")
-            options.compilerArgs.add("-Xlint:deprecation")
+    ext.camelVersionRange = "[2.18,3)"
+    ext.activemqVersionRange = "[5.14,6)"
+    ext.fcrepoCamelVersionRange = "[4.5,5)"
+    ext.fcrepoCamelToolboxVersionRange = "[4.7.1,5)"
+    ext.activemqVersion = "5.14.5"
+    ext.blueprintVersion = "1.0.9"
+    ext.camelVersion = "2.18.4"
+    ext.cargoVersion = "1.6.3"
+    ext.checkstylePluginVersion = "2.17"
+    ext.commonsioVersion = "2.5"
+    ext.dexxcollectionVersion = "0.6"
+    ext.fcrepoVersion = "4.7.4"
+    ext.fcrepocamelVersion = "4.5.0"
+    ext.fcrepotoolboxVersion = "4.7.2"
+    ext.fcrepobuildtoolsVersion = "4.4.2"
+    ext.fcrepoclientVersion = "0.3.0"
+    ext.felixVersion = "1.8.8"
+    ext.fusekiVersion = "2.4.1"
+    ext.httpclientVersion = "4.5.2"
+    ext.httpcoreVersion = "4.4.5"
+    ext.jenaVersion = "3.1.1"
+    ext.jsoupVersion = "1.9.2"
+    ext.junitVersion = "4.12"
+    ext.karafVersion = "4.0.9"
+    ext.licensePluginVersion = "2.11"
+    ext.logbackVersion = "1.2.3"
+    ext.mockitoVersion = "1.10.19"
+    ext.osgiscrVersion = "1.3.0"
+    ext.osgiVersion = "5.0.0"
+    ext.paxexamVersion = "4.11.0"
+    ext.paxurlaetherVersion = "2.5.2"
+    ext.slf4jVersion = "1.7.13"
+    ext.xercesVersion = "2.11.0_1"
+    ext.xmlresolverVersion = "1.2_5"
+    ext.defaultOsgiImports = "org.osgi.service.blueprint;version='[1,2)',*"
+    ext.projectOsgiVersion = project.version.replaceAll("-SNAPSHOT", ".SNAPSHOT")
+
+    compileJava {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+        options.encoding = 'UTF-8'
+    }
+
+    compileTestJava {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+        options.encoding = 'UTF-8'
+        options.compilerArgs += "-parameters"
+    }
+
+    afterEvaluate {
+        gradle.projectsEvaluated {
+            tasks.withType(JavaCompile) {
+                options.compilerArgs.add("-Xlint:unchecked")
+                options.compilerArgs.add("-Xlint:deprecation")
+//                options.compilerArgs.addAll(["--add-modules", "java.se.ee"])
+            }
+        }
+
+        compileTestJava {
+            doFirst {
+//                options.compilerArgs.addAll(['--add-modules', 'java.se.ee'])
+                options.compilerArgs.add("-Xlint:deprecation")
+            }
         }
     }
 
     release {
-        tagTemplate = '$name-$version'
+        tagTemplate = "$name-$version"
         scmAdapters = [
                 GitAdapter
         ]
 
         git {
-            requireBranch = 'master'
-            pushToRemote = 'origin'
-            pushToBranchPrefix = ''
+            requireBranch = "master"
+            pushToRemote = "origin"
+            pushToBranchPrefix = ""
             commitVersionFileOnly = false
         }
     }
 
-}
-
-subprojects {
-    apply plugin: 'com.bmuschko.nexus'
-    apply plugin: 'java'
-    apply plugin: 'maven-publish'
-    apply plugin: 'signing'
-    apply plugin: 'jacoco'
-
-    sourceCompatibility = 1.8
-    targetCompatibility = 1.8
-
-    ext {
-        vendor = 'Pandora Ecosystem'
-        homepage = 'http://cool.pandora'
-        docURL = 'https://github.com/pan-dora/pandora-demo/wiki'
-        license = 'Apache 2'
-
-        camelVersionRange = '[2.18,3)'
-        activemqVersionRange = '[5.14,6)'
-        fcrepoCamelVersionRange = '[4.5,5)'
-        fcrepoCamelToolboxVersionRange = '[4.7.1,5)'
-
-        /* Dependencies */
-        activemqVersion = '5.14.1'
-        camelVersion = '2.18.0'
-        commonsIoVersion = '2.5'
-        commonsLangVersion = '3.4'
-        derbyVersion = '10.12.1.1'
-        fcrepoCamelVersion = '4.5.0'
-        fcrepoCamelToolboxVersion = '4.7.1'
-        guavaVersion = '18.0'
-        hk2Version = '2.4.0'
-        httpclientVersion = '4.5.2'
-        httpcoreVersion = '4.4.5'
-        jacksonVersion = '2.9.0'
-        jenaVersion = '3.1.1'
-        junitVersion = '4.12'
-        jsonldVersion = '0.10.4'
-        logbackVersion = '1.2.3'
-        marmottaVersion = '3.3.0'
-        postgresqlVersion = '9.4.1208'
-        rdf4jVersion = '2.2.2'
-        saxonVersion = '9.6.0-7'
-        slf4jVersion = '1.7.25'
-        springVersion = '4.1.7.RELEASE'
-        woodstoxVersion = '4.4.1'
-        xercesVersion = '2.11.0'
-
-        /* Transitive deps */
-        cal10nVersion = '0.8.1'
-        commonsBeanutilsVersion = '1.8.3'
-        commonsCodecVersion = '1.10'
-        commonsCollectionsVersion = '3.2.1'
-        commonsCsvVersion = '1.4'
-        commonsDigesterVersion = '1.8'
-        commonsHttpclientVersion = '3.1'
-        commonsValidatorVersion = '1.4.0'
-        dexxVersion = '0.6'
-        fluentHcVersion = '4.5.2'
-        fcrepoClientVersion = '0.2.1'
-        httpclientCacheVersion = '4.3.5'
-        httpmimeVersion = '4.5.2'
-        httpcoreNioVersion = '4.4.4'
-        jaxenVersion = '1.1.6'
-        jdom2Version = '2.0.5'
-        jodaTimeVersion = '2.5'
-        jsonldSesameVersion = '0.5.1'
-        semarglVersion = '0.6.1'
-        sesameVersion = '2.7.13'
-        thriftVersion = '0.9.2'
-
-        /* Testing */
-        paxExamVersion = '4.9.1'
-        karafVersion = '4.0.5'
-        fcrepoVersion = '4.6.0'
-        fusekiVersion = '2.3.1'
-        xercesVersion = '2.11.0'
-        osgiVersion = '4.3.1'
-
-        /* OSGi */
-        defaultOsgiImports = 'org.osgi.service.blueprint;version="[1,2)",*'
-        projectOsgiVersion = project.version.replaceAll("-SNAPSHOT", ".SNAPSHOT")
+    test {
+        systemProperty("java.awt.headless", "true")
+        systemProperty("testGroups", project.properties.get("testGroups"))
+        scanForTestClasses = false
+        include(["**/*Tests.class", "**/*Test.class"])
+        exclude(["**/Abstract*.class", '**/*$*', "**/*IT.class"])
+        reports.junitXml.destination = file("$buildDir/test-results")
     }
 
-    task sourceJar(type: Jar) {
-        classifier 'sources'
+}
+
+configure(subprojects) { subproject ->
+    apply plugin: "com.bmuschko.nexus"
+    apply plugin: "maven-publish"
+    apply plugin: "signing"
+    apply plugin: "jacoco"
+
+    task packageSources(type: Jar) {
+        classifier = 'sources'
         from sourceSets.main.allSource
     }
 
-    artifacts {
-        archives sourceJar
+    artifacts.archives packageSources
+
+    task packageTests(type: Jar) {
+        classifier = 'tests'
+        from sourceSets.test.output
     }
+    artifacts.archives packageTests
 
     jacoco {
         toolVersion = "0.7.9"
@@ -163,36 +192,36 @@ subprojects {
     modifyPom {
         //noinspection GroovyAssignabilityCheck
         project {
-            name 'API-X'
-            description 'API-X'
-            url 'https://github.com/fcrepo4-labs/fcrepo-api-x/'
-            inceptionYear '2017'
+            name "API-X"
+            description "API-X"
+            url "https://github.com/fcrepo4-labs/fcrepo-api-x/"
+            inceptionYear "2017"
 
             developers {
                 developer {
-                    id 'christopher-johnson'
-                    name 'Christopher Johnson'
-                    email 'chjohnson @ (domain of organization url)'
-                    organization ''
-                    organizationUrl ''
+                    id "christopher-johnson"
+                    name "Christopher Johnson"
+                    email "chjohnson @ (domain of organization url)"
+                    organization ""
+                    organizationUrl ""
                     roles {
-                        role 'developer'
+                        role "developer"
                     }
-                    timezone '+1'
+                    timezone "+1"
                 }
             }
 
             scm {
-                connection 'scm:git:git://github.com/fcrepo4-labs/fcrepo-api-x.git'
-                developerConnection 'scm:git:git@github.com/fcrepo4-labs/fcrepo-api-x.git'
-                url 'https://github.com/fcrepo4-labs/fcrepo-api-x/'
-                tag 'HEAD'
+                connection "scm:git:git://github.com/fcrepo4-labs/fcrepo-api-x.git"
+                developerConnection "scm:git:git@github.com/fcrepo4-labs/fcrepo-api-x.git"
+                url "https://github.com/fcrepo4-labs/fcrepo-api-x/"
+                tag "HEAD"
             }
 
             licenses {
                 license {
-                    name 'Apache License, Version 2.0'
-                    url 'http://www.apache.org/licenses/LICENSE-2.0'
+                    name "Apache License, Version 2.0"
+                    url "http://www.apache.org/licenses/LICENSE-2.0"
                 }
             }
         }
@@ -205,32 +234,226 @@ subprojects {
 
     nexus {
         sign = true
-        repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
-        snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+        repositoryUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+        snapshotRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
     }
 }
 
-configurations {
-    buildToolsConfig
+project("fcrepo-api-x-binding") {
+
+    description = "fcrepo-api-x-binding"
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile("org.fcrepo.client:fcrepo-java-client:${fcrepoclientVersion}") {
+            exclude(module: "*")
+        }
+        compile("org.apache.httpcomponents:httpclient-osgi:${httpclientVersion}") {
+            exclude(module: "httpclient")
+            exclude(module: "httpcore")
+            exclude(module: "httpclient-cache")
+            exclude(module: "httpmime")
+            exclude(module: "fluent-hc")
+            exclude(module: "commons-codec")
+        }
+        compile("org.apache.httpcomponents:httpcore-osgi:${httpcoreVersion}") {
+            exclude(module: "httpcore")
+            exclude(module: "httpcore-nio")
+        }
+        compile "commons-io:commons-io:${commonsioVersion}"
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "org.mockito:mockito-all:${mockitoVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+        compile "org.osgi:org.osgi.service.component.annotations:${osgiscrVersion}"
+    }
 }
 
-def homeDir = System.getProperty('user.home')
-def mavenLocal = new File(homeDir, ".m2/repository/cool/pandora")
+project("fcrepo-api-x-indexing") {
 
-docker {
-    name 'pandorasystems/apix'
-    tags 'latest'
-    dockerfile file('messaging/latest/Dockerfile')
-    copySpec.from("${buildDir}/maven").into("repository/cool/pandora")
-    files "${projectDir}/cfg", "entrypoint.sh"
-    buildArgs([BUILD_VERSION: 'version'])
-    labels(['key': 'value'])
-    pull true
-    noCache true
+    description = "fcrepo-api-x-indexing"
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        testCompile "org.apache.camel:camel-test-blueprint:${camelVersion}"
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "org.mockito:mockito-all:${mockitoVersion}"
+        testCompile "ch.qos.logback:logback-classic:${logbackVersion}"
+        testCompile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.xerces:${xercesVersion}"
+        compile "org.fcrepo.camel:fcrepo-camel:${fcrepocamelVersion}"
+        compile "org.apache.camel:camel-core:${camelVersion}"
+        compile "org.apache.camel:camel-http4:${camelVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    }
 }
 
-task copyTask(type: Copy) {
-    from mavenLocal
-    into 'build/maven'
+project("fcrepo-api-x-integration") {
+    description = "fcrepo-api-x-integration"
+    dependencies {
+        compile project(":fcrepo-api-x-karaf")
+        compile project(":fcrepo-api-x-test")
+        compile "org.jsoup:jsoup:${jsoupVersion}"
+        compile("org.apache.jena:jena-osgi:${jenaVersion}") {
+            exclude(module: "org.osgi.core")
+        }
+        compile("org.fcrepo.client:fcrepo-java-client:${fcrepoclientVersion}") {
+            exclude(module: "*")
+        }
+        testCompile group: 'org.apache.camel.karaf', name: 'apache-camel', version: "${camelVersion}", classifier: 'features', ext: 'xml'
+        testCompile("org.apache.httpcomponents:httpclient-osgi:${httpclientVersion}") {
+            exclude(module: "httpclient")
+            exclude(module: "httpcore")
+            exclude(module: "httpclient-cache")
+            exclude(module: "httpmime")
+            exclude(module: "fluent-hc")
+            exclude(module: "commons-codec")
+        }
+        testCompile project(":fcrepo-api-x-model")
+        testCompile project(":fcrepo-api-x-jena")
+        testCompile project(":fcrepo-api-x-routing")
+        testCompile project(":fcrepo-api-x-karaf")
+        testCompile "org.apache.camel:camel-test:${camelVersion}"
+        testCompile group: 'org.apache.karaf.features', name: 'standard', version: "${karafVersion}", classifier: 'features', ext: 'xml'
+        testCompile "org.ops4j.pax.exam:pax-exam-container-karaf:${paxexamVersion}"
+        testCompile "org.ops4j.pax.exam:pax-exam-junit4:${paxexamVersion}"
+        testCompile "org.ops4j.pax.exam:pax-exam:${paxexamVersion}"
+        testCompile "org.ops4j.pax.url:pax-url-aether:${paxurlaetherVersion}"
+        testCompile "javax.inject:javax.inject:1"
+        testCompile "org.osgi:org.osgi.core:${osgiVersion}"
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "commons-io:commons-io:${commonsioVersion}"
+        testCompile("org.fcrepo:fcrepo-webapp:${fcrepoVersion}") {
+            exclude(module: "*")
+        }
+        testCompile "org.apache.jena:jena-fuseki-war:${fusekiVersion}"
+        testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
+    }
 }
 
+project("fcrepo-api-x-jena") {
+
+    description = 'fcrepo-api-x-jena'
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile project(":fcrepo-api-x-registry")
+        compile("org.apache.jena:jena-osgi:${jenaVersion}") {
+            exclude(module: "org.osgi.core")
+        }
+        compile  "com.github.andrewoma.dexx:collection:${dexxcollectionVersion}"
+        compile  "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
+        compile  "org.apache.servicemix.bundles:org.apache.servicemix.bundles.xmlresolver:${xmlresolverVersion}"
+        compile("org.apache.servicemix.bundles:org.apache.servicemix.bundles.xerces:${xercesVersion}") {
+            exclude(module: "xml-apis")
+        }
+        testCompile  "junit:junit:${junitVersion}"
+        testCompile  "org.mockito:mockito-all:${mockitoVersion}"
+        testCompile  "org.apache.jena:jena-core:${jenaVersion}"
+        testCompile project(":fcrepo-api-x-test")
+        testCompile  "org.slf4j:slf4j-simple:${slf4jVersion}"
+        compile "org.osgi:org.osgi.service.component.annotations:${osgiscrVersion}"
+        compile  "org.slf4j:slf4j-api:${slf4jVersion}"
+    }
+}
+
+project("fcrepo-api-x-karaf") {
+
+    description = "fcrepo-api-x-karaf"
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile project(":fcrepo-api-x-registry")
+        compile("org.apache.jena:jena-osgi:${jenaVersion}") {
+            exclude(module: "org.osgi.core")
+        }
+        compile "com.github.andrewoma.dexx:collection:${dexxcollectionVersion}"
+        compile "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
+        compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.xmlresolver:${xmlresolverVersion}"
+        compile("org.apache.servicemix.bundles:org.apache.servicemix.bundles.xerces:${xercesVersion}") {
+            exclude(module: "xml-apis")
+        }
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "org.mockito:mockito-all:${mockitoVersion}"
+        testCompile "org.apache.jena:jena-core:${jenaVersion}"
+        testCompile project(":fcrepo-api-x-test")
+        testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
+        compile "org.osgi:org.osgi.service.component.annotations:${osgiscrVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    }
+}
+
+project("fcrepo-api-x-listener") {
+    apply plugin: "osgi"
+
+    description = "fcrepo-api-x-listener"
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile "org.apache.camel:camel-core:${camelVersion}"
+        compile "org.fcrepo.camel:fcrepo-camel:${fcrepocamelVersion}"
+    }
+}
+
+project("fcrepo-api-x-loader") {
+
+    description = "fcrepo-api-x-loade"
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile project(":fcrepo-api-x-jena")
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "org.mockito:mockito-all:${mockitoVersion}"
+        testCompile "org.apache.jena:jena-core:${jenaVersion}"
+        compile "org.apache.camel:camel-core:${camelVersion}"
+    }
+}
+
+project("fcrepo-api-x-registry") {
+
+    description = "fcrepo-api-x-registry"
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile("org.apache.httpcomponents:httpcore-osgi:${httpcoreVersion}") {
+            exclude(module: "httpcore")
+            exclude(module: "httpcore-nio")
+        }
+        compile("org.apache.httpcomponents:httpclient-osgi:${httpclientVersion}") {
+            exclude(module: "httpclient")
+            exclude(module: "httpcore")
+            exclude(module: "httpclient-cache")
+            exclude(module: "httpmime")
+            exclude(module: "fluent-hc")
+            exclude(module: "commons-codec")
+        }
+        compile "org.apache.felix:org.apache.felix.configadmin:${felixVersion}"
+        compile "commons-io:commons-io:${commonsioVersion}"
+        compile "org.osgi:org.osgi.core:${osgiVersion}"
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "org.mockito:mockito-all:${mockitoVersion}"
+        testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
+        compile "org.osgi:org.osgi.service.component.annotations:${osgiscrVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    }
+}
+
+project("fcrepo-api-x-routing") {
+
+    description = 'fcrepo-api-x-routing'
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile project(":fcrepo-api-x-jena")
+        testCompile  "org.apache.jena:jena-core:${jenaVersion}"
+        testCompile  "junit:junit:${junitVersion}"
+        testCompile  "org.mockito:mockito-all:${mockitoVersion}"
+        compile "org.apache.camel:camel-core:${camelVersion}"
+        compile "org.apache.camel:camel-jetty:${camelVersion}"
+        compile "org.apache.camel:camel-http4:${camelVersion}"
+        compile "org.osgi:org.osgi.service.component.annotations:${osgiscrVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    }
+}
+
+project("fcrepo-api-x-test") {
+
+    description = "fcrepo-api-x-test"
+    dependencies {
+        compile "org.apache.aries.blueprint:org.apache.aries.blueprint.cm:${blueprintVersion}"
+        compile "org.apache.httpcomponents:httpclient:${httpclientVersion}"
+        compile "org.apache.httpcomponents:httpcore:${httpcoreVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+        compile project(":fcrepo-api-x-model")
+    }
+}

@@ -80,7 +80,7 @@ import org.ops4j.pax.exam.util.Filter;
  * @author apb@jhu.edu
  */
 @RunWith(PaxExam.class)
-public class LoaderIT extends ServiceBasedTest {
+public class LoaderIT extends ServiceBasedIT {
 
     static final String LOADER_URI = "http://127.0.0.1:" + System.getProperty(
             "loader.dynamic.test.port") + "/load";
