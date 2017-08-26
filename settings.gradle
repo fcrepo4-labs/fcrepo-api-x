@@ -1,0 +1,28 @@
+rootProject.name = 'fcrepo-api-x'
+include ':fcrepo-api-x-registry'
+include ':fcrepo-api-x-model'
+include ':fcrepo-api-x-routing'
+include ':fcrepo-api-x-binding'
+include ':fcrepo-api-x-execution'
+include ':fcrepo-api-x-jena'
+include ':fcrepo-api-x-integration'
+include ':fcrepo-api-x-karaf'
+include ':fcrepo-api-x-ontology'
+include ':fcrepo-api-x-test'
+include ':fcrepo-api-x-listener'
+include ':fcrepo-api-x-loader'
+include ':fcrepo-api-x-indexing'
+
+project(':fcrepo-api-x-registry').projectDir = "$rootDir/fcrepo-api-x-registry" as File
+project(':fcrepo-api-x-model').projectDir = "$rootDir/fcrepo-api-x-model" as File
+project(':fcrepo-api-x-routing').projectDir = "$rootDir/fcrepo-api-x-routing" as File
+project(':fcrepo-api-x-binding').projectDir = "$rootDir/fcrepo-api-x-binding" as File
+project(':fcrepo-api-x-execution').projectDir = "$rootDir/fcrepo-api-x-execution" as File
+project(':fcrepo-api-x-jena').projectDir = "$rootDir/fcrepo-api-x-jena" as File
+project(':fcrepo-api-x-integration').projectDir = "$rootDir/fcrepo-api-x-integration" as File
+project(':fcrepo-api-x-karaf').projectDir = "$rootDir/fcrepo-api-x-karaf" as File
+project(':fcrepo-api-x-ontology').projectDir = "$rootDir/fcrepo-api-x-ontology" as File
+project(':fcrepo-api-x-test').projectDir = "$rootDir/fcrepo-api-x-test" as File
+project(':fcrepo-api-x-listener').projectDir = "$rootDir/fcrepo-api-x-listener" as File
+project(':fcrepo-api-x-loader').projectDir = "$rootDir/fcrepo-api-x-loader" as File
+project(':fcrepo-api-x-indexing').projectDir = "$rootDir/fcrepo-api-x-indexing" as File

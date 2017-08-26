@@ -86,6 +86,8 @@ public interface KarafIT {
 
     URI serviceContainer = URI.create(System.getProperty("registry.service.container", ""));
 
+    URI extensionObjectContainer = URI.create(apixBaseURI + "/apix/extensions/objects");
+
     URI ontologyContainer = URI.create(System.getProperty("registry.ontology.container", ""));
 
     /**

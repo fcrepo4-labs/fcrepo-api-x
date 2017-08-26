@@ -18,22 +18,21 @@
 
 package org.fcrepo.apix.listener.impl;
 
-import static org.apache.camel.builder.PredicateBuilder.not;
-import static org.fcrepo.camel.FcrepoHeaders.FCREPO_RESOURCE_TYPE;
-import static org.fcrepo.camel.FcrepoHeaders.FCREPO_URI;
-
-import java.net.URI;
-import java.util.List;
-
+import org.apache.camel.LoggingLevel;
+import org.apache.camel.Processor;
+import org.apache.camel.builder.RouteBuilder;
 import org.fcrepo.apix.model.components.RoutingFactory;
 import org.fcrepo.apix.model.components.Updateable;
 import org.fcrepo.camel.FcrepoHeaders;
 import org.fcrepo.camel.processor.EventProcessor;
-
-import org.apache.camel.Processor;
-import org.apache.camel.builder.RouteBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.URI;
+import java.util.List;
+
+import static org.apache.camel.builder.PredicateBuilder.or;
+import static org.fcrepo.camel.FcrepoHeaders.FCREPO_URI;
 
 /**
  * Listens for updates to repository resources and notifies {@link Updateable}s
@@ -46,7 +45,8 @@ public class UpdateListener extends RouteBuilder {
 
     private List<Updateable> toUpdate;
 
-    private static final String TYPE_REPOSITORY_RESOURCE = "http://fedora.info/definitions/v4/repository#Resource";
+    private static final String TYPE_APIX_EXTENSION = "extensions";
+    private static final String TYPE_APIX_SERVICE = "services";
 
     private RoutingFactory routing;
 
@@ -71,21 +71,18 @@ public class UpdateListener extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        from("{{input.uri}}").id("listener-update-apix")
-                .process(new EventProcessor())
+        from("{{input.uri}}").id("listener-update-apix").process(new EventProcessor())
 
-                // At the moment, this seems to be the only way to filter out messages for "hash resources"
-                .filter(not(header(FCREPO_URI).contains("#")))
-                .filter(header(FCREPO_RESOURCE_TYPE).contains(TYPE_REPOSITORY_RESOURCE))
-
-                .process(USE_FCREPO_URIS)
-                .process(e -> toUpdate.forEach(u -> {
-                    try {
-                        u.update(URI.create(e.getIn().getHeader(FCREPO_URI, String.class)));
-                    } catch (final Exception x) {
-                        LOG.warn(String.format("Update to <%s> failed", e.getIn().getHeader(FCREPO_URI)), x);
-                    }
-                }));
+                .filter(or(header(FCREPO_URI).contains(TYPE_APIX_SERVICE), header(FCREPO_URI)
+                        .contains(TYPE_APIX_EXTENSION)))
+                .log(LoggingLevel.DEBUG, LOG, "Updating service doc of ${headers[CamelFcrepoUri]}")
+                .process(USE_FCREPO_URIS).process(e -> toUpdate.forEach(u -> {
+            try {
+                u.update(URI.create(e.getIn().getHeader(FCREPO_URI, String.class)));
+            } catch (final Exception x) {
+                LOG.warn(String.format("Update to <%s> failed", e.getIn().getHeader(FCREPO_URI)), x);
+            }
+        }));
     }
 
     private final Processor USE_FCREPO_URIS = ex -> {

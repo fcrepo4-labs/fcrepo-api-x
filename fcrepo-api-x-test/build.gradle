@@ -1,0 +1,9 @@
+
+description = ''
+dependencies {
+    compile group: 'org.apache.aries.blueprint', name: 'org.apache.aries.blueprint.cm', version:'1.0.9'
+    compile group: 'org.apache.httpcomponents', name: 'httpclient', version:'4.5.2'
+    compile group: 'org.apache.httpcomponents', name: 'httpcore', version:'4.4.5'
+    compile group: 'org.slf4j', name: 'slf4j-api', version:'1.7.13'
+  compile project(':fcrepo-api-x-model')
+}

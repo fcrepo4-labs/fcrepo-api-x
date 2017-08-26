@@ -1,0 +1,33 @@
+
+description = ''
+dependencies {
+  compile project(':fcrepo-api-x-model')
+    compile(group: 'org.fcrepo.client', name: 'fcrepo-java-client', version:'0.2.1') {
+exclude(module: '*')
+    }
+    compile(group: 'org.apache.httpcomponents', name: 'httpclient-osgi', version:'4.5.2') {
+exclude(module: 'httpclient')
+exclude(module: 'httpcore')
+exclude(module: 'httpclient-cache')
+exclude(module: 'httpmime')
+exclude(module: 'fluent-hc')
+exclude(module: 'commons-codec')
+    }
+    compile(group: 'org.apache.httpcomponents', name: 'httpcore-osgi', version:'4.4.5') {
+exclude(module: 'httpcore')
+exclude(module: 'httpcore-nio')
+    }
+    compile group: 'commons-io', name: 'commons-io', version:'2.5'
+    testCompile group: 'junit', name: 'junit', version:'4.12'
+    testCompile group: 'org.mockito', name: 'mockito-all', version:'1.10.19'
+    compile(group: 'org.slf4j', name: 'slf4j-api', version:'1.7.13') {
+       /* This dependency was originally in the Maven provided scope, but the project was not of type war.
+       This behavior is not yet supported by Gradle, so this dependency has been converted to a compile dependency.
+       Please review and delete this closure when resolved. */
+    }
+    compile(group: 'org.osgi', name: 'org.osgi.service.component.annotations', version:'1.3.0') {
+       /* This dependency was originally in the Maven provided scope, but the project was not of type war.
+       This behavior is not yet supported by Gradle, so this dependency has been converted to a compile dependency.
+       Please review and delete this closure when resolved. */
+    }
+}

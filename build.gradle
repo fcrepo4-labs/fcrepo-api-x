@@ -1,0 +1,236 @@
+import net.researchgate.release.GitAdapter
+
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
+    }
+}
+
+plugins {
+    id 'com.github.hierynomus.license' version '0.13.1'
+    id 'net.researchgate.release' version '2.6.0'
+    id 'io.codearte.nexus-staging' version '0.9.0'
+    id 'com.palantir.docker' version '0.13.0'
+}
+
+allprojects {
+    apply plugin: 'maven'
+
+    group = 'cool.pandora'
+
+    repositories {
+        jcenter()
+        mavenCentral()
+        mavenLocal()
+    }
+
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs.add("-Xlint:unchecked")
+            options.compilerArgs.add("-Xlint:deprecation")
+        }
+    }
+
+    release {
+        tagTemplate = '$name-$version'
+        scmAdapters = [
+                GitAdapter
+        ]
+
+        git {
+            requireBranch = 'master'
+            pushToRemote = 'origin'
+            pushToBranchPrefix = ''
+            commitVersionFileOnly = false
+        }
+    }
+
+}
+
+subprojects {
+    apply plugin: 'com.bmuschko.nexus'
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+    apply plugin: 'signing'
+    apply plugin: 'jacoco'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    ext {
+        vendor = 'Pandora Ecosystem'
+        homepage = 'http://cool.pandora'
+        docURL = 'https://github.com/pan-dora/pandora-demo/wiki'
+        license = 'Apache 2'
+
+        camelVersionRange = '[2.18,3)'
+        activemqVersionRange = '[5.14,6)'
+        fcrepoCamelVersionRange = '[4.5,5)'
+        fcrepoCamelToolboxVersionRange = '[4.7.1,5)'
+
+        /* Dependencies */
+        activemqVersion = '5.14.1'
+        camelVersion = '2.18.0'
+        commonsIoVersion = '2.5'
+        commonsLangVersion = '3.4'
+        derbyVersion = '10.12.1.1'
+        fcrepoCamelVersion = '4.5.0'
+        fcrepoCamelToolboxVersion = '4.7.1'
+        guavaVersion = '18.0'
+        hk2Version = '2.4.0'
+        httpclientVersion = '4.5.2'
+        httpcoreVersion = '4.4.5'
+        jacksonVersion = '2.9.0'
+        jenaVersion = '3.1.1'
+        junitVersion = '4.12'
+        jsonldVersion = '0.10.4'
+        logbackVersion = '1.2.3'
+        marmottaVersion = '3.3.0'
+        postgresqlVersion = '9.4.1208'
+        rdf4jVersion = '2.2.2'
+        saxonVersion = '9.6.0-7'
+        slf4jVersion = '1.7.25'
+        springVersion = '4.1.7.RELEASE'
+        woodstoxVersion = '4.4.1'
+        xercesVersion = '2.11.0'
+
+        /* Transitive deps */
+        cal10nVersion = '0.8.1'
+        commonsBeanutilsVersion = '1.8.3'
+        commonsCodecVersion = '1.10'
+        commonsCollectionsVersion = '3.2.1'
+        commonsCsvVersion = '1.4'
+        commonsDigesterVersion = '1.8'
+        commonsHttpclientVersion = '3.1'
+        commonsValidatorVersion = '1.4.0'
+        dexxVersion = '0.6'
+        fluentHcVersion = '4.5.2'
+        fcrepoClientVersion = '0.2.1'
+        httpclientCacheVersion = '4.3.5'
+        httpmimeVersion = '4.5.2'
+        httpcoreNioVersion = '4.4.4'
+        jaxenVersion = '1.1.6'
+        jdom2Version = '2.0.5'
+        jodaTimeVersion = '2.5'
+        jsonldSesameVersion = '0.5.1'
+        semarglVersion = '0.6.1'
+        sesameVersion = '2.7.13'
+        thriftVersion = '0.9.2'
+
+        /* Testing */
+        paxExamVersion = '4.9.1'
+        karafVersion = '4.0.5'
+        fcrepoVersion = '4.6.0'
+        fusekiVersion = '2.3.1'
+        xercesVersion = '2.11.0'
+        osgiVersion = '4.3.1'
+
+        /* OSGi */
+        defaultOsgiImports = 'org.osgi.service.blueprint;version="[1,2)",*'
+        projectOsgiVersion = project.version.replaceAll("-SNAPSHOT", ".SNAPSHOT")
+    }
+
+    task sourceJar(type: Jar) {
+        classifier 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts {
+        archives sourceJar
+    }
+
+    jacoco {
+        toolVersion = "0.7.9"
+    }
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
+            }
+        }
+        repositories {
+            maven {
+                url "$buildDir/maven"
+            }
+        }
+    }
+
+    modifyPom {
+        //noinspection GroovyAssignabilityCheck
+        project {
+            name 'API-X'
+            description 'API-X'
+            url 'https://github.com/fcrepo4-labs/fcrepo-api-x/'
+            inceptionYear '2017'
+
+            developers {
+                developer {
+                    id 'christopher-johnson'
+                    name 'Christopher Johnson'
+                    email 'chjohnson @ (domain of organization url)'
+                    organization ''
+                    organizationUrl ''
+                    roles {
+                        role 'developer'
+                    }
+                    timezone '+1'
+                }
+            }
+
+            scm {
+                connection 'scm:git:git://github.com/fcrepo4-labs/fcrepo-api-x.git'
+                developerConnection 'scm:git:git@github.com/fcrepo4-labs/fcrepo-api-x.git'
+                url 'https://github.com/fcrepo4-labs/fcrepo-api-x/'
+                tag 'HEAD'
+            }
+
+            licenses {
+                license {
+                    name 'Apache License, Version 2.0'
+                    url 'http://www.apache.org/licenses/LICENSE-2.0'
+                }
+            }
+        }
+    }
+
+    nexusStaging {
+        packageGroup = "cool.pandora"
+        stagingProfileId = "4d5f13c386f543"
+    }
+
+    nexus {
+        sign = true
+        repositoryUrl = 'https://oss.sonatype.org/service/local/staging/deploy/maven2/'
+        snapshotRepositoryUrl = 'https://oss.sonatype.org/content/repositories/snapshots/'
+    }
+}
+
+configurations {
+    buildToolsConfig
+}
+
+def homeDir = System.getProperty('user.home')
+def mavenLocal = new File(homeDir, ".m2/repository/cool/pandora")
+
+docker {
+    name 'pandorasystems/apix'
+    tags 'latest'
+    dockerfile file('messaging/latest/Dockerfile')
+    copySpec.from("${buildDir}/maven").into("repository/cool/pandora")
+    files "${projectDir}/cfg", "entrypoint.sh"
+    buildArgs([BUILD_VERSION: 'version'])
+    labels(['key': 'value'])
+    pull true
+    noCache true
+}
+
+task copyTask(type: Copy) {
+    from mavenLocal
+    into 'build/maven'
+}
+
