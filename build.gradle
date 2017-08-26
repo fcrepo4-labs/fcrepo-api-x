@@ -65,9 +65,9 @@ configure(allprojects) { project ->
     ext.activemqVersionRange = "[5.14,6)"
     ext.fcrepoCamelVersionRange = "[4.5,5)"
     ext.fcrepoCamelToolboxVersionRange = "[4.7.1,5)"
-    ext.activemqVersion = "5.14.5"
+    ext.activemqVersion = "5.15.0"
     ext.blueprintVersion = "1.0.9"
-    ext.camelVersion = "2.18.4"
+    ext.camelVersion = "2.19.2"
     ext.cargoVersion = "1.6.3"
     ext.checkstylePluginVersion = "2.17"
     ext.commonsioVersion = "2.5"
@@ -77,14 +77,14 @@ configure(allprojects) { project ->
     ext.fcrepotoolboxVersion = "4.7.2"
     ext.fcrepobuildtoolsVersion = "4.4.2"
     ext.fcrepoclientVersion = "0.3.0"
-    ext.felixVersion = "1.8.8"
+    ext.felixVersion = "1.8.16"
     ext.fusekiVersion = "2.4.1"
-    ext.httpclientVersion = "4.5.2"
-    ext.httpcoreVersion = "4.4.5"
+    ext.httpclientVersion = "4.5.3"
+    ext.httpcoreVersion = "4.4.6"
     ext.jenaVersion = "3.1.1"
     ext.jsoupVersion = "1.9.2"
     ext.junitVersion = "4.12"
-    ext.karafVersion = "4.0.9"
+    ext.karafVersion = "4.1.0"
     ext.licensePluginVersion = "2.11"
     ext.logbackVersion = "1.2.3"
     ext.mockitoVersion = "1.10.19"
@@ -171,6 +171,31 @@ configure(subprojects) { subproject ->
         from sourceSets.test.output
     }
     artifacts.archives packageTests
+
+    def exportedProjects = [
+           ":fcrepo-api-x-registry",
+            ":fcrepo-api-x-model",
+            ":fcrepo-api-x-routing",
+            ":fcrepo-api-x-binding",
+            ":fcrepo-api-x-execution",
+            ":fcrepo-api-x-jena",
+            ":fcrepo-api-x-integration",
+            ":fcrepo-api-x-karaf",
+            ":fcrepo-api-x-ontology",
+            ":fcrepo-api-x-test",
+            ":fcrepo-api-x-listener",
+            ":fcrepo-api-x-loader",
+            ":fcrepo-api-x-indexing"
+    ]
+
+    def docOutputDir = "${rootProject.buildDir}/docs/javadoc"
+
+    task allJavadoc(type: Javadoc) {
+        //noinspection GroovyAssignabilityCheck
+        source exportedProjects.collect { project(it).sourceSets.main.allJava }
+        classpath = files(exportedProjects.collect { project(it).sourceSets.main.compileClasspath })
+        destinationDir = file(docOutputDir)
+    }
 
     jacoco {
         toolVersion = "0.7.9"

@@ -93,7 +93,7 @@ public class ServiceIndexingRoutesTest extends CamelBlueprintTestSupport {
 
     @Override
     public boolean isUseRouteBuilder() {
-        return false;
+        return true;
     }
 
     @Override
@@ -108,6 +108,10 @@ public class ServiceIndexingRoutesTest extends CamelBlueprintTestSupport {
 
     @Before
     public void init() throws Exception {
+
+        // For some reason, this is necessary after upgrating to Camel 2.19.
+        // Otherwise, it looks like the context doesn't start(!??)
+        context.start();
         dataset = DatasetFactory.create();
 
         // Create two named graphs with triples. Verify that they're non-empty from the start.
@@ -124,7 +128,7 @@ public class ServiceIndexingRoutesTest extends CamelBlueprintTestSupport {
     /**
      * Advise routes before the camel context starts
      *
-     * @throws Exception
+     * @throws Exception Exception
      */
     @Override
     public void doPostSetup() throws Exception {

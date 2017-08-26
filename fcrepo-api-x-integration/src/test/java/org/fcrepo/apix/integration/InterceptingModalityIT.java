@@ -18,6 +18,7 @@
 
 package org.fcrepo.apix.integration;
 
+import static org.fcrepo.apix.integration.KarafIT.attempt;
 import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.HTTP_HEADER_MODALITY;
 import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.MODALITY_INTERCEPT_INCOMING;
 import static org.fcrepo.apix.routing.impl.GenericInterceptExecution.MODALITY_INTERCEPT_OUTGOING;
@@ -80,13 +81,16 @@ public class InterceptingModalityIT extends ServiceBasedIT implements KarafIT {
 
         final URI object = client.post(objectContainer).slug(testMethodName()).perform().getLocation();
 
-        try (final FcrepoResponse response = client.get(
-                routing.of(REQUEST_URI).interceptUriFor(object)).perform()) {
+        attempt(60, () -> {
+            try (final FcrepoResponse response = client.get(
+                    routing.of(REQUEST_URI).interceptUriFor(object)).perform()) {
 
-            assertEquals(1, response.getLinkHeaders("service").size());
-            assertEquals(routing.of(REQUEST_URI).serviceDocFor(object),
-                    response.getLinkHeaders("service").get(0));
-        }
+                assertEquals(1, response.getLinkHeaders("service").size());
+                assertEquals(routing.of(REQUEST_URI).serviceDocFor(object),
+                        response.getLinkHeaders("service").get(0));
+                return true;
+            }
+        });
     }
 
     // Verify that if an intercepting extension throws a 4xx code, it aborts the request and returns service response.

@@ -27,10 +27,12 @@ import java.io.InputStream;
 import java.io.PushbackInputStream;
 import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import org.fcrepo.apix.model.Extension;
@@ -43,7 +45,6 @@ import org.apache.camel.Exchange;
 import org.apache.camel.Processor;
 import org.apache.camel.builder.RouteBuilder;
 import org.apache.camel.processor.aggregate.AggregationStrategy;
-import org.eclipse.jetty.util.ConcurrentHashSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +121,7 @@ public class GenericInterceptExecution extends RouteBuilder implements Updateabl
         this.proxyURI = uri;
     }
 
-    private final Collection<Extension> extensions = new ConcurrentHashSet<>();
+    private final Collection<Extension> extensions = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     @Override
     public void update() {

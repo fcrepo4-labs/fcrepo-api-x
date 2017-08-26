@@ -1,4 +1,4 @@
-FROM pandorasystems/karaf
+FROM pandorasystems/karaf:4.1.0
 
 MAINTAINER Elliot Metsger <emetsger@jhu.edu>
 LABEL description = "Provides a Karaf container configured with API-X features"

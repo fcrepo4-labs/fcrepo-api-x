@@ -1,0 +1,55 @@
+version: "2.1"
+
+services:
+  activemq:
+    image: pandorasystems/activemq
+    container_name: activemq
+    ports:
+      - "61616:61616"
+      - "8181:8181"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://activemq:8181/activemqweb"]
+      interval: 45s
+      timeout: 20s
+      retries: 10
+
+  apix:
+    image: pandorasystems/apix:0.3.0-SNAPSHOT
+    container_name: apix
+    ports:
+      - "8001:80"
+      - "8081:8081"
+      - "5011:5011"
+    depends_on:
+      - fcrepo
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/docker-healthcheck.sh"]
+      interval: 45s
+      timeout: 20s
+      retries: 1
+
+  fcrepo:
+    image: pandorasystems/fcrepo:4.8.0-SNAPSHOT
+    container_name: fcrepo
+    environment:
+      CATALINA_OPTS: -Dfcrepo.home=/mnt/fcrepo-data -Dfcrepo.spring.configuration=file:/etc/fcrepo/fcrepo-config.xml -Xss8M -Dfcrepo.modeshape.configuration=file:/etc/fcrepo/repository.json
+    ports:
+      - "8443:8443"
+      - "8080:8080"
+    depends_on:
+      activemq:
+        condition: service_healthy
+    volumes:
+      - fcrepo-volume:/mnt/fcrepo-data
+  fuseki:
+    image: pandorasystems/fuseki
+    container_name: fuseki
+    environment:
+        CATALINA_OPTS: -Xmx8G -Xss8M
+    ports:
+      - "3030:3030"
+    volumes:
+      - fuseki-volume:/shared
+volumes:
+  fcrepo-volume:
+  fuseki-volume:

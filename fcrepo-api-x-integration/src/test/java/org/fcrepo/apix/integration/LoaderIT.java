@@ -205,9 +205,9 @@ public class LoaderIT extends ServiceBasedIT {
         final URI container = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         // Deposit an object into the container
-        final URI deposited = client.post(container).slug("LoaderIT_htmlMinimalTest")
+        final URI deposited = attempt(60, () -> client.post(container).slug("LoaderIT_htmlMinimalTest")
                 .body(IOUtils.toInputStream("<> a <test:LoaderIT#minimal> .", "utf8"), "text/turtle")
-                .perform().getLocation();
+                .perform().getLocation());
 
         // Get the service discovery document
         final URI discoveryDoc = client.options(deposited).perform().getLinkHeaders("service").get(0);
@@ -237,9 +237,9 @@ public class LoaderIT extends ServiceBasedIT {
         final URI container = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         // Deposit an object into the container
-        final URI deposited = client.post(container).slug("LoaderIT_definedServiceTest")
+        final URI deposited = attempt(60, () -> client.post(container).slug("LoaderIT_definedServiceTest")
                 .body(IOUtils.toInputStream("<> a <test:LoaderIT#full> .", "utf8"), "text/turtle")
-                .perform().getLocation();
+                .perform().getLocation());
 
         // Get the service discovery document
         final URI discoveryDoc = client.options(deposited).perform().getLinkHeaders("service").get(0);
@@ -272,9 +272,9 @@ public class LoaderIT extends ServiceBasedIT {
         final URI container = routing.of(REQUEST_URI).interceptUriFor(objectContainer);
 
         // Deposit an object into the container, as a text/plain binary
-        final URI deposited = client.post(container).slug("LoaderIT_" + name.getMethodName())
+        final URI deposited = attempt(60, () -> client.post(container).slug("LoaderIT_" + name.getMethodName())
                 .body(IOUtils.toInputStream("THIS IS TEXT", "utf8"), "text/plain")
-                .perform().getLocation();
+                .perform().getLocation());
 
         // Get the service discovery document
         final URI discoveryDoc = client.options(deposited).perform().getLinkHeaders("service").get(0);
@@ -343,7 +343,6 @@ public class LoaderIT extends ServiceBasedIT {
     private final FcrepoResponse textPost(final String uri, final String content) throws Exception {
 
         final String body = content;
-
         return client.post(URI.create(uri)).body(new ByteArrayInputStream(body.getBytes()),
                 "text/plain").perform();
     }

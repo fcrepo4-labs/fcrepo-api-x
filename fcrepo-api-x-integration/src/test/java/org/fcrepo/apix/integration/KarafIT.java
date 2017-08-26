@@ -311,13 +311,15 @@ public interface KarafIT {
      */
     public default URI postFromTestResource(final String filePath, final URI intoContainer,
             final String contentType, final String slug) throws Exception {
-        try (final WebResource object = testResource(filePath, contentType);
-                final FcrepoResponse response = client.post(intoContainer)
-                        .body(object.representation(), object.contentType())
-                        .slug(slug)
-                        .perform()) {
-            return response.getLocation();
-        }
+        return attempt(60, () -> {
+            try (final WebResource object = testResource(filePath, contentType);
+                    final FcrepoResponse response = client.post(intoContainer)
+                            .body(object.representation(), object.contentType())
+                            .slug(slug)
+                            .perform()) {
+                return response.getLocation();
+            }
+        });
     }
 
     /**
@@ -332,13 +334,16 @@ public interface KarafIT {
      */
     public default URI postFromStream(final InputStream in, final URI intoContainer, final String contentType,
             final String slug) throws Exception {
-        try (final WebResource object = WebResource.of(in, contentType);
-                final FcrepoResponse response = client.post(intoContainer)
-                        .body(object.representation(), object.contentType())
-                        .slug(slug)
-                        .perform()) {
-            return response.getLocation();
-        }
+        return attempt(60, () -> {
+            try (final WebResource object = WebResource.of(in, contentType);
+                    final FcrepoResponse response = client.post(intoContainer)
+                            .body(object.representation(), object.contentType())
+                            .slug(slug)
+                            .perform()) {
+                return response.getLocation();
+
+            }
+        });
     }
 
     /**
