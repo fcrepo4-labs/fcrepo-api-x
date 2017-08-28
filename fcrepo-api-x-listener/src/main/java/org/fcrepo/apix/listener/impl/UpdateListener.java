@@ -18,8 +18,15 @@
 
 package org.fcrepo.apix.listener.impl;
 
+import static org.apache.camel.builder.PredicateBuilder.or;
+import static org.fcrepo.camel.FcrepoHeaders.FCREPO_URI;
+
+import java.net.URI;
+import java.util.List;
+
 import org.apache.camel.LoggingLevel;
 import org.apache.camel.Processor;
+import org.apache.camel.PropertyInject;
 import org.apache.camel.builder.RouteBuilder;
 import org.fcrepo.apix.model.components.RoutingFactory;
 import org.fcrepo.apix.model.components.Updateable;
@@ -45,10 +52,13 @@ public class UpdateListener extends RouteBuilder {
 
     private List<Updateable> toUpdate;
 
-    private static final String TYPE_APIX_EXTENSION = "extensions";
-    private static final String TYPE_APIX_SERVICE = "services";
-
     private RoutingFactory routing;
+
+    @PropertyInject("{{ldp.path.extension.container}}")
+    public String TYPE_APIX_EXTENSION;
+
+    @PropertyInject("{{ldp.path.service.container}}")
+    public String TYPE_APIX_SERVICE;
 
     /**
      * Set the list of services to update
@@ -71,22 +81,29 @@ public class UpdateListener extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-        from("{{input.uri}}").id("listener-update-apix").process(new EventProcessor())
+        from("{{input.uri}}").id("listener-update-apix")
+                .process(new EventProcessor())
 
                 .filter(or(header(FCREPO_URI).contains(TYPE_APIX_SERVICE), header(FCREPO_URI)
                         .contains(TYPE_APIX_EXTENSION)))
-                .log(LoggingLevel.DEBUG, LOG, "Updating service doc of ${headers[CamelFcrepoUri]}")
-                .process(USE_FCREPO_URIS).process(e -> toUpdate.forEach(u -> {
-            try {
-                u.update(URI.create(e.getIn().getHeader(FCREPO_URI, String.class)));
-            } catch (final Exception x) {
-                LOG.warn(String.format("Update to <%s> failed", e.getIn().getHeader(FCREPO_URI)), x);
-            }
-        }));
+                .log(LoggingLevel.INFO, LOG, "Processing service update for "
+                        + "${headers}")
+                .process(USE_FCREPO_URIS)
+                .process(e -> toUpdate.forEach(u -> {
+                    try {
+                        u.update(URI.create(e.getIn().getHeader(FCREPO_URI, String.class)));
+                    } catch (final Exception x) {
+                        LOG.warn(String.format("Update to <%s> failed", e.getIn().getHeader
+                                (FCREPO_URI)), x);
+                    }
+                }));
+
     }
 
     private final Processor USE_FCREPO_URIS = ex -> {
-        final URI fcrepoUri = URI.create(ex.getIn().getHeader(FcrepoHeaders.FCREPO_URI, String.class));
-        ex.getIn().setHeader(FcrepoHeaders.FCREPO_URI, routing.of(fcrepoUri).nonProxyURIFor(fcrepoUri));
+        final URI fcrepoUri = URI.create(ex.getIn().getHeader(FcrepoHeaders.FCREPO_URI, String
+                .class));
+        ex.getIn().setHeader(FcrepoHeaders.FCREPO_URI, routing.of(fcrepoUri).nonProxyURIFor
+                (fcrepoUri));
     };
 }

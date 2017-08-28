@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<features xmlns="http://karaf.apache.org/xmlns/features/v1.3.0" name="fcrepo-api-x-karaf">
+  <repository>mvn:org.apache.camel.karaf/apache-camel/${camelVersion}/xml/features</repository>
+  <repository>mvn:org.apache.activemq/activemq-karaf/${activemqVersion}/xml/features</repository>
+  <repository>mvn:org.fcrepo.camel/fcrepo-camel/${fcrepoCamelVersion}/xml/features</repository>
+  <repository>mvn:org.fcrepo.camel/toolbox-features/${fcrepotoolboxVersion}/xml/features</repository>
+  <feature name="fcrepo-api-x" version="${version}">
+    <details>org.fcrepo.apix all</details>
+    <feature version="${version}">fcrepo-api-x-binding</feature>
+    <feature version="${version}">fcrepo-api-x-indexing</feature>
+    <feature version="${version}">fcrepo-api-x-jena</feature>
+    <feature version="${version}">fcrepo-api-x-listener</feature>
+    <feature version="${version}">fcrepo-api-x-loader</feature>
+    <feature version="${version}">fcrepo-api-x-model</feature>
+    <feature version="${version}">fcrepo-api-x-registry</feature>
+    <feature version="${version}">fcrepo-api-x-routing</feature>
+  </feature>
+
+  <feature name="fcrepo-api-x-binding" version="${version}">
+    <details>org.fcrepo.apix binding</details>
+    <bundle>mvn:org.fcrepo.apix/fcrepo-api-x-binding/${version}</bundle>
+    <feature version="${version}">fcrepo-api-x-registry</feature>
+    <feature version="${version}">fcrepo-api-x-model</feature>
+    <bundle dependency="true">mvn:org.fcrepo.client/fcrepo-java-client/${fcrepoclientVersion}</bundle>
+    <bundle dependency="true">mvn:commons-io/commons-io/${commonsioVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/${httpcoreVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/${httpclientVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commonslangVersion}</bundle>
+  </feature>
+
+  <feature name="fcrepo-api-x-jena" version="${version}">
+    <details>org.fcrepo.apix jena</details>
+    <bundle>mvn:org.fcrepo.apix/fcrepo-api-x-jena/${version}</bundle>
+    <feature version="${version}">fcrepo-api-x-registry</feature>
+    <bundle dependency="true">mvn:commons-io/commons-io/${commonsioVersion}</bundle>
+    <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/${jacksonVersion}</bundle>
+    <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/${jacksonVersion}</bundle>
+    <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${jacksonVersion}</bundle>
+    <bundle dependency="true">mvn:com.github.andrewoma.dexx/collection/${dexxcollectionVersion}</bundle>
+    <bundle dependency="true">mvn:com.github.jsonld-java/jsonld-java/${jsonldVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.commons/commons-csv/${commonscsvVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commonslangVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/${httpcoreVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/${httpclientVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.jena/jena-osgi/${jenaVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.thrift/libthrift/${thriftVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.felix/org.apache.felix.configadmin/${felixVersion}</bundle>
+  </feature>
+
+  <feature name="fcrepo-api-x-listener" version="${version}">
+    <details>org.fcrepo.apix listener</details>
+    <bundle>mvn:org.fcrepo.apix/fcrepo-api-x-listener/${version}</bundle>
+    <feature version="${version}">fcrepo-api-x-model</feature>
+    <feature version="${fcrepoCamelVersionRange}">fcrepo-camel</feature>
+    <feature version="${fcrepoCamelVersionRange}">fcrepo-service-activemq</feature>
+    <feature version="${camelVersionRange}">camel</feature>
+    <feature version="${camelVersionRange}">camel-http4</feature>
+  </feature>
+
+  <feature name="fcrepo-api-x-loader" version="${version}">
+    <details>org.fcrepo.apix loader</details>
+    <bundle>mvn:org.fcrepo.apix/fcrepo-api-x-loader/${version}</bundle>
+    <feature version="${version}">fcrepo-api-x-model</feature>
+    <bundle dependency="true">mvn:commons-io/commons-io/${commonsioVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/${httpcoreVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/${httpclientVersion}</bundle>
+    <feature version="${camelVersionRange}">camel</feature>
+    <feature version="${camelVersionRange}">camel-http4</feature>
+    <feature version="${version}">fcrepo-api-x-jena</feature>
+  </feature>
+
+  <feature name="fcrepo-api-x-model" version="${version}">
+    <details>org.fcrepo.apix model</details>
+    <bundle>mvn:org.fcrepo.apix/fcrepo-api-x-model/${version}</bundle>
+  </feature>
+
+  <feature name="fcrepo-api-x-registry" version="${version}">
+    <details>org.fcrepo.apix registry</details>
+    <bundle>mvn:org.fcrepo.apix/fcrepo-api-x-registry/${version}</bundle>
+    <feature version="${version}">fcrepo-api-x-model</feature>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/${httpcoreVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/${httpclientVersion}</bundle>
+    <bundle dependency="true">mvn:commons-io/commons-io/${commonsioVersion}</bundle>
+    <bundle dependency="true">mvn:org.osgi/org.osgi.core/${osgiVersion}</bundle>
+  </feature>
+
+  <feature name="fcrepo-api-x-routing" version="${version}">
+    <details>org.fcrepo.apix routing</details>
+    <bundle>mvn:org.fcrepo.apix/fcrepo-api-x-routing/${version}</bundle>
+    <feature version="${version}">fcrepo-api-x-model</feature>
+    <feature version="${camelVersionRange}">camel</feature>
+    <feature version="${camelVersionRange}">camel-http4</feature>
+    <feature version="${camelVersionRange}">camel-jetty</feature>
+    <bundle dependency="true">mvn:org.apache.jena/jena-osgi/${jenaVersion}</bundle>
+    <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/${jacksonVersion}</bundle>
+    <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/${jacksonVersion}</bundle>
+    <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-annotations/${jacksonVersion}</bundle>
+    <bundle dependency="true">mvn:com.github.andrewoma.dexx/collection/${dexxcollectionVersion}</bundle>
+    <bundle dependency="true">mvn:com.github.jsonld-java/jsonld-java/${jsonldVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.commons/commons-lang3/${commonslangVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.commons/commons-csv/${commonscsvVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.thrift/libthrift/${thriftVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpcore-osgi/${httpcoreVersion}</bundle>
+    <bundle dependency="true">mvn:org.apache.httpcomponents/httpclient-osgi/${httpclientVersion}</bundle>
+  </feature>
+
+  <feature name="fcrepo-api-x-indexing" version="${version}">
+    <details>org.fcrepo.apix indexing</details>
+    <bundle>mvn:org.fcrepo.apix/fcrepo-api-x-indexing/${version}</bundle>
+    <feature version="${version}">fcrepo-api-x-model</feature>
+    <feature version="${camelVersionRange}">camel</feature>
+    <feature version="${camelVersionRange}">camel-http4</feature>
+    <feature version="${fcrepoCamelVersionRange}">fcrepo-camel</feature>
+    <feature version="${fcrepoCamelVersionRange}">fcrepo-service-activemq</feature>
+  </feature>
+</features>

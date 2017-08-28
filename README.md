@@ -11,7 +11,12 @@ For more information, please see the [technical overview](src/site/markdown/apix
 
 To build API-X, do:
 
-    mvn clean install
+    gradle build
+
+## Docker
+    
+    gradle copyTask
+    gradle docker
 
 ## OSGi deployment (Karaf 4.x)
 

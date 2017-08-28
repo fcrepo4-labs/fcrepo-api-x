@@ -14,6 +14,8 @@
     update-strategy="reload">
     <cm:default-properties>
       <cm:property name="input.uri" value="broker:topic:fedora" />
+      <cm:property name="ldp.path.extension.container" value="extensions"/>
+      <cm:property name="ldp.path.service.container" value="services"/>
     </cm:default-properties>
   </cm:property-placeholder>
 
