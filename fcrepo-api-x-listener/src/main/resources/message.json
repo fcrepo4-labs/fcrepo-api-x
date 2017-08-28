@@ -1,0 +1,61 @@
+{
+  "id": "http://localhost:8080/fcrepo/rest/collection/test/115",
+  "type": [
+    "http://www.w3.org/ns/ldp#Container",
+    "http://fedora.info/definitions/v4/repository#Resource",
+    "http://fedora.info/definitions/v4/repository#Container",
+    "http://www.w3.org/ns/ldp#RDFSource",
+    "http://www.w3.org/ns/prov#Entity"
+  ],
+  "isPartOf": "http://localhost:8080/fcrepo/rest",
+  "wasGeneratedBy": {
+    "type": [
+      "http://fedora.info/definitions/v4/event#ResourceModification",
+      "http://www.w3.org/ns/prov#Activity"
+    ],
+    "identifier": "urn:uuid:a11feb5c-42ad-4026-a1ec-34f440df408a",
+    "atTime": "2017-08-25T05:16:30.359Z"
+  },
+  "wasAttributedTo": [
+    {
+      "type": "http://www.w3.org/ns/prov#Person",
+      "name": "bypassAdmin"
+    },
+    {
+      "type": "http://www.w3.org/ns/prov#SoftwareAgent",
+      "name": "Apache-HttpClient/4.4.1 (Java/9)"
+    }
+  ],
+  "@context": {
+    "prov": "http://www.w3.org/ns/prov#",
+    "foaf": "http://xmlns.com/foaf/0.1/",
+    "dcterms": "http://purl.org/dc/terms/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "type": "@type",
+    "id": "@id",
+    "name": {
+      "@id": "foaf:name",
+      "@type": "xsd:string"
+    },
+    "identifier": {
+      "@id": "dcterms:identifier",
+      "@type": "@id"
+    },
+    "isPartOf": {
+      "@id": "dcterms:isPartOf",
+      "@type": "@id"
+    },
+    "atTime": {
+      "@id": "prov:atTime",
+      "@type": "xsd:dateTime"
+    },
+    "wasAttributedTo": {
+      "@id": "prov:wasAttributedTo",
+      "@type": "@id"
+    },
+    "wasGeneratedBy": {
+      "@id": "prov:wasGeneratedBy",
+      "@type": "@id"
+    }
+  }
+}

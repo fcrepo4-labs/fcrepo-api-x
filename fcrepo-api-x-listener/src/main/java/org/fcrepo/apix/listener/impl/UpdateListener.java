@@ -18,20 +18,20 @@
 
 package org.fcrepo.apix.listener.impl;
 
-import static org.apache.camel.builder.PredicateBuilder.not;
-import static org.fcrepo.camel.FcrepoHeaders.FCREPO_RESOURCE_TYPE;
+import static org.apache.camel.builder.PredicateBuilder.or;
 import static org.fcrepo.camel.FcrepoHeaders.FCREPO_URI;
 
 import java.net.URI;
 import java.util.List;
 
+import org.apache.camel.LoggingLevel;
+import org.apache.camel.Processor;
+import org.apache.camel.PropertyInject;
+import org.apache.camel.builder.RouteBuilder;
 import org.fcrepo.apix.model.components.RoutingFactory;
 import org.fcrepo.apix.model.components.Updateable;
 import org.fcrepo.camel.FcrepoHeaders;
 import org.fcrepo.camel.processor.EventProcessor;
-
-import org.apache.camel.Processor;
-import org.apache.camel.builder.RouteBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,9 +46,13 @@ public class UpdateListener extends RouteBuilder {
 
     private List<Updateable> toUpdate;
 
-    private static final String TYPE_REPOSITORY_RESOURCE = "http://fedora.info/definitions/v4/repository#Resource";
-
     private RoutingFactory routing;
+
+    @PropertyInject("{{ldp.path.extension.container}}")
+    public String TYPE_APIX_EXTENSION;
+
+    @PropertyInject("{{ldp.path.service.container}}")
+    public String TYPE_APIX_SERVICE;
 
     /**
      * Set the list of services to update
@@ -74,22 +78,26 @@ public class UpdateListener extends RouteBuilder {
         from("{{input.uri}}").id("listener-update-apix")
                 .process(new EventProcessor())
 
-                // At the moment, this seems to be the only way to filter out messages for "hash resources"
-                .filter(not(header(FCREPO_URI).contains("#")))
-                .filter(header(FCREPO_RESOURCE_TYPE).contains(TYPE_REPOSITORY_RESOURCE))
-
+                .filter(or(header(FCREPO_URI).contains(TYPE_APIX_SERVICE), header(FCREPO_URI)
+                        .contains(TYPE_APIX_EXTENSION)))
+                .log(LoggingLevel.INFO, LOG, "Processing service update for "
+                        + "${headers}")
                 .process(USE_FCREPO_URIS)
                 .process(e -> toUpdate.forEach(u -> {
                     try {
                         u.update(URI.create(e.getIn().getHeader(FCREPO_URI, String.class)));
                     } catch (final Exception x) {
-                        LOG.warn(String.format("Update to <%s> failed", e.getIn().getHeader(FCREPO_URI)), x);
+                        LOG.warn(String.format("Update to <%s> failed", e.getIn().getHeader
+                                (FCREPO_URI)), x);
                     }
                 }));
+
     }
 
     private final Processor USE_FCREPO_URIS = ex -> {
-        final URI fcrepoUri = URI.create(ex.getIn().getHeader(FcrepoHeaders.FCREPO_URI, String.class));
-        ex.getIn().setHeader(FcrepoHeaders.FCREPO_URI, routing.of(fcrepoUri).nonProxyURIFor(fcrepoUri));
+        final URI fcrepoUri = URI.create(ex.getIn().getHeader(FcrepoHeaders.FCREPO_URI, String
+                .class));
+        ex.getIn().setHeader(FcrepoHeaders.FCREPO_URI, routing.of(fcrepoUri).nonProxyURIFor
+                (fcrepoUri));
     };
 }

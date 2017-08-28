@@ -57,7 +57,7 @@ import org.osgi.framework.BundleContext;
  *
  * @author apb@jhu.edu
  */
-public abstract class ServiceBasedTest implements KarafIT {
+public abstract class ServiceBasedIT implements KarafIT {
 
     static final protected String serviceEndpoint = "http://127.0.0.1:" + System.getProperty(
             "services.dynamic.test.port") +

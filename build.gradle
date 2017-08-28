@@ -1,0 +1,568 @@
+import net.researchgate.release.GitAdapter
+
+buildscript {
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath "com.bmuschko:gradle-nexus-plugin:2.3.1"
+    }
+}
+
+plugins {
+    //id "com.github.hierynomus.license" version "0.13.1"
+    id "net.researchgate.release" version "2.6.0"
+    id "io.codearte.nexus-staging" version "0.9.0"
+    id "com.palantir.docker" version "0.13.0"
+    id 'org.dm.bundle' version '0.10.0'
+}
+
+ext {
+    vendor = "pandorasystems"
+    homepage = "http://cool.pandora"
+    docURL = "https://github.com/fcrepo4-labs/fcrepo-api-x"
+    license = "Apache License, Version 2.0"
+}
+
+configurations {
+    buildToolsConfig
+}
+
+configure(allprojects) { project ->
+    apply plugin: "maven"
+    apply plugin: "java"
+    apply plugin: 'org.dm.bundle'
+
+    group = "org.fcrepo.apix"
+
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven { url file('pax-exam') }
+    }
+
+    ext.camelVersionRange = "[2.18,3)"
+    ext.activemqVersionRange = "[5.14,6)"
+    ext.fcrepoCamelVersionRange = "[4.5,5)"
+    ext.fcrepoCamelToolboxVersionRange = "[4.7.1,5)"
+    ext.activemqVersion = "5.15.0"
+    ext.blueprintVersion = "1.1.0"
+    ext.camelVersion = "2.19.2"
+    ext.camelComponentVersion=
+    ext.cargoVersion = "1.6.3"
+    ext.checkstylePluginVersion = "2.17"
+    ext.commonsioVersion = "2.5"
+    ext.commonscsvVersion = "1.4"
+    ext.commonslangVersion = "3.6"
+    ext.dexxcollectionVersion = "0.6"
+    ext.fcrepoVersion = "4.7.4"
+    ext.fcrepocamelVersion = "4.5.0"
+    ext.fcrepotoolboxVersion = "4.7.2"
+    ext.fcrepobuildtoolsVersion = "4.4.2"
+    ext.fcrepoclientVersion = "[0.2,1]"
+    ext.felixVersion = "1.8.16"
+    ext.fusekiVersion = "2.4.1"
+    ext.httpclientVersion = "4.5.3"
+    ext.httpcoreVersion = "4.4.6"
+    ext.jacksonVersion = "2.7.0"
+    ext.jenaVersion = "3.1.1"
+    ext.jsonldVersion = "0.8.0"
+    ext.jsoupVersion = "1.9.2"
+    ext.junitVersion = "4.12"
+    ext.karafVersion = "4.1.0"
+    ext.licensePluginVersion = "2.11"
+    ext.logbackVersion = "1.2.3"
+    ext.mockitoVersion = "1.10.19"
+    ext.osgiscrVersion = "1.3.0"
+    ext.osgiVersion = "5.0.0"
+    ext.paxexamVersion = "4.11.0"
+    ext.paxurlaetherVersion = "2.5.2"
+    ext.slf4jVersion = "1.7.13"
+    ext.thriftVersion = "0.9.3"
+    ext.xercesVersion = "2.11.0_1"
+    ext.xmlresolverVersion = "1.2_5"
+    ext.projectOsgiVersion = version.replaceAll("-SNAPSHOT", ".SNAPSHOT")
+    ext.defaultOsgiImports = "org.osgi.service.blueprint;version='[1,2)',*"
+
+
+    compileJava {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+        options.encoding = 'UTF-8'
+    }
+
+    compileTestJava {
+        sourceCompatibility = 1.8
+        targetCompatibility = 1.8
+        options.encoding = 'UTF-8'
+        options.compilerArgs += "-parameters"
+    }
+
+    processResources {
+        filesMatching(["**/Dockerfile", "**/*.cfg"]) {
+            expand(project.properties)
+        }
+    }
+
+    afterEvaluate {
+        gradle.projectsEvaluated {
+            tasks.withType(JavaCompile) {
+                options.compilerArgs.add("-Xlint:unchecked")
+                options.compilerArgs.add("-Xlint:deprecation")
+//                options.compilerArgs.addAll(["--add-modules", "java.se.ee"])
+            }
+        }
+
+        compileTestJava {
+            doFirst {
+//                options.compilerArgs.addAll(['--add-modules', 'java.se.ee'])
+                options.compilerArgs.add("-Xlint:deprecation")
+            }
+        }
+    }
+
+    release {
+        tagTemplate = "$name-$version"
+        scmAdapters = [
+                GitAdapter
+        ]
+
+        git {
+            requireBranch = "master"
+            pushToRemote = "origin"
+            pushToBranchPrefix = ""
+            commitVersionFileOnly = false
+        }
+    }
+
+    test {
+        systemProperty("java.awt.headless", "true")
+        systemProperty("testGroups", project.properties.get("testGroups"))
+        scanForTestClasses = false
+        include(["**/*Tests.class", "**/*Test.class"])
+        exclude(["**/Abstract*.class", '**/*$*', "**/*IT.class"])
+        reports.junitXml.destination = file("$buildDir/test-results")
+    }
+
+    def dockerResourceDir = "${rootProject.buildDir}/resources/main/docker"
+    def mavenInstallPath = "repository/org/fcrepo/apix"
+
+    docker {
+        name "${vendor}/apix"
+        tags "${version}"
+        dockerfile file("${dockerResourceDir}/Dockerfile")
+        files "${dockerResourceDir}/cfg", "${dockerResourceDir}/entrypoint.sh", "${dockerResourceDir}/docker-healthcheck.sh"
+        copySpec.from("${buildDir}/maven").into("${mavenInstallPath}")
+        pull true
+        noCache true
+    }
+
+    def homeDir = System.getProperty('user.home')
+    def mavenLocal = new File(homeDir, ".m2/${mavenInstallPath}")
+
+    task copyTask(type: Copy) {
+        from mavenLocal
+        into "${rootProject.buildDir}/maven"
+    }
+    copyTask.dependsOn install
+}
+
+configure(subprojects) { subproject ->
+    apply plugin: "maven-publish"
+    apply plugin: "com.bmuschko.nexus"
+    apply plugin: "signing"
+    apply plugin: "jacoco"
+
+    task packageSources(type: Jar) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    artifacts.archives packageSources
+
+    task packageTests(type: Jar) {
+        classifier = 'tests'
+        from sourceSets.test.output
+    }
+
+    artifacts.archives packageTests
+
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                from components.java
+            }
+        }
+        repositories {
+            maven {
+                url "${rootProject.buildDir}/maven"
+            }
+        }
+    }
+
+    bundle {
+        includeTransitiveDependencies = true
+        passProjectProperties = false
+        instruction '-plugin', 'aQute.lib.spring.SpringXMLType'
+        instruction '-dsannotations', 'norequirements'
+    }
+
+    modifyPom {
+        //noinspection GroovyAssignabilityCheck
+        project {
+            name "API-X"
+            description "API-X"
+            url "https://github.com/fcrepo4-labs/fcrepo-api-x/"
+            inceptionYear "2017"
+
+            developers {
+                developer {
+                    id "christopher-johnson"
+                    name "Christopher Johnson"
+                    email "chjohnson @ (domain of organization url)"
+                    organization ""
+                    organizationUrl ""
+                    roles {
+                        role "developer"
+                    }
+                    timezone "+1"
+                }
+            }
+
+            scm {
+                connection "scm:git:git://github.com/fcrepo4-labs/fcrepo-api-x.git"
+                developerConnection "scm:git:git@github.com/fcrepo4-labs/fcrepo-api-x.git"
+                url "https://github.com/fcrepo4-labs/fcrepo-api-x/"
+                tag "HEAD"
+            }
+
+            licenses {
+                license {
+                    name license
+                    url "http://www.apache.org/licenses/LICENSE-2.0"
+                }
+            }
+        }
+    }
+
+    def exportedProjects = [
+            ":fcrepo-api-x-registry",
+            ":fcrepo-api-x-model",
+            ":fcrepo-api-x-routing",
+            ":fcrepo-api-x-binding",
+            ":fcrepo-api-x-execution",
+            ":fcrepo-api-x-jena",
+            ":fcrepo-api-x-integration",
+            ":fcrepo-api-x-karaf",
+            ":fcrepo-api-x-ontology",
+            ":fcrepo-api-x-test",
+            ":fcrepo-api-x-listener",
+            ":fcrepo-api-x-loader",
+            ":fcrepo-api-x-indexing"
+    ]
+
+    def docOutputDir = "${rootProject.buildDir}/docs/javadoc"
+
+    task allJavadoc(type: Javadoc) {
+        //noinspection GroovyAssignabilityCheck
+        source exportedProjects.collect { project(it).sourceSets.main.allJava }
+        classpath = files(exportedProjects.collect { project(it).sourceSets.main.compileClasspath })
+        destinationDir = file(docOutputDir)
+    }
+
+    jacoco {
+        toolVersion = "0.7.9"
+    }
+
+    nexusStaging {
+        packageGroup = "cool.pandora"
+        stagingProfileId = "4d5f13c386f543"
+    }
+
+    nexus {
+        sign = true
+        repositoryUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+        snapshotRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+}
+
+project("fcrepo-api-x-binding") {
+
+    description = "fcrepo-api-x-binding"
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile("org.fcrepo.client:fcrepo-java-client:${fcrepoclientVersion}") {
+            exclude(module: "*")
+        }
+        compile("org.apache.httpcomponents:httpclient-osgi:${httpclientVersion}") {
+            exclude(module: "httpclient")
+            exclude(module: "httpcore")
+            exclude(module: "httpclient-cache")
+            exclude(module: "httpmime")
+            exclude(module: "fluent-hc")
+            exclude(module: "commons-codec")
+        }
+        compile("org.apache.httpcomponents:httpcore-osgi:${httpcoreVersion}") {
+            exclude(module: "httpcore")
+            exclude(module: "httpcore-nio")
+        }
+        compile "commons-io:commons-io:${commonsioVersion}"
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "org.mockito:mockito-all:${mockitoVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+        compile "org.osgi:org.osgi.service.component.annotations:${osgiscrVersion}"
+    }
+
+    jar {
+        manifest {
+            attributes 'Import-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion},${defaultOsgiImports}",
+             'Export-Package': "org.fcrepo.apix.binding;version=${projectOsgiVersion}",
+             'Conditional-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion}",
+             'DynamicImport-Package': "org.fcrepo.apix.*"
+        }
+    }
+}
+
+project("fcrepo-api-x-indexing") {
+
+    description = "fcrepo-api-x-indexing"
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        testCompile "org.apache.camel:camel-test-blueprint:${camelVersion}"
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "org.mockito:mockito-all:${mockitoVersion}"
+        testCompile "ch.qos.logback:logback-classic:${logbackVersion}"
+        testCompile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.xerces:${xercesVersion}"
+        compile "org.fcrepo.camel:fcrepo-camel:${fcrepocamelVersion}"
+        compile "org.apache.camel:camel-core:${camelVersion}"
+        compile "org.apache.camel:camel-http4:${camelVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    }
+
+    jar {
+        manifest {
+            attributes 'Import-Package': "${defaultOsgiImports}",
+             'Export-Package': "org.fcrepo.apix.indexing;version=${projectOsgiVersion}"
+        }
+    }
+}
+
+project("fcrepo-api-x-integration") {
+    description = "fcrepo-api-x-integration"
+    dependencies {
+        compile project(":fcrepo-api-x-karaf")
+        compile project(":fcrepo-api-x-test")
+        compile "org.jsoup:jsoup:${jsoupVersion}"
+        compile("org.apache.jena:jena-osgi:${jenaVersion}") {
+            exclude(module: "org.osgi.core")
+        }
+        compile("org.fcrepo.client:fcrepo-java-client:${fcrepoclientVersion}") {
+            exclude(module: "*")
+        }
+        testCompile group: 'org.apache.camel.karaf', name: 'apache-camel', version: "${camelVersion}", classifier: 'features', ext: 'xml'
+        testCompile("org.apache.httpcomponents:httpclient-osgi:${httpclientVersion}") {
+            exclude(module: "httpclient")
+            exclude(module: "httpcore")
+            exclude(module: "httpclient-cache")
+            exclude(module: "httpmime")
+            exclude(module: "fluent-hc")
+            exclude(module: "commons-codec")
+        }
+        testCompile project(":fcrepo-api-x-model")
+        testCompile project(":fcrepo-api-x-jena")
+        testCompile project(":fcrepo-api-x-routing")
+        testCompile project(":fcrepo-api-x-karaf")
+        testCompile "org.apache.camel:camel-test:${camelVersion}"
+        testCompile group: 'org.apache.karaf.features', name: 'standard', version: "${karafVersion}", classifier: 'features', ext: 'xml'
+        testCompile "org.ops4j.pax.exam:pax-exam-container-karaf:${paxexamVersion}"
+        testCompile "org.ops4j.pax.exam:pax-exam-junit4:${paxexamVersion}"
+        testCompile "org.ops4j.pax.exam:pax-exam:${paxexamVersion}"
+        testCompile "org.ops4j.pax.url:pax-url-aether:${paxurlaetherVersion}"
+        testCompile "javax.inject:javax.inject:1"
+        testCompile "org.osgi:org.osgi.core:${osgiVersion}"
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "commons-io:commons-io:${commonsioVersion}"
+        testCompile("org.fcrepo:fcrepo-webapp:${fcrepoVersion}") {
+            exclude(module: "*")
+        }
+        testCompile "org.apache.jena:jena-fuseki-war:${fusekiVersion}"
+        testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
+    }
+}
+
+project("fcrepo-api-x-jena") {
+
+    description = 'fcrepo-api-x-jena'
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile project(":fcrepo-api-x-registry")
+        compile("org.apache.jena:jena-osgi:${jenaVersion}") {
+            exclude(module: "org.osgi.core")
+        }
+        compile "com.github.andrewoma.dexx:collection:${dexxcollectionVersion}"
+        compile "org.slf4j:jcl-over-slf4j:${slf4jVersion}"
+        compile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.xmlresolver:${xmlresolverVersion}"
+        compile("org.apache.servicemix.bundles:org.apache.servicemix.bundles.xerces:${xercesVersion}") {
+            exclude(module: "xml-apis")
+        }
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "org.mockito:mockito-all:${mockitoVersion}"
+        testCompile "org.apache.jena:jena-core:${jenaVersion}"
+        testCompile project(":fcrepo-api-x-test")
+        testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
+        compile "org.osgi:org.osgi.service.component.annotations:${osgiscrVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    }
+
+    jar {
+        manifest {
+            attributes 'Import-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion},org.apache.commons.csv;version=${commonscsvVersion},${defaultOsgiImports}",
+             'Export-Package': "org.fcrepo.apix.jena;version=${projectOsgiVersion}",
+             'Conditional-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion}"
+        }
+    }
+}
+
+project("fcrepo-api-x-karaf") {
+    description = "fcrepo-api-x-karaf"
+    processResources {
+        outputs.upToDateWhen { false }
+        expand project.properties
+    }
+
+    artifacts {
+        archives(file('build/resources/main/features.xml')) {
+            classifier 'features'
+            type 'xml'
+        }
+    }
+}
+
+project("fcrepo-api-x-listener") {
+
+    description = "fcrepo-api-x-listener"
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile project(":fcrepo-api-x-registry")
+        compile "org.apache.camel:camel-core:${camelVersion}"
+        compile "org.fcrepo.camel:fcrepo-camel:${fcrepocamelVersion}"
+    }
+
+    jar {
+        manifest {
+            attributes 'Import-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion},org.apache.camel;version=${camelVersion},${defaultOsgiImports}",
+             'Export-Package': "org.fcrepo.apix.listener;version=${projectOsgiVersion}",
+             'Conditional-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion}",
+             'DynamicImport-Package': "org.fcrepo.apix.*"
+        }
+    }
+}
+
+project("fcrepo-api-x-loader") {
+
+    description = "fcrepo-api-x-loader"
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile project(":fcrepo-api-x-registry")
+        compile project(":fcrepo-api-x-jena")
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "org.mockito:mockito-all:${mockitoVersion}"
+        testCompile "org.apache.jena:jena-core:${jenaVersion}"
+        compile "org.apache.camel:camel-core:${camelVersion}"
+    }
+
+    jar {
+        manifest {
+            attributes 'Import-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion},${defaultOsgiImports}",
+             'Export-Package': "org.fcrepo.apix.loader;version=${projectOsgiVersion}",
+             'Conditional-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion}",
+             'DynamicImport-Package': "org.fcrepo.apix.*"
+        }
+    }
+}
+
+project("fcrepo-api-x-model") {
+
+    description = "fcrepo-api-x-model"
+
+    jar {
+        manifest {
+            attributes 'Import-Package': "${defaultOsgiImports}",
+             'Export-Package': "org.fcrepo.apix.model;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion}"
+        }
+    }
+}
+
+project("fcrepo-api-x-registry") {
+
+    description = "fcrepo-api-x-registry"
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile("org.apache.httpcomponents:httpcore-osgi:${httpcoreVersion}") {
+            exclude(module: "httpcore")
+            exclude(module: "httpcore-nio")
+        }
+        compile("org.apache.httpcomponents:httpclient-osgi:${httpclientVersion}") {
+            exclude(module: "httpclient")
+            exclude(module: "httpcore")
+            exclude(module: "httpclient-cache")
+            exclude(module: "httpmime")
+            exclude(module: "fluent-hc")
+            exclude(module: "commons-codec")
+        }
+        compile "org.apache.felix:org.apache.felix.configadmin:${felixVersion}"
+        compile "commons-io:commons-io:${commonsioVersion}"
+        compile "org.osgi:org.osgi.core:${osgiVersion}"
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "org.mockito:mockito-all:${mockitoVersion}"
+        testCompile "org.slf4j:slf4j-simple:${slf4jVersion}"
+        compile "org.osgi:org.osgi.service.component.annotations:${osgiscrVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    }
+
+    jar {
+        manifest {                                                                              
+            attributes 'Import-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion},${defaultOsgiImports}",
+             'Export-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.registry.impl;version=${projectOsgiVersion}",
+             'Conditional-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion}"
+        }
+    }
+}
+
+project("fcrepo-api-x-routing") {
+
+    description = 'fcrepo-api-x-routing'
+    dependencies {
+        compile project(":fcrepo-api-x-model")
+        compile project(":fcrepo-api-x-jena")
+        testCompile "org.apache.jena:jena-core:${jenaVersion}"
+        testCompile "junit:junit:${junitVersion}"
+        testCompile "org.mockito:mockito-all:${mockitoVersion}"
+        compile "org.apache.camel:camel-core:${camelVersion}"
+        compile "org.apache.camel:camel-jetty:${camelVersion}"
+        compile "org.apache.camel:camel-http4:${camelVersion}"
+        compile "org.osgi:org.osgi.service.component.annotations:${osgiscrVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+    }
+
+    jar {
+        manifest {
+            attributes 'Import-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion},org.apache.http;version=${httpcoreVersion},org.apache.http.auth;version=${httpclientVersion},org.apache.commons.io;version=${commonsioVersion},org.fcrepo.apix.jena;version=${projectOsgiVersion},${defaultOsgiImports}",
+             'Export-Package': "org.fcrepo.apix.routing;version=${projectOsgiVersion},org.fcrepo.apix.routing.impl;version=${projectOsgiVersion}",
+             'Conditional-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion}",
+             'DynamicImport-Package': "org.fcrepo.apix.*"
+        }
+    }
+}
+
+project("fcrepo-api-x-test") {
+    description = "fcrepo-api-x-test"
+    dependencies {
+        compile "org.apache.aries.blueprint:org.apache.aries.blueprint.cm:${blueprintVersion}"
+        compile "org.apache.httpcomponents:httpclient:${httpclientVersion}"
+        compile "org.apache.httpcomponents:httpcore:${httpcoreVersion}"
+        compile "org.slf4j:slf4j-api:${slf4jVersion}"
+        compile project(":fcrepo-api-x-model")
+    }
+}

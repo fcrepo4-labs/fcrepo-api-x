@@ -47,7 +47,7 @@ import org.ops4j.pax.exam.junit.PaxExam;
  * @author apb@jhu.edu
  */
 @RunWith(PaxExam.class)
-public class OntologyIT extends ServiceBasedTest {
+public class OntologyIT extends ServiceBasedIT {
 
     @Rule
     public TestName name = new TestName();

@@ -48,7 +48,7 @@ import org.ops4j.pax.exam.junit.PaxExam;
  * @author apb@jhu.edu
  */
 @RunWith(PaxExam.class)
-public class InterceptingModalityIT extends ServiceBasedTest implements KarafIT {
+public class InterceptingModalityIT extends ServiceBasedIT implements KarafIT {
 
     final String TEST_OBJECT_TYPE = "test:InterceptingModalityIT#object";
 

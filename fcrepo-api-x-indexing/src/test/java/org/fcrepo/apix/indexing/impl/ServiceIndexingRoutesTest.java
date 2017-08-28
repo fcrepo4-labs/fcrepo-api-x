@@ -128,7 +128,7 @@ public class ServiceIndexingRoutesTest extends CamelBlueprintTestSupport {
     /**
      * Advise routes before the camel context starts
      *
-     * @throws Exception
+     * @throws Exception Exception
      */
     @Override
     public void doPostSetup() throws Exception {

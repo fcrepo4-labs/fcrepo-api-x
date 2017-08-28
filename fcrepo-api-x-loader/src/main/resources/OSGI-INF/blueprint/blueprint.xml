@@ -75,13 +75,13 @@
         <constant>POST</constant>
       </setHeader>
       <setBody>
-        <simple>http://localhost:{{loader.port}}/load</simple>
+        <simple>http://{{loader.host}}:{{loader.port}}/load</simple>
       </setBody>
       <choice>
         <when>
           <simple>{{extension.load}}</simple>
           <to
-            uri="jetty:http://localhost:{{loader.port}}/load?okStatusCodeRange=200-399" />
+            uri="jetty:http://{{loader.host}}:{{loader.port}}/load?okStatusCodeRange=200-399" />
         </when>
       </choice>
     </route>

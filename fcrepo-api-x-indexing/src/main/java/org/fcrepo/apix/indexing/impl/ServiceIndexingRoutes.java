@@ -144,7 +144,6 @@ public class ServiceIndexingRoutes extends RouteBuilder {
                 .setHeader(Exchange.HTTP_METHOD, constant("HEAD"))
                 .setHeader(Exchange.HTTP_URI, header(FCREPO_URI))
                 .setHeader("Accept", constant("application/n-triples"))
-
                 // This is annoying, no easy way around
                 .doTry()
                 .to("http://get-servicedoc-uri?httpClient=#httpClient")

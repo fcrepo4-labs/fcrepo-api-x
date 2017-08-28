@@ -64,7 +64,7 @@ import org.ops4j.pax.exam.util.Filter;
  */
 @RunWith(PaxExam.class)
 @ExamReactorStrategy(PerClass.class)
-public class KarafServiceIndexingIT extends ServiceBasedTest {
+public class KarafServiceIndexingIT extends ServiceBasedIT {
 
     static final String fusekiBaseURI = String.format("http://localhost:%s/fuseki/", System.getProperty(
             "fcrepo.dynamic.test.port", "8080"));
