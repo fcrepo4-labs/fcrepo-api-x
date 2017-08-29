@@ -68,7 +68,7 @@ This execution engine supports the exposing modality.  It operates by proxying a
 * The HTTP path has the relative portion of the request with respect to the exposed service URI appended to it.
 * The `Host` header is preserved as the API-X host.
 * An `Apix-Ldp-Resource` header is added to the request, containing the URI of the resource exposing the service in the Fedora repository.
-* An API-X header `Apix-Exposed-Uri` is added to the request containing the URI of the exposed service.  A service may use this to as a base URI when formulating a response that contains hypertext or links, but should consider using relative URIs instead.
+* An API-X header `Apix-Exposed-Uri` is added to the request containing the URI of the exposed service.  A service may use this as a base URI when formulating a response that contains hypertext or links, but should consider using relative URIs instead.
 * The body and all other headers are preserved.
 
 The generic endpoint proxy can implement an extension where [`apix:exposesService`][8] and [`apix:consumesService`][7] are equivalent.  It will use a [service instance registry][6] to discover a registered instance of the service indicated by `apix:consumesService`, and proxy the request to that service instance.
