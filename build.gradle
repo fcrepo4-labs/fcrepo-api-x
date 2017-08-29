@@ -50,14 +50,14 @@ configure(allprojects) { project ->
     ext.blueprintVersion = "1.1.0"
     ext.camelVersion = "2.19.2"
     ext.camelComponentVersion=
-    ext.cargoVersion = "1.6.3"
+            ext.cargoVersion = "1.6.3"
     ext.checkstylePluginVersion = "2.17"
     ext.commonsioVersion = "2.5"
     ext.commonscsvVersion = "1.4"
     ext.commonslangVersion = "3.6"
     ext.dexxcollectionVersion = "0.6"
     ext.fcrepoVersion = "4.7.4"
-    ext.fcrepocamelVersion = "4.5.0"
+    ext.fcrepoCamelVersion = "4.5.0"
     ext.fcrepotoolboxVersion = "4.7.2"
     ext.fcrepobuildtoolsVersion = "4.4.2"
     ext.fcrepoclientVersion = "[0.2,1]"
@@ -317,9 +317,9 @@ project("fcrepo-api-x-binding") {
     jar {
         manifest {
             attributes 'Import-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion},${defaultOsgiImports}",
-             'Export-Package': "org.fcrepo.apix.binding;version=${projectOsgiVersion}",
-             'Conditional-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion}",
-             'DynamicImport-Package': "org.fcrepo.apix.*"
+                    'Export-Package': "org.fcrepo.apix.binding;version=${projectOsgiVersion}",
+                    'Conditional-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion}",
+                    'DynamicImport-Package': "*"
         }
     }
 }
@@ -334,7 +334,7 @@ project("fcrepo-api-x-indexing") {
         testCompile "org.mockito:mockito-all:${mockitoVersion}"
         testCompile "ch.qos.logback:logback-classic:${logbackVersion}"
         testCompile "org.apache.servicemix.bundles:org.apache.servicemix.bundles.xerces:${xercesVersion}"
-        compile "org.fcrepo.camel:fcrepo-camel:${fcrepocamelVersion}"
+        compile "org.fcrepo.camel:fcrepo-camel:${fcrepoCamelVersion}"
         compile "org.apache.camel:camel-core:${camelVersion}"
         compile "org.apache.camel:camel-http4:${camelVersion}"
         compile "org.slf4j:slf4j-api:${slf4jVersion}"
@@ -342,8 +342,8 @@ project("fcrepo-api-x-indexing") {
 
     jar {
         manifest {
-            attributes 'Import-Package': "${defaultOsgiImports}",
-             'Export-Package': "org.fcrepo.apix.indexing;version=${projectOsgiVersion}"
+            attributes 'Import-Package': "org.apache.camel,org.fcrepo.camel;version=${fcrepoCamelVersion},org.apache.camel.component.http4,${defaultOsgiImports}",
+                    'Export-Package': "org.fcrepo.apix.indexing;version=${projectOsgiVersion}"
         }
     }
 }
@@ -418,8 +418,8 @@ project("fcrepo-api-x-jena") {
     jar {
         manifest {
             attributes 'Import-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion},org.apache.commons.csv;version=${commonscsvVersion},${defaultOsgiImports}",
-             'Export-Package': "org.fcrepo.apix.jena;version=${projectOsgiVersion}",
-             'Conditional-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion}"
+                    'Export-Package': "org.fcrepo.apix.jena;version=${projectOsgiVersion}",
+                    'Conditional-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion}"
         }
     }
 }
@@ -446,15 +446,15 @@ project("fcrepo-api-x-listener") {
         compile project(":fcrepo-api-x-model")
         compile project(":fcrepo-api-x-registry")
         compile "org.apache.camel:camel-core:${camelVersion}"
-        compile "org.fcrepo.camel:fcrepo-camel:${fcrepocamelVersion}"
+        compile "org.fcrepo.camel:fcrepo-camel:${fcrepoCamelVersion}"
     }
 
     jar {
         manifest {
-            attributes 'Import-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion},org.apache.camel;version=${camelVersion},${defaultOsgiImports}",
-             'Export-Package': "org.fcrepo.apix.listener;version=${projectOsgiVersion}",
-             'Conditional-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion}",
-             'DynamicImport-Package': "org.fcrepo.apix.*"
+            attributes 'Import-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.camel,org.fcrepo.apix.model.components;version=${projectOsgiVersion},org.apache.camel;version=${camelVersion},${defaultOsgiImports}",
+                    'Export-Package': "org.fcrepo.apix.listener;version=${projectOsgiVersion}",
+                    'Conditional-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion}",
+                    'DynamicImport-Package': "*"
         }
     }
 }
@@ -475,9 +475,9 @@ project("fcrepo-api-x-loader") {
     jar {
         manifest {
             attributes 'Import-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion},${defaultOsgiImports}",
-             'Export-Package': "org.fcrepo.apix.loader;version=${projectOsgiVersion}",
-             'Conditional-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion}",
-             'DynamicImport-Package': "org.fcrepo.apix.*"
+                    'Export-Package': "org.fcrepo.apix.loader;version=${projectOsgiVersion}",
+                    'Conditional-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion}",
+                    'DynamicImport-Package': "*"
         }
     }
 }
@@ -489,7 +489,7 @@ project("fcrepo-api-x-model") {
     jar {
         manifest {
             attributes 'Import-Package': "${defaultOsgiImports}",
-             'Export-Package': "org.fcrepo.apix.model;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion}"
+                    'Export-Package': "org.fcrepo.apix.model;version=${projectOsgiVersion},org.fcrepo.apix.model.components;version=${projectOsgiVersion}"
         }
     }
 }
@@ -522,10 +522,10 @@ project("fcrepo-api-x-registry") {
     }
 
     jar {
-        manifest {                                                                              
+        manifest {
             attributes 'Import-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion},${defaultOsgiImports}",
-             'Export-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.registry.impl;version=${projectOsgiVersion}",
-             'Conditional-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion}"
+                    'Export-Package': "org.fcrepo.apix.registry;version=${projectOsgiVersion},org.fcrepo.apix.registry.impl;version=${projectOsgiVersion}",
+                    'Conditional-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion}"
         }
     }
 }
@@ -548,10 +548,10 @@ project("fcrepo-api-x-routing") {
 
     jar {
         manifest {
-            attributes 'Import-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion},org.apache.http;version=${httpcoreVersion},org.apache.http.auth;version=${httpclientVersion},org.apache.commons.io;version=${commonsioVersion},org.fcrepo.apix.jena;version=${projectOsgiVersion},${defaultOsgiImports}",
-             'Export-Package': "org.fcrepo.apix.routing;version=${projectOsgiVersion},org.fcrepo.apix.routing.impl;version=${projectOsgiVersion}",
-             'Conditional-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion}",
-             'DynamicImport-Package': "org.fcrepo.apix.*"
+            attributes 'Import-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion},org.apache.camel.spi,org.apache.http;version=${httpcoreVersion},org.apache.http.auth;version=${httpclientVersion},org.apache.commons.io;version=${commonsioVersion},org.fcrepo.apix.jena;version=${projectOsgiVersion},${defaultOsgiImports}",
+                    'Export-Package': "org.fcrepo.apix.routing;version=${projectOsgiVersion},org.fcrepo.apix.routing.impl;version=${projectOsgiVersion}",
+                    'Conditional-Package': "org.fcrepo.apix.model.components;version=${projectOsgiVersion},org.apache.camel.spi",
+                    'DynamicImport-Package': "*"
         }
     }
 }

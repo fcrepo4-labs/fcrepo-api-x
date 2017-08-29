@@ -2,7 +2,7 @@ version: "2.1"
 
 services:
   activemq:
-    image: pandorasystems/activemq
+    image: pandorasystems/activemq:0.0.1
     container_name: activemq
     ports:
       - "61616:61616"
@@ -39,8 +39,14 @@ services:
     depends_on:
       activemq:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://fcrepo:8080/fcrepo/rest"]
+      interval: 45s
+      timeout: 20s
+      retries: 1
     volumes:
       - fcrepo-volume:/mnt/fcrepo-data
+
   fuseki:
     image: pandorasystems/fuseki
     container_name: fuseki
@@ -50,6 +56,19 @@ services:
       - "3030:3030"
     volumes:
       - fuseki-volume:/shared
+
+  exts-sparqler:
+    image: pandorasystems/exts-sparqler
+    container_name: exts-sparqler
+    ports:
+     - "9104:9104"
+     - "5008:5008"
+    environment:
+     - FUSEKI_BASEURI=http4://fuseki:3030
+    depends_on:
+      apix:
+        condition: service_healthy
+
 volumes:
   fcrepo-volume:
   fuseki-volume:

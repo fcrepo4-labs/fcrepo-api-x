@@ -9,7 +9,6 @@ ENV JAVA_DEBUG_PORT=${DEBUG_PORT}
 ENV MAVEN_REPO=/build/repository
 # The version of API-X being included in the image
 ENV APIX_VERSION=${version}
-ENV KARAF_VERSION=${karafVersion}
 
 # The Fedora repository base URI
 ENV FCREPO_HOST=${FCREPO_HOST}

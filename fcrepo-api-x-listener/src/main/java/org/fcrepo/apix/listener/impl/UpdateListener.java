@@ -35,6 +35,12 @@ import org.fcrepo.camel.processor.EventProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
+import java.util.List;
+
+import static org.apache.camel.builder.PredicateBuilder.or;
+import static org.fcrepo.camel.FcrepoHeaders.FCREPO_URI;
+
 /**
  * Listens for updates to repository resources and notifies {@link Updateable}s
  *
