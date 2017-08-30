@@ -1,58 +1,79 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
-  xmlns:ext="http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0"
-  xmlns:camel="http://camel.apache.org/schema/blueprint"
-  xsi:schemaLocation="
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+           xmlns:ext="http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0"
+           xsi:schemaLocation="
        http://www.osgi.org/xmlns/blueprint/v1.0.0 https://osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
        http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0 http://aries.apache.org/schemas/blueprint-ext/blueprint-ext.xsd
        http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0  http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd
        http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
 
-  <cm:property-placeholder id="properties"
-    persistent-id="org.fcrepo.apix.indexing" update-strategy="reload">
+    <cm:property-placeholder id="properties"
+                             persistent-id="org.fcrepo.apix.indexing" update-strategy="reload">
 
-    <cm:default-properties>
-      <cm:property name="error.maxRedeliveries" value="10" />
-      <cm:property name="service.index.stream" value="broker:topic:fedora" />
-      <cm:property name="service.reindex.stream" value="broker:queue:service.reindex" />
-      <cm:property name="triplestore.baseUrl"
-        value="http://localhost:8080/fuseki/test/update" />
-      <cm:property name="reindexing.service.uri" value="http://localhost:9090/reindexing/" />
-      <cm:property name="ldp.path.extension.container"
-        value="/extensions" />
-    </cm:default-properties>
+        <cm:default-properties>
+            <cm:property name="error.maxRedeliveries" value="10"/>
+            <cm:property name="service.index.stream" value="broker:queue:apix.service.index"/>
+            <cm:property name="service.reindex.stream" value="broker:queue:service.reindex"/>
+            <cm:property name="triplestore.baseUrl"
+                         value="http://localhost:8080/fuseki/test/update"/>
+            <cm:property name="reindexing.service.uri" value="http://localhost:9090/reindexing/"/>
+            <cm:property name="ldp.path.extension.container"
+                         value="/extensions"/>
+            <cm:property name="socketTimeoutMs" value="1000" />
+            <cm:property name="connectTimeoutMs" value="1000" />
+            <cm:property name="proxy" value="http://fcrepo:8080"/>
+        </cm:default-properties>
+    </cm:property-placeholder>
 
-  </cm:property-placeholder>
+    <bean id="requestConfigBuilder" class="org.apache.http.client.config.RequestConfig"
+          factory-method="custom">
+        <property name="socketTimeout" value="${socketTimeoutMs}"/>
+        <property name="connectTimeout" value="${connectTimeoutMs}"/>
+        <property name="proxy" value="${proxy}"/>
+    </bean>
 
-  <reference id="httpClientFetcher" ext:proxy-method="classes"
-    interface="org.fcrepo.apix.registry.HttpClientFetcher" />
-    
-  <bean id="httpClient" factory-ref="httpClientFetcher"
-    factory-method="getClient" />
+    <bean id="requestConfig" factory-ref="requestConfigBuilder"
+          factory-method="build"/>
 
-  <bean id="indexerRoutes" class="org.fcrepo.apix.indexing.impl.ServiceIndexingRoutes">
-    <property name="extensionContainer" value="${ldp.path.extension.container}" />
-    <property name="reindexStream" value="${service.reindex.stream}" />
-  </bean>
+    <bean id="httpClientBuilder" class="org.apache.http.impl.client.HttpClientBuilder"
+          factory-method="create">
+        <property name="defaultRequestConfig" ref="requestConfig"/>
+    </bean>
 
-  <bean id="http" class="org.apache.camel.component.http4.HttpComponent" />
-  <bean id="https" class="org.apache.camel.component.http4.HttpComponent" />
+    <bean id="httpClient" factory-ref="httpClientBuilder"
+          factory-method="build"/>
+
+    <bean id="httpOntologyRegistry">
+        <property name="httpClient" ref="httpClient"/>
+    </bean>
+
+    <service id="ontologyRegistry" ref="httpOntologyRegistry"/>
+    <reference id="httpClientFetcher" ext:proxy-method="classes"
+               interface="org.fcrepo.apix.registry.HttpClientFetcher"/>
+
+    <bean id="indexerRoutes" class="org.fcrepo.apix.indexing.impl.ServiceIndexingRoutes">
+        <property name="extensionContainer" value="${ldp.path.extension.container}"/>
+        <property name="reindexStream" value="${service.reindex.stream}"/>
+    </bean>
+
+    <bean id="http" class="org.apache.camel.component.http4.HttpComponent"/>
+    <bean id="https" class="org.apache.camel.component.http4.HttpComponent"/>
 
 
-  <reference id="broker" interface="org.apache.camel.Component"
-    filter="(osgi.jndi.service.name=fcrepo/Broker)" />
+    <reference id="broker" interface="org.apache.camel.Component"
+               filter="(osgi.jndi.service.name=fcrepo/Broker)"/>
 
-  <camelContext id="FcrepoServiceIndexer"
-    xmlns="http://camel.apache.org/schema/blueprint">
-    <routeBuilder ref="indexerRoutes" />
-  </camelContext>
+    <camelContext id="FcrepoServiceIndexer"
+                  xmlns="http://camel.apache.org/schema/blueprint">
+        <routeBuilder ref="indexerRoutes"/>
+    </camelContext>
 
-  <service interface="org.apache.camel.CamelContext" ref="FcrepoServiceIndexer">
-    <service-properties>
-      <entry key="role" value="FcrepoServiceIndexer" />
-    </service-properties>
-  </service>
+    <service interface="org.apache.camel.CamelContext" ref="FcrepoServiceIndexer">
+        <service-properties>
+            <entry key="role" value="FcrepoServiceIndexer"/>
+        </service-properties>
+    </service>
 
 </blueprint>
