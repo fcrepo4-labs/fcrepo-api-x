@@ -69,6 +69,19 @@ services:
       apix:
         condition: service_healthy
 
+  messaging:
+    image: pandorasystems/messaging
+    container_name: messaging
+    ports:
+      - "9080:9080"
+    environment:
+      - FCREPO_BASEURI=http4://localhost:8080/fcrepo/rest
+      - FUSEKI_BASEURI=http4://fuseki:3030/fuseki/manifests
+    depends_on:
+      - fcrepo
+    links:
+      - fcrepo:localhost
+
 volumes:
   fcrepo-volume:
   fuseki-volume:
