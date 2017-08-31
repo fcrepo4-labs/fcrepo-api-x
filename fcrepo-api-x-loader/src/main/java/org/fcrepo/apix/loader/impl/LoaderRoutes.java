@@ -90,8 +90,16 @@ public class LoaderRoutes extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
+<<<<<<< HEAD
         from("jetty:http://{{loader.host}}:{{loader.port}}/load" +
                 "?matchOnUriPrefix=true&optionsEnabled=true&sendServerVersion=false&httpMethodRestrict=GET,OPTIONS,POST")
+=======
+        from("jetty:http://0.0.0.0:{{loader.port}}/load" +
+                "?matchOnUriPrefix=true" +
+                "&sendServerVersion=false" +
+                "&httpMethodRestrict=GET,OPTIONS,POST" +
+                "&optionsEnabled=true")
+>>>>>>> 77ea3cd2ebdd731a3b9b7a7218c103dda23181c4
                         .id("loader-http")
                         .choice()
 
