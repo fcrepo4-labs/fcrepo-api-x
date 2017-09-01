@@ -90,27 +90,20 @@ public class LoaderRoutes extends RouteBuilder {
     @Override
     public void configure() throws Exception {
 
-<<<<<<< HEAD
         from("jetty:http://{{loader.host}}:{{loader.port}}/load" +
-                "?matchOnUriPrefix=true&optionsEnabled=true&sendServerVersion=false&httpMethodRestrict=GET,OPTIONS,POST")
-=======
-        from("jetty:http://0.0.0.0:{{loader.port}}/load" +
-                "?matchOnUriPrefix=true" +
-                "&sendServerVersion=false" +
-                "&httpMethodRestrict=GET,OPTIONS,POST" +
-                "&optionsEnabled=true")
->>>>>>> 77ea3cd2ebdd731a3b9b7a7218c103dda23181c4
-                        .id("loader-http")
-                        .choice()
+                "?matchOnUriPrefix=true&optionsEnabled=true&sendServerVersion=false" +
+                "&httpMethodRestrict=GET,OPTIONS,POST")
+                .id("loader-http")
+                .choice()
 
-                        .when(header(Exchange.HTTP_METHOD).isEqualTo("GET"))
-                        .setHeader("Content-Type", constant("text/html"))
-                        .to("language:simple:resource:classpath:form.html")
+                .when(header(Exchange.HTTP_METHOD).isEqualTo("GET"))
+                .setHeader("Content-Type", constant("text/html"))
+                .to("language:simple:resource:classpath:form.html")
 
-                        .when(header(Exchange.HTTP_METHOD).isEqualTo("POST"))
-                        .to(ROUTE_PREPARE_LOAD)
+                .when(header(Exchange.HTTP_METHOD).isEqualTo("POST"))
+                .to(ROUTE_PREPARE_LOAD)
 
-                        .otherwise().to(ROUTE_OPTIONS);
+                .otherwise().to(ROUTE_OPTIONS);
 
         from(ROUTE_OPTIONS).id("respond-options")
                 .setHeader(CONTENT_TYPE).constant("text/turtle")
@@ -132,7 +125,8 @@ public class LoaderRoutes extends RouteBuilder {
                 .setHeader(Exchange.HTTP_METHOD, constant("OPTIONS"))
                 .setHeader(Exchange.HTTP_URI, header(HEADER_SERVICE_URI))
                 .setHeader("Accept", constant("text/turtle"))
-                .process(e -> LOG.info("Execution OPTIONS to service URI {}", e.getIn().getHeader(Exchange.HTTP_URI)))
+                .process(e -> LOG.info("Execution OPTIONS to service URI {}", e.getIn().getHeader
+                        (Exchange.HTTP_URI)))
                 .to("http://localhost?httpClient=#httpClient")
                 .process(DEPOSIT_OBJECTS)
                 .setHeader(HTTP_RESPONSE_CODE, constant(303));

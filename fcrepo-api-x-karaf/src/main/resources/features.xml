@@ -90,7 +90,7 @@
     <feature version="${version}">fcrepo-api-x-model</feature>
     <feature version="${camelVersionRange}">camel</feature>
     <feature version="${camelVersionRange}">camel-http4</feature>
-    <feature version="${camelVersionRange}">camel-jetty</feature>
+    <feature version="${camelVersionRange}">camel-jetty9</feature>
     <bundle dependency="true">mvn:org.apache.jena/jena-osgi/${jenaVersion}</bundle>
     <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-core/${jacksonVersion}</bundle>
     <bundle dependency="true">mvn:com.fasterxml.jackson.core/jackson-databind/${jacksonVersion}</bundle>

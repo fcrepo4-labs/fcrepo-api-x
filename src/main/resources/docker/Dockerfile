@@ -1,4 +1,4 @@
-FROM pandorasystems/karaf:4.1.0
+FROM pandorasystems/karaf:${KARAF_VERSION}
 
 MAINTAINER Christopher Johnson <christopher_hanna.johnson@uni-leipzig.de>
 LABEL description = "Provides a Karaf container configured with API-X features"

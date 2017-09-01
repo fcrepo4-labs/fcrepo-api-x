@@ -204,7 +204,7 @@ configure(subprojects) { subproject ->
     bundle {
         includeTransitiveDependencies = true
         passProjectProperties = false
-        instruction '-plugin', 'aQute.lib.spring.SpringXMLType'
+ //       instruction '-plugin', 'aQute.lib.spring.SpringXMLType'
         instruction '-dsannotations', 'norequirements'
     }
 
@@ -540,7 +540,7 @@ project("fcrepo-api-x-routing") {
         testCompile "junit:junit:${junitVersion}"
         testCompile "org.mockito:mockito-all:${mockitoVersion}"
         compile "org.apache.camel:camel-core:${camelVersion}"
-        compile "org.apache.camel:camel-jetty:${camelVersion}"
+        compile "org.apache.camel:camel-jetty9:${camelVersion}"
         compile "org.apache.camel:camel-http4:${camelVersion}"
         compile "org.osgi:org.osgi.service.component.annotations:${osgiscrVersion}"
         compile "org.slf4j:slf4j-api:${slf4jVersion}"

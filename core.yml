@@ -2,7 +2,7 @@ version: "2.1"
 
 services:
   activemq:
-    image: pandorasystems/activemq:0.0.1
+    image: pandorasystems/activemq
     container_name: activemq
     ports:
       - "61616:61616"
@@ -12,21 +12,53 @@ services:
       interval: 45s
       timeout: 20s
       retries: 10
+    networks:
+      - apix-ipv6
 
   apix:
     image: pandorasystems/apix
     container_name: apix
+    env_file: apix.env
     ports:
       - "8001:80"
-      - "8081:8081"
-      - "5011:5011"
     depends_on:
       - fcrepo
     healthcheck:
       test: ["CMD", "/usr/local/bin/docker-healthcheck.sh"]
-      interval: 45s
+      interval: 20s
       timeout: 20s
-      retries: 1
+      retries: 3
+    networks:
+      - apix-ipv6
+
+  exts-sparqler:
+    image: pandorasystems/exts-sparqler
+    container_name: exts-sparqler
+    ports:
+      - "9104:9104"
+    environment:
+      - FUSEKI_BASEURI=http4://fuseki:3030
+    networks:
+      - apix-ipv6
+    depends_on:
+      apix:
+        condition: service_healthy
+
+  messaging:
+    image: pandorasystems/messaging
+    container_name: messaging
+    env_file: apix.env
+    ports:
+      - "9080:9080"
+    environment:
+      - FCREPO_BASEURI=http4://localhost:8080/fcrepo/rest
+      - FUSEKI_BASEURI=http4://fuseki:3030/fuseki/manifests
+    depends_on:
+      - fcrepo
+    links:
+      - fcrepo:localhost
+    networks:
+      - apix-ipv6
 
   fcrepo:
     image: pandorasystems/fcrepo:4.8.0-SNAPSHOT
@@ -34,18 +66,14 @@ services:
     environment:
       CATALINA_OPTS: -Dfcrepo.home=/mnt/fcrepo-data -Dfcrepo.spring.configuration=file:/etc/fcrepo/fcrepo-config.xml -Xss8M -Dfcrepo.modeshape.configuration=file:/etc/fcrepo/repository.json
     ports:
-      - "8443:8443"
       - "8080:8080"
     depends_on:
       activemq:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://fcrepo:8080/fcrepo/rest"]
-      interval: 45s
-      timeout: 20s
-      retries: 1
     volumes:
       - fcrepo-volume:/mnt/fcrepo-data
+    networks:
+      - apix-ipv6
 
   fuseki:
     image: pandorasystems/fuseki
@@ -56,32 +84,42 @@ services:
       - "3030:3030"
     volumes:
       - fuseki-volume:/shared
+    networks:
+      - apix-ipv6
 
-  exts-sparqler:
-    image: pandorasystems/exts-sparqler
-    container_name: exts-sparqler
+  redis:
+    image: pandorasystems/redis
+    container_name: redis
     ports:
-     - "9104:9104"
-     - "5008:5008"
-    environment:
-     - FUSEKI_BASEURI=http4://fuseki:3030
-    depends_on:
-      apix:
-        condition: service_healthy
-
-  messaging:
-    image: pandorasystems/messaging
-    container_name: messaging
-    ports:
-      - "9080:9080"
-    environment:
-      - FCREPO_BASEURI=http4://localhost:8080/fcrepo/rest
-      - FUSEKI_BASEURI=http4://fuseki:3030/fuseki/manifests
-    depends_on:
-      - fcrepo
-    links:
-      - fcrepo:localhost
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/docker-healthcheck.sh"]
+      interval: 45s
+      timeout: 20s
+      retries: 1
 
 volumes:
   fcrepo-volume:
+#    driver_opts:
+#          type: none
+#          device: /mnt/pandora-data/fcrepo-data
+#          o: bind
+  loris-cache:
+  loris-volume:
+#    driver_opts:
+#          type: none
+#          device: /mnt/pandora-data/loris/binaries
+#          o: bind
   fuseki-volume:
+#    driver_opts:
+#          type: none
+#          device: /mnt/pandora-data/fuseki
+#          o: bind
+networks:
+  apix-ipv6:
+    enable_ipv6: true
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 2001:db8:2::/64
