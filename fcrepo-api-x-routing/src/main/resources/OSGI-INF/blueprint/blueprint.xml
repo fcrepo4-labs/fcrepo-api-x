@@ -13,7 +13,7 @@
   <cm:property-placeholder persistent-id="org.fcrepo.apix.routing"
     update-strategy="reload">
     <cm:default-properties>
-      <cm:property name="apix.listen.host" value="0.0.0.0" />
+      <cm:property name="apix.routing.host" value="0.0.0.0" />
       <cm:property name="apix.port" value="8081" />
       <cm:property name="apix.discoveryPath" value="discovery" />
       <cm:property name="apix.exposePath" value="services" />
@@ -47,13 +47,11 @@
     <property name="fcrepoBaseURI" value="${fcrepo.baseURI}" />
   </bean>
 
-  <bean id="exposedServiceUriAnalyzer" class="org.fcrepo.apix.routing.impl.ExposedServiceUriAnalyzer"
-    init-method="init" destroy-method="shutdown">
+  <bean id="exposedServiceUriAnalyzer" class="org.fcrepo.apix.routing.impl.ExposedServiceUriAnalyzer">
     <property name="extensionRegistry" ref="extensionRegistry" />
     <property name="fcrepoBaseURI" value="${fcrepo.baseURI}" />
     <property name="exposePath" value="${apix.exposePath}" />
     <property name="routing" ref="routingStub" />
-    <property name="initializer" ref="initializer" />
   </bean>
 
   <bean id="routingImpl" class="org.fcrepo.apix.routing.impl.RoutingImpl">

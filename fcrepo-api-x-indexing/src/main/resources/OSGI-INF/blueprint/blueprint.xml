@@ -27,39 +27,19 @@
         </cm:default-properties>
     </cm:property-placeholder>
 
-    <bean id="requestConfigBuilder" class="org.apache.http.client.config.RequestConfig"
-          factory-method="custom">
-        <property name="socketTimeout" value="${socketTimeoutMs}"/>
-        <property name="connectTimeout" value="${connectTimeoutMs}"/>
-        <property name="proxy" value="${proxy}"/>
-    </bean>
+  <bean id="indexerRoutes" class="org.fcrepo.apix.indexing.impl.ServiceIndexingRoutes">
+    <property name="extensionContainer" value="${ldp.path.extension.container}" />
+    <property name="reindexStream" value="${service.reindex.stream}" />
+  </bean>
 
-    <bean id="requestConfig" factory-ref="requestConfigBuilder"
-          factory-method="build"/>
+    <bean id="http" class="org.apache.camel.component.http4.HttpComponent" />
+    <bean id="https" class="org.apache.camel.component.http4.HttpComponent" />
 
     <bean id="httpClientBuilder" class="org.apache.http.impl.client.HttpClientBuilder"
-          factory-method="create">
-        <property name="defaultRequestConfig" ref="requestConfig"/>
-    </bean>
+          factory-method="create" />
 
     <bean id="httpClient" factory-ref="httpClientBuilder"
-          factory-method="build"/>
-
-    <bean id="httpOntologyRegistry">
-        <property name="httpClient" ref="httpClient"/>
-    </bean>
-
-    <service id="ontologyRegistry" ref="httpOntologyRegistry"/>
-    <reference id="httpClientFetcher" ext:proxy-method="classes"
-               interface="org.fcrepo.apix.registry.HttpClientFetcher"/>
-
-    <bean id="indexerRoutes" class="org.fcrepo.apix.indexing.impl.ServiceIndexingRoutes">
-        <property name="extensionContainer" value="${ldp.path.extension.container}"/>
-        <property name="reindexStream" value="${service.reindex.stream}"/>
-    </bean>
-
-    <bean id="http" class="org.apache.camel.component.http4.HttpComponent"/>
-    <bean id="https" class="org.apache.camel.component.http4.HttpComponent"/>
+          factory-method="build" />
 
 
     <reference id="broker" interface="org.apache.camel.Component"

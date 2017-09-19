@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+import org.apache.camel.LoggingLevel;
 import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.ServiceInstance;
@@ -174,12 +175,12 @@ public class RoutingImpl extends RouteBuilder {
 
         // It would be nice to use the rest DSL to do the service doc, if that is at all possible
 
-        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.discoveryPath}}" +
+        from("jetty:http://{{apix.routing.host}}:{{apix.port}}/{{apix.discoveryPath}}" +
                 "?matchOnUriPrefix=true&optionsEnabled=true")
                         .routeId("service-doc-endpoint")
                         .process(WRITE_SERVICE_DOC);
 
-        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.exposePath}}" +
+        from("jetty:http://{{apix.routing.host}}:{{apix.port}}/{{apix.exposePath}}" +
                 "?matchOnUriPrefix=true" +
                 "&bridgeEndpoint=true" +
                 "&disableStreamCache=true" +
@@ -190,13 +191,12 @@ public class RoutingImpl extends RouteBuilder {
                         .when(header(EXPOSING_EXTENSION).isNull()).to(EXTENSION_NOT_FOUND)
                         .otherwise().to(EXECUTION_EXPOSE_MODALITY);
 
-        from("jetty:http://{{apix.listen.host}}:{{apix.port}}/{{apix.proxyPath}}?" +
+        from("jetty:http://{{apix.routing.host}}:{{apix.port}}/{{apix.proxyPath}}?" +
                 "matchOnUriPrefix=true" +
                 "&bridgeEndpoint=true" +
                 "&disableStreamCache=true" +
                 "&optionsEnabled=true")
                         .routeId("endpoint-proxy").routeDescription("Endpoint for proxy to Fedora")
-
                         .choice()
                         .when(IN_INTERCEPT_PATH).to(ROUTE_INTERCEPT)
                         .otherwise().doTry()
@@ -312,7 +312,6 @@ public class RoutingImpl extends RouteBuilder {
         try {
             final ServiceInstanceRegistry instanceRegistry = serviceRegistry.instancesOf(serviceRegistry.getService(
                     consumedServiceURI));
-
             if (instanceRegistry == null) {
                 throw new ResourceNotFoundException("No instance registry for service " + consumedServiceURI);
             }

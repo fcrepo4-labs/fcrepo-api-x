@@ -21,12 +21,7 @@ package org.fcrepo.apix.jena.impl;
 import static org.fcrepo.apix.jena.Util.rdfResource;
 import static org.fcrepo.apix.jena.Util.triple;
 import static org.fcrepo.apix.model.Ontologies.RDF_TYPE;
-import static org.fcrepo.apix.model.Ontologies.Service.CLASS_LDP_SERVICE_INSTANCE_REGISTRY;
-import static org.fcrepo.apix.model.Ontologies.Service.CLASS_SERVICE;
-import static org.fcrepo.apix.model.Ontologies.Service.PROP_CANONICAL;
-import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_ENDPOINT;
-import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_SERVICE_INSTANCE;
-import static org.fcrepo.apix.model.Ontologies.Service.PROP_HAS_SERVICE_INSTANCE_REGISTRY;
+import static org.fcrepo.apix.model.Ontologies.Service.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -35,6 +30,7 @@ import static org.mockito.Mockito.when;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -108,9 +104,9 @@ public class JenaServiceRegistryTest {
         when(delegate.get(SERVICE_URI)).thenReturn(
                 rdfResource(SERVICE, triple(SERVICE, RDF_TYPE, CLASS_SERVICE) +
                         triple(SERVICE, PROP_CANONICAL, CANONICAL)));
-        when(delegate.list()).thenReturn(Arrays.asList(SERVICE_URI));
+        when(delegate.list()).thenReturn(Collections.singletonList(SERVICE_URI));
 
-        toTest.update();
+        toTest.update.run();
 
         try (Service svc = toTest.getService(URI.create(CANONICAL))) {
 
@@ -150,7 +146,7 @@ public class JenaServiceRegistryTest {
         instanceRegistry.instances().stream().forEach(si -> assertEquals(1, si.endpoints().size()));
         final List<URI> instanceURIs = instanceRegistry.instances().stream().map(ServiceInstance::endpoints).flatMap(
                 Collection::stream).collect(
-                        Collectors.toList());
+                Collectors.toList());
         assertTrue(instanceURIs.containsAll(Arrays.asList(URI.create(SERVICE_ENDPOINT_1), URI.create(
                 SERVICE_ENDPOINT_2))));
     }

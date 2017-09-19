@@ -142,7 +142,7 @@ configure(allprojects) { project ->
         scanForTestClasses = false
         include(["**/*Tests.class", "**/*Test.class"])
         exclude(["**/Abstract*.class", '**/*$*', "**/*IT.class"])
-        reports.junitXml.destination = file("$buildDir/test-results")
+        reports.junitXml.destination(file("$buildDir/test-results"))
     }
 
     def dockerResourceDir = "${rootProject.buildDir}/resources/main/docker"
@@ -251,7 +251,6 @@ configure(subprojects) { subproject ->
             ":fcrepo-api-x-model",
             ":fcrepo-api-x-routing",
             ":fcrepo-api-x-binding",
-            ":fcrepo-api-x-execution",
             ":fcrepo-api-x-jena",
             ":fcrepo-api-x-integration",
             ":fcrepo-api-x-karaf",
@@ -273,6 +272,14 @@ configure(subprojects) { subproject ->
 
     jacoco {
         toolVersion = "0.7.9"
+    }
+
+    jacocoTestReport {
+        reports {
+            xml.enabled false
+            csv.enabled false
+            html.destination file("${buildDir}/jacocoHtml")
+        }
     }
 
     nexusStaging {
@@ -342,7 +349,7 @@ project("fcrepo-api-x-indexing") {
 
     jar {
         manifest {
-            attributes 'Import-Package': "org.apache.camel,org.fcrepo.camel;version=${fcrepoCamelVersion},org.apache.camel.component.http4,${defaultOsgiImports}",
+            attributes 'Import-Package': "org.apache.camel,org.fcrepo.camel;version=${fcrepoCamelVersion},org.apache.http.client.config,org.apache.http.impl.client,org.apache.camel.component.http4,${defaultOsgiImports}",
                     'Export-Package': "org.fcrepo.apix.indexing;version=${projectOsgiVersion}"
         }
     }
@@ -544,6 +551,8 @@ project("fcrepo-api-x-routing") {
         compile "org.apache.camel:camel-http4:${camelVersion}"
         compile "org.osgi:org.osgi.service.component.annotations:${osgiscrVersion}"
         compile "org.slf4j:slf4j-api:${slf4jVersion}"
+        testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
     }
 
     jar {

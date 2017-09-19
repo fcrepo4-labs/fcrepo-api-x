@@ -51,6 +51,7 @@ import org.fcrepo.apix.jena.JenaResource;
 import org.fcrepo.apix.jena.Util;
 import org.fcrepo.apix.model.Service;
 import org.fcrepo.apix.model.ServiceInstance;
+import org.fcrepo.apix.model.WebResource;
 import org.fcrepo.apix.model.components.Initializer;
 import org.fcrepo.apix.model.components.Initializer.Initialization;
 import org.fcrepo.apix.model.components.Registry;
@@ -136,8 +137,8 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
         init.cancel();
     }
 
-    @Override
-    public void update() {
+
+    Runnable update = () -> {
 
         // For all resources in the registry, get the URIs of everything that calls itself a Service, or is explicitly
         // registered as a service
@@ -160,21 +161,23 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
         // indicate the same canonical URI, pick one arbitrarily.
         final Map<URI, URI> canonical = serviceURIs.stream()
                 .flatMap(this::attemptLookupService)
-                .collect(Collectors.toMap(s -> s.canonicalURI(), s -> s.uri(), (a, b) -> a));
+                .collect(Collectors.toMap(Service::canonicalURI, WebResource::uri, (a, b) -> a));
 
         canonicalUriMap.putAll(canonical);
 
         canonicalUriMap.keySet().removeIf(k -> !canonical.containsKey(k));
-    }
+    };
 
     @Override
     public void update(final URI uri) {
         if (hasInDomain(uri) && uri.getFragment() == null) {
             // TODO: This can be optimized more. Right now, it re-scans all services,
             // but at least filters out obvious redundancies (hash URIs) or inapplicable resources
-            update();
+            update.run();
         }
     }
+
+    public void update() {}
 
     @Override
     public void register(final URI uri) {
@@ -198,7 +201,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
     }
 
     private InputStream patchAddService(final URI service) {
-        init.await();
+        update.run();
         try {
             return IOUtils.toInputStream(String.format(
                     "INSERT {<> <%s> <%s> .} WHERE {}", PROP_CONTAINS_SERVICE, service), "utf8");
@@ -209,7 +212,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     @Override
     public ServiceInstanceRegistry createInstanceRegistry(final Service service) {
-        init.await();
+        update.run();
         LOG.debug("POST: Creating service instance registry");
 
         final HttpPost post = new HttpPost(service.uri());
@@ -317,13 +320,13 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     @Override
     public Collection<URI> list() {
-        init.await();
+        update.run();
         return new HashSet<>(canonicalUriMap.values());
     }
 
     @Override
     public boolean contains(final URI uri) {
-        init.await();
+        update.run();
         return canonicalUriMap.containsKey(uri) || canonicalUriMap.containsValue(uri);
     }
 
@@ -395,7 +398,7 @@ public class JenaServiceRegistry extends WrappingRegistry implements ServiceRegi
 
     @Override
     public boolean hasInDomain(final URI uri) {
-        init.await();
+        update.run();
         return delegate.hasInDomain(uri) || canonicalUriMap.values().contains(uri);
     }
 

@@ -33,7 +33,7 @@ import org.fcrepo.apix.model.Extension;
 import org.fcrepo.apix.model.Extension.Scope;
 import org.fcrepo.apix.model.components.ExtensionRegistry;
 import org.fcrepo.apix.model.components.Initializer;
-import org.fcrepo.apix.model.components.Initializer.Initialization;
+
 import org.fcrepo.apix.model.components.ResourceNotFoundException;
 import org.fcrepo.apix.model.components.RoutingFactory;
 import org.fcrepo.apix.model.components.Updateable;
@@ -58,10 +58,6 @@ public class ExposedServiceUriAnalyzer implements Updateable {
     private String exposePath;
 
     private String fcrepoBaseURI;
-
-    private Initializer initializer;
-
-    private Initialization init = Initialization.NONE;
 
     private final Map<String, Extension> endpoints = new ConcurrentHashMap<>();
 
@@ -103,29 +99,8 @@ public class ExposedServiceUriAnalyzer implements Updateable {
         this.routing = routing;
     }
 
-    /**
-     * Set the initializer.
-     *
-     * @param initializer the initializer.
-     */
-    public void setInitializer(final Initializer initializer) {
-        this.initializer = initializer;
-    }
 
-    /** Initialize */
-    public void init() {
-        init = initializer.initialize(() -> {
-            update();
-        });
-    }
-
-    /** Shutdown */
-    public void shutdown() {
-        init.cancel();
-    }
-
-    @Override
-    public void update() {
+    Runnable update = () -> {
         final Map<String, Extension> exts = extensions.list().stream()
                 .map(extensions::getExtension)
                 .filter(Extension::isExposing)
@@ -134,14 +109,14 @@ public class ExposedServiceUriAnalyzer implements Updateable {
                     // If there's a clash, ignore the one whose URI is lexically greatest
                     LOG.warn("Expose path '{}' defined by two extensions: <{}> and <{}>; " +
                             "Arbitrarily ignoring one of them",
-                            e1.exposed().exposedAt().getPath(), e1.uri(), e2.uri());
-                    return e1.uri().compareTo(e2.uri()) <= 0 ? e1 : e2;
+                            e1.exposed().exposedAt().getPath(), e1.toString(), e2.toString());
+                    return e1.toString().compareTo(e2.toString()) <= 0 ? e1 : e2;
                 }));
 
         endpoints.putAll(exts);
-
+        LOG.info("endpoint list {}", exts.toString());
         endpoints.keySet().removeIf(k -> !exts.containsKey(k));
-    }
+    };
 
     @Override
     public void update(final URI inResponseTo) {
@@ -151,6 +126,8 @@ public class ExposedServiceUriAnalyzer implements Updateable {
         }
     }
 
+    public void update() {}
+
     /**
      * Match a request URI to a concrete extension binding.
      *
@@ -158,7 +135,7 @@ public class ExposedServiceUriAnalyzer implements Updateable {
      * @return Service exposing extension binding
      */
     public ServiceExposingBinding match(final URI requestURI) {
-        init.await();
+        update.run();
 
         LOG.debug("ANALYZER:  Analyzing URI for exposed extensions {}", requestURI);
 
@@ -168,7 +145,6 @@ public class ExposedServiceUriAnalyzer implements Updateable {
             final String rawPath = requestPath.replaceFirst("^" + exposePath + "/", "");
 
             LOG.debug("ANALYZER: raw path: {}", rawPath);
-
             LOG.debug("ANALYZER: candidates: {}", endpoints.keySet());
 
             final List<String> matches = new ArrayList<String>(
