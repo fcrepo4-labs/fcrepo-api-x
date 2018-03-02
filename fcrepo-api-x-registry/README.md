@@ -16,7 +16,7 @@ To provide an alternative `HttpClient` implementation for API-X to use when comm
 ## Configuration
 
 The application can be configured by creating a file in
-`$KARAF_HOME/etc/org.fcrepo.apix.registry.cfg`. The following
+`$KARAF_HOME/etc/org.fcrepo.apix.registry.http.cfg`. The following
 values are available for configuration:
 
 ### `timeout.connect.ms`
