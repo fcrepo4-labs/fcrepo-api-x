@@ -19,7 +19,7 @@ Exposes an endpoint `${loader.host}:${loader.port}/load` that responds to `POST`
 @prefix fedora:&lt;http://fedora.info/definitions/v4/repository#&gt; .
 &nbsp;
 &lt;&gt; a apix:Extension;
-    apix:exposesService &lt;http://example.org/LoaderIT/ont&gt;
+    apix:exposesService &lt;http://example.org/LoaderIT/ont&gt;;
     apix:exposesServiceAt "test:LoaderIT/ont";
     <b>apix:bindsTo &lt;#class&gt; </b>.
 &nbsp;
