@@ -38,8 +38,9 @@ or be covered by a corporate agreement.
 
 ## Sponshorship
 
-This work was made possible in part by IMLS grant [LG-70-16-0076-16](https://www.imls.gov/sites/default/files/lg-70-16-0076_proposal_narrative_0.pdf) _Fedora 4 API Extension (API-X) Architecture_,
-and design or development effort from:
+This work was made possible in part by IMLS grant [LG-70-16-0076-16](https://www.imls.gov/sites/default/files/lg-70-16-0076_proposal_narrative_0.pdf) _Fedora 4 API Extension (API-X) Architecture_, lead by Principal Investigator Sayeed Choudhury.
+
+Design or development efforts attributed to:
 * Elliot Metsger - Johns Hopkins, Software Engineer, API-X stakeholder and developer
 * Ruth Duerr - Ronin Institute for Independent Scholarship, API-X stakeholder, Data Manager/Informaticist, ex-operations manager, ex-archive manager, ex-systems engineer, ex-software engineer & developer
 * Joshua Westgard - University of Maryland Libraries, API-X stakeholder, repository application manager
