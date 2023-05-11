@@ -36,7 +36,7 @@ or be covered by a corporate agreement.
 ## License
 [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-## Sponshorship
+## Sponsorship
 
 This work was made possible in part by IMLS grant [LG-70-16-0076-16](https://www.imls.gov/sites/default/files/lg-70-16-0076_proposal_narrative_0.pdf) _Fedora 4 API Extension (API-X) Architecture_, lead by Principal Investigator Sayeed Choudhury.
 
